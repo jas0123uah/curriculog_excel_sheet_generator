@@ -1,4 +1,4 @@
-import requests, json, subprocess
+import requests, json
 from pprint import pprint
 class ReportGenerator:
     def __init__(self, api_token, report_id = None) -> None:
@@ -16,12 +16,9 @@ class ReportGenerator:
         
         url = f'{self.base_url}{api_endpoint}'
         #response = requests.post(url=url, headers=self.headers, allow_redirects=True)
-        #pprint(vars(response))
         #report_id = response.json()['report_id']
         report_id = '838'
         proposal_list = self.get_report_results(report_id)
-        #print(proposal_list.keys())
-        #print(proposal_list[0].__dir__())
         self.proposal_list = proposal_list
         return proposal_list
 
@@ -29,33 +26,33 @@ class ReportGenerator:
         """Loops over proposal_list to return a unique list of ap_ids."""
         ap_ids = []
         for proposal in self.proposal_list:
-            #print(f'PROPOSAL:\n {proposal}')
             if proposal['ap_id'] not in ap_ids:
                 ap_ids.append(proposal['ap_id'])
         self.ap_ids = ap_ids
         return ap_ids
     
-    def get_all_proposal_fields(self):
+    def get_all_proposal_fields(self, api_filters):
         """Loops over self.ap_ids calling _get_proposal_fields."""
         print(self.ap_ids)
         for ap_id in self.ap_ids:
             print(f'Getting proposal fields for ap_id {ap_id}')
-            prop_fields = self._get_proposal_fields(ap_id)
-            #print(prop_fields)
+            prop_fields = self._get_proposal_fields(ap_id, api_filters=api_filters)
             self.write_json(prop_fields, 't')
             
 
-    def _get_proposal_fields(self, ap_id): 
+    def _get_proposal_fields(self, ap_id, api_filters = {}): 
         """Calls /api/v1/report/proposal_field/ with ap_id to return proposals matching a specific approval process id."""
     
         api_endpoint = '/api/v1/report/proposal_field/'
         url = f'{self.base_url}{api_endpoint}'
-        #ap_id = 1
-        #data = {"ap_id": ap_id }
-        #response = requests.post(url=url, headers=self.headers, allow_redirects=True, data=data)
-        #print(response.json())
-        report_id = 846
-        #report_id = response.json()['report_id']
+        
+        print(f'API filters: {api_filters}')
+        data = {"ap_id": ap_id }
+        data.update(api_filters)
+        data = json.dumps(data)
+        response = requests.post(url=url, headers=self.headers, allow_redirects=True, data=data)
+        print(response.json())
+        report_id = response.json()['report_id']
         
         print(f'{report_id} will contain results for proposal fields with api_id {ap_id}.')
         return self.get_report_results(report_id)
@@ -66,10 +63,8 @@ class ReportGenerator:
         api_endpoint = f'/api/v1/report/result/{report_id}'
         url = f'{self.base_url}{api_endpoint}'
         response = requests.get(url=url, headers=self.headers, allow_redirects=True)
-        #pprint(vars(response))
         meta = response.json()['meta']
 
-        #print(meta)
         
         if meta['total_results'] != meta['results_current_page']:
             err = f'There are {meta["total_results"]} total results and only {meta["results_current_page"]} results are on the current page. Please contact jspenc35@utk.edu with this error and provide the report_id {report_id}.'
