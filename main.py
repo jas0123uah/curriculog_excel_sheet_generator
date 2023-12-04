@@ -3,7 +3,7 @@ from classes import report_generator, excel_writer
 import argparse, time
 parser = argparse.ArgumentParser()
 parser.add_argument('-a', '--api_token', help="The token associated with your API key. Used to pull data from Curriculog. Tokens expire every 25 hours so make sure you have a recent token.")
-parser.add_argument('-r', '--report', help="The type of report you are requesting from the Curriculog API.", default= 'proposal_report', choices=['proposal_report'])
+# parser.add_argument('-r', '--report', help="The type of report you are requesting from the Curriculog API.", default= 'proposal_report', choices=['proposal_report'])
 parser.add_argument('-er', '--existing_report', nargs='?', help= 'Use this to pull the results for a previously run Curriculog API report. This can be used in cases where the Excel sheet did not format as expected.')
 args = parser.parse_args()
 
@@ -15,7 +15,10 @@ try:
         pass
     else:
         pass
-        report_runner.run_report(args.report)
+        report_runner.get_proposal_list()
+        report_runner.get_ap_ids()
+        report_runner.get_all_proposal_fields()
+        #report_runner.run_report(args.report)
         #report_runner.get_report_results()
     
     # excel_workbook = excel_writer.ExcelWriter(web_crawl.agenda_name, web_crawl)
