@@ -41,7 +41,7 @@ class ReportGenerator:
             proposals_w_data = self._get_proposal_fields(ap_id, api_filters=api_filters)
             all_proposals_w_data = [*all_proposals_w_data, *proposals_w_data]
         self.all_proposal_data = all_proposals_w_data
-        self.write_json(all_proposals_w_data, 'proposals.json')
+        self.write_json(all_proposals_w_data, 'proposals')
             
 
     def _get_proposal_fields(self, ap_id, api_filters = {}): 
