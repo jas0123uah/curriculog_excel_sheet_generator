@@ -59,8 +59,6 @@ class ExcelInputParser:
             pprint(vars(field_filter))
         return field_filter
 
-    def _get_approval_processes_ids(self, row): 
-        """Parses the Approval Proccesses Columns to return a list of approval processes that should be kept in the proposal_list. This method uses a lookup to match an approval process name to its ap_id found in the curriculog API. This list should be passed the ReportGenerator get_proposal_fields method"""
 
     def _get_sorting_rules(self): 
         """Parses the Sort By, Sort Order, and Custom Sort columns to create an array of SortingRules. Returns a list of SortingRules to pass to the PandasHelper constructor."""
