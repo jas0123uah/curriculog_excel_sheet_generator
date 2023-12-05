@@ -9,15 +9,16 @@ class ReportGenerator:
             'Content-Type': 'application/json',
             'Authorization': f'Bearer {self.api_token}'
         }
+        self.all_proposal_data = []
     
     def get_proposal_list(self): 
         """Calls /api/v1/reports/proposal to return a list of all Curriculog proposals in the system. Also stores results on ReportGenerator instance under proposal_list."""
         api_endpoint = '/api/v1/report/proposal/'
         
         url = f'{self.base_url}{api_endpoint}'
-        #response = requests.post(url=url, headers=self.headers, allow_redirects=True)
-        #report_id = response.json()['report_id']
-        report_id = '838'
+        response = requests.post(url=url, headers=self.headers, allow_redirects=True)
+        report_id = response.json()['report_id']
+        #report_id = '838'
         proposal_list = self.get_report_results(report_id)
         self.proposal_list = proposal_list
         return proposal_list
@@ -33,11 +34,14 @@ class ReportGenerator:
     
     def get_all_proposal_fields(self, api_filters):
         """Loops over self.ap_ids calling _get_proposal_fields."""
+        all_proposals_w_data = []
         print(self.ap_ids)
         for ap_id in self.ap_ids:
             print(f'Getting proposal fields for ap_id {ap_id}')
-            prop_fields = self._get_proposal_fields(ap_id, api_filters=api_filters)
-            self.write_json(prop_fields, 't')
+            proposals_w_data = self._get_proposal_fields(ap_id, api_filters=api_filters)
+            all_proposals_w_data = [*all_proposals_w_data, *proposals_w_data]
+        self.all_proposal_data = all_proposals_w_data
+        self.write_json(all_proposals_w_data, 'proposals.json')
             
 
     def _get_proposal_fields(self, ap_id, api_filters = {}): 

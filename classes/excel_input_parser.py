@@ -9,7 +9,10 @@ class ExcelInputParser:
         self.workbook = openpyxl.load_workbook(input_workbook)
         self.columns = {}
         self.fields = []
+        self.filters = []
         self.sorting_rules = []
+        #Default to an empty field instance
+        self.grouping_rule = None
         self.api_filters = {}
         self.api_field_name_from_user_friendly_field_name = {
             'Completed Date': 'completed_date',
@@ -56,6 +59,8 @@ class ExcelInputParser:
         field_filter = None
         if vals[1]: ##if there is no operator assume no filter.
             field_filter = Filter(field_name=vals[0], operator=vals[1], values=vals[2])
+            #Keep the filter by itself for easy access later
+            self.filters.append(field_filter)
             pprint(vars(field_filter))
         return field_filter
 
@@ -84,8 +89,8 @@ class ExcelInputParser:
         print(f'THE API FILTERS {self.api_filters}')
 
     def get_grouping_rule(self): 
-        """Parses the Separate Sheets By column to get the field which should be used for creating additional_dataframes in the PandasHelper instance. Return value is passed to the PandasHelper constructor."""
-        return self.workbook.active.cell(row = 2, column = self.workbook.active.max_col).value
+        """Parses the Separate Sheets By column to get the field which should be used for creating additional_dataframes in the PandasHelper instance."""
+        self.grouping_rule = self.workbook.active.cell(row = 2, column = self.workbook.active.max_col).value
     def _get_worksheet_by_columns(self):
         """Creates a dict of values in a given column of the active Excel spreadsheet"""
         #https://stackoverflow.com/questions/51478413/select-a-column-by-its-name-openpyxl

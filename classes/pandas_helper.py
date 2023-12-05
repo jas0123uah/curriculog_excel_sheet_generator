@@ -16,6 +16,9 @@ class PandasHelper:
         self.fields = fields
         self.sorting_rules = sorting_rules
         self.grouping_rule = grouping_rule
+        self.concatenated_dataframe = pd.DataFrame()
+        self.additional_dataframes = []
+        self.concatenate_proposals(self.proposal_list)
 
 
 def concatenate_proposals (self, proposals): 
@@ -48,13 +51,19 @@ def filter_concatenated_proposals(self, filters:Filter):
         elif filter_item.operator == 'BETWEEN':
             self.concatenated_dataframe = self.concatenated_dataframe[self.concatenated_dataframe[filter_item.field_name].between(filter_item.values[0], filter_item.values[1])]
 
-def sort_concatenated_proposals(self, sorting_rules:SortingRule): 
+def sort_concatenated_proposals(self, sorting_rules:list[SortingRule]): 
     """Accepts a list of SortingRule instances and sorts**concatenated_dataframe** in Pandas. Sorting is done by the first SortingRule followed by subsequent SortingRules, so SortingRule order matters. Stores sorted dataframe as the new value on concatenated_dataframe."""
+    self.convert_custom_sorts_to_categorical_columns(sorting_rules)
+    columns = list(map(lambda sorting_rule: sorting_rule.field_name, sorting_rules))
+    #Ascending works for custom bc pd.Categorical data type
+    sort_orders = [sorting_rule.sort_order in ['Ascending', 'Custom'] for sorting_rule in sorting_rules]
+    
 
-def _convert_custom_sorts_to_categorical_columns(self, sorting_rules: list[SortingRule]):
-    """Uses a """
+def convert_custom_sorts_to_categorical_columns(self, sorting_rules: list[SortingRule]):
+    """Accepts a list of sorting rules. For sorting rules with a 'Custom' sort, their corresponding pandas column is converted to a Categorical type to allow for custom sorting."""
     for sorting_rule in sorting_rules:
-        self.concatenate_dataframe[sorting_rule.field_name] = pd.Categorical(self.concatenate_dataframe[sorting_rule.field])
+        if sorting_rule.sort_order == 'Custom':
+            self.concatenate_dataframe[sorting_rule.field_name] = pd.Categorical(self.concatenate_dataframe[sorting_rule.field], sorting_rule.values)
 
 def transform_column_names(self):
     """Loops over api_field_names checking for them in the concatenated_dataframe. If found, the column name is transformed to the user-friendly name stored in api_field_names."""
@@ -64,9 +73,17 @@ def get_relevant_columns(self, fields):
     Filters concatenated_dataframe to include only columns corresponding to the passed in fields. Stores the filtered dataframe as the new value on concatenated_dataframe.
 
     fields A list of Fields passed in from the ExcelInputParser instance that should appear in the output Excel Workbook."""
+    columns = list(map(lambda field: field.field_name, fields))
+    self.concatenated_dataframe = self.concatenated_dataframe[columns]
 
 def get_additional_dataframes(self, field):
     """Using the passed in Field, concatenated_dataframe is filtered to create a new dataframe for each unique value found in the appropriate Field column. Additional dataframes are stored as entries in additional_dataframes. concatenated_dataframe is not mutated."""
+    self.get_additional_dataframe_names(field)
+    for additional_dataframe_name in self.additional_dataframe_names:
+        additional_dataframe = self.concatenated_dataframe[self.concatenated_dataframe[field.field_name] == additional_dataframe_name]
+        self.additional_dataframes.append(additional_dataframe)
+    
 
-def _get_unique_values(self, field): 
+def get_additional_dataframe_names(self, field:Field): 
     """Using the passed in Field,identify unique values within a column of concatenated_dataframe. Stores unique values as additional_dataframe_names."""
+    self.additional_dataframe_names = list(self.concatenated_dataframe[field.field_name].unique())
