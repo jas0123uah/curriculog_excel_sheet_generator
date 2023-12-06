@@ -1,28 +1,34 @@
 from .field import Field
 from .filter import Filter
 from .sorting_rule import SortingRule
+from collections import OrderedDict
 import pandas as pd
 import json
 import numpy as np
 class PandasHelper:
     
-    def concatenate_proposals (self, proposals): 
-        """Concatenates the passed in proposals to form a single Pandas dataframe. Stores the dataframe as concatenated_dataframe."""
-        all_proposals = []
-        for count, ele in enumerate(proposals, len(proposals)):
-            all_proposals.append(ele)
-        # all_keys = set().union(*map(lambda proposal: list(map(lambda field: field, proposal.fields)), all_proposals))
+    def concatenate_proposals (self, api_responses): 
+        """Analyzes the passed in api_responses to form a single Pandas dataframe. Stores the dataframe as concatenated_dataframe."""
+        
+    def _convert_proposal_field_report_to_pandas_dataframe(self, api_responses):
+        """In the API response for the Curriculog Proposal Field Report, the response nests the fields for a proposal under a list called 'fields'. This function loops over those the api_responses and the nested fields to create a pandas dataframe with a column for each field. If the field, does not exist in given proposal it will be filled with NA."""
+        #all_proposals = []
+        proposal_field_resp = api_responses['/api/v1/report/proposal_field/']
+        # for count, ele in enumerate(proposal_field_resp, len(proposal_field_resp)):
+        #     all_proposals.append(ele)
         all_keys = set()
-        for proposal in proposals:
-            print(f'PROPOSAL:{proposal}')
-            for field in proposal['fields']:
-                print(f'FIELD:{field}')
-                all_keys.add(field['label'])
-        print(f'ALL KEYS: {all_keys}')
         
         fields = []
-        for proposal in all_proposals:
+        for proposal in proposal_field_resp:
+            #Get the fields we need for dataframe
             fields.append(proposal['fields'])
+            # Add the field labels to our set for use as columns in our pandas dataframe. 
+            for field in proposal['fields']:
+                #print(f'FIELD:{field}')
+                all_keys.add(field['label'])
+        #print(f'ALL KEYS: {all_keys}')
+        
+        
         # Create a dataframe with all columns 
         df = pd.DataFrame(columns=all_keys)
         print(df)
@@ -32,11 +38,18 @@ class PandasHelper:
             
         # Fill missing values with null
         df = df.fillna(value=np.nan)
-        print(df)
         self.concatenated_dataframe = df
     
-    def __init__(self, proposal_list:list[Field], fields:list, sorting_rules, grouping_rule): 
-        """proposal_list - The unfiltered list of proposals (in JSON) obtained via calling get_proposal_list on a ReportGenerator instance. The list is transformed to a Pandas dataframe at construction.
+    def _merge_api_responses(self):
+        """The primary dataframe 'concatenated_dataframe', is composed of api responses from /api/report/proposal_field. The user may wish to include or filter based-on proposal-related data not in the /api/report/proposal_field response, e.g., Step Name. To counteract this we gather data from the proposal data from other API endpoints and join them to 'concatenated_dataframe'."""
+        for api_endpoint, api_response in self.api_responses:
+            if api_endpoint !=  '/api/v1/report/proposal_field/':
+                merge_on = self.proposal_field_merge_key[api_endpoint]
+                self.merge_dataframes(self.concatenated_dataframe, api_response, merge_on)
+    
+    def __init__(self, proposal_list_res, proposal_fields_res, user_report_res, fields:list, sorting_rules, grouping_rule): 
+        """proposal_fields_res - The JSON response with proposals and their fields from /api/v1/report/proposal_field/
+        proposal_list_res - The JSON response with the list of all proposals in Curriculog and their fields from /api/v1/report/proposal
 
         fields - A list of Fields which should appear in the dataframes that will ultimately appear in the output Excel workbook.
 
@@ -44,18 +57,30 @@ class PandasHelper:
 
         grouping_rule - A string indicating which field to use for creating additional_dataframes from concatenated_dataframes.
         """
-        self.proposal_list = proposal_list
+        # self.proposal_list = proposal_list
         self.fields = fields
         self.sorting_rules = sorting_rules
         self.grouping_rule = grouping_rule
         self.concatenated_dataframe = pd.DataFrame()
         self.additional_dataframes = []
-        self.concatenate_proposals(self.proposal_list)
+        # Use an ordered dict to indicate the order the API responses should be merged in 
+        self.api_responses = OrderedDict({
+            '/api/v1/report/proposal_field/': proposal_fields_res,
+            '/api/v1/report/proposal': proposal_list_res,
+            '/api/v1/report/user/': user_report_res,
+        })
+        self.proposal_field_merge_key = {
+            '/api/v1/report/proposal': 'proposal_id',
+            '/api/v1/report/user/': 'originator_id'  
+        }
+        self.concatenate_proposals(self.api_responses)
 
 
 
 
-
+    def merge_dataframes(self, df1, df2, merge_on):
+        """Given two dataframes and a key/column to merge on, merge them and return the resulting dataframe. Used to merge API responses from Curriculog API and allow user access to more fields."""
+        return df1.merge(df2, on=merge_on)
     def filter_concatenated_proposals(self, filters:Filter):
         """Accepts a list of Filter instances and filters concatenated_dataframe in Pandas. Stores filtered dataframe as the new value on concatenated_dataframe."""
         for filter_item in filters:

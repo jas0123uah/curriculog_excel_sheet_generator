@@ -61,7 +61,6 @@ class ExcelInputParser:
             field_filter = Filter(field_name=vals[0], operator=vals[1], values=vals[2])
             #Keep the filter by itself for easy access later
             self.filters.append(field_filter)
-            pprint(vars(field_filter))
         return field_filter
 
 
