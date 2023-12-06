@@ -1,6 +1,7 @@
 #import classes.proposal_crawler as proposal_crawler
 from classes import report_generator, excel_writer, excel_input_parser, pandas_helper
 import argparse, time
+import pandas as pd
 from pprint import pprint
 parser = argparse.ArgumentParser()
 parser.add_argument('-a', '--api_token', help="The token associated with your API key. Used to pull data from Curriculog. Tokens expire every 25 hours so make sure you have a recent token.")
@@ -23,10 +24,6 @@ else:
     report_runner.get_proposal_list()
     report_runner.get_user_list()
     report_runner.get_all_proposal_field_reports(excel_parser.api_filters)
-    # report_runner.run_report(api_endpoint='/api/v1/report/proposal/', report_type='PROPOSAL LIST')
-    # #report_runner.get_ap_ids()
-    # report_runner.run_report(api_endpoint='/api/v1/report/proposal/', report_type='PROPOSAL FIELD')
-    # report_runner.get_all_proposal_field_reports(excel_parser.api_filters)
 
 
 data_manipulator = pandas_helper.PandasHelper(
@@ -36,6 +33,9 @@ data_manipulator = pandas_helper.PandasHelper(
     fields= excel_parser.fields, 
     grouping_rule= excel_parser.grouping_rule,
     sorting_rules= excel_parser.sorting_rules)
+data_manipulator.concatenate_proposals()
+data_manipulator.transform_column_names()
 data_manipulator.filter_concatenated_proposals(excel_parser.filters)
 data_manipulator.sort_concatenated_proposals(sorting_rules=excel_parser.sorting_rules)
-data_manipulator.get_relevant_columns(excel_parser.gr)
+data_manipulator.get_relevant_columns(excel_parser.fields)
+data_manipulator.concatenated_dataframe.to_excel('test.xlsx')

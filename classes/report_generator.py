@@ -1,4 +1,4 @@
-import requests, json
+import requests, json, re
 from pprint import pprint
 class ReportGenerator:
     def __init__(self, api_token, report_id = None) -> None:
@@ -64,7 +64,7 @@ class ReportGenerator:
         response = requests.get(url=url, headers=self.headers, allow_redirects=True)
         meta = response.json()['meta']
 
-        
+        #print(meta)
         if meta['total_results'] != meta['results_current_page']:
             err = f'There are {meta["total_results"]} total results and only {meta["results_current_page"]} results are on the current page. Please contact jspenc35@utk.edu with this error and provide the report_id {report_id}.'
             raise Exception(err)
@@ -85,7 +85,7 @@ class ReportGenerator:
         self.proposal_list = self.get_report_results(args.proposal_list_report_id) 
         
         ### Pulling for /api/report/user here
-        self.users = self.get_report_results(args.user_report_id) 
+        self.user_list = self.get_report_results(args.user_report_id) 
         
         ### Pulling for /api/report/proposal_field here
         report_id_range = args.proposal_field_report_range.split(',')
