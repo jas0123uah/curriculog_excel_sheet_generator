@@ -18,46 +18,18 @@ class PandasHelper:
         
     def _convert_proposal_field_report_to_pandas_dataframe(self):
         """In the API response for the Curriculog Proposal Field Report, the response nests the fields for a proposal under a list called 'fields'. This function loops over those the api_responses and the nested fields to create a pandas dataframe with a column for each field. If the field, does not exist in given proposal it will be filled with NA."""
-        #all_proposals = []
         proposal_field_resp = self.api_responses['/api/v1/report/proposal_field/']
-        # for count, ele in enumerate(proposal_field_resp, len(proposal_field_resp)):
-        #     all_proposals.append(ele)
-        all_keys = set()
+        pandas_dict = self._get_fields_from_proposals(proposal_field_resp)
+        pandas_dict = self._get_field_values_from_proposals(pandas_dict, proposal_field_resp)
+        #print(f'Keys:{len(pandas_dict.keys())}')
+        #print(f'Keys:{pandas_dict.keys()}')
+        #print(f'Values:{len(pandas_dict.values())}')
+        self.concatenated_dataframe = pd.DataFrame.from_dict(pandas_dict)
+        print(self.concatenated_dataframe)
         
-        fields = []
-        # for proposal in proposal_field_resp:
-        #     #Nest the proposal_id into the fields, so its column is in the dataframe we make
-        #     proposal['fields'].append({
-        #         "field_id": 1, #placeholder
-        #         "label": "proposal_id",
-        #         "rich_text": False,
-        #         "tracked": True,
-        #         "value": proposal['proposal_id']
-        #     })
-        #     #Get the fields we need for dataframe
-        #     #fields.append(proposal['fields'])
-        #     # Add the field labels to our set for use as columns in our pandas dataframe. 
-        #     for field in proposal['fields']:
-        #         #print(f'FIELD:{field}')
-        #         all_keys.add(field['label'])
-        # print(f'ALL KEYS: {all_keys}')
-        
-        
-        
-        
-        # Create a dataframe with all columns 
-        # df = pd.DataFrame(columns=all_keys, )
-        # # Populate rows  
-        # for proposal_field in fields:
-        #     df = df.append(proposal_field, ignore_index=True)
-        
-        #print(df)
-            
-        # Fill missing values with null
-        #df = df.fillna(value=np.nan)
-        #self.concatenated_dataframe = df
-        
-        
+        self.concatenated_dataframe.to_csv(f'PRIOR TO MERGE.tsv', sep='}')
+    def _get_fields_from_proposals(self, proposal_field_resp):
+        """Returns a dict of field names that are found in at least one proposal. Values are an empty list."""
         pandas_dict = {}
         ##DETERMINE ALL OF THE DIFFERENT FIELDS A PROPOSAL MAY HAVE. ASSUME THE PROPOSAL_FIELD_RESP HAS DIFFERENT TYPES OF PROPOSALS
         for proposal in proposal_field_resp:
@@ -74,36 +46,47 @@ class PandasHelper:
                 if field['label'] not in ['Report']:
                     pandas_dict[field['label']] = []
             
-            
-        
-        
-        
-        for proposal in proposal_field_resp:
+        return pandas_dict
+    def _get_field_values_from_proposals(self, pandas_dict, proposal_field_resp):
+        """Loops over proposals and all possible proposal fields. If the proposal has the field its value is appended to the field label in the pandas_dict else np.nan is appended as a  placeholder."""
+        #print(f'THIS NUM PROPOSAL FIELD RESP: {len(proposal_field_resp)}')
+        #print(f'PROPOSAL FIELD RESP IS {type(proposal_field_resp)}')
+        #print(f'PROPOSAL FIELD RESP AT 0 IS {proposal_field_resp[0]}')
+        #print(f'PROPOSAL FIELD RESP AT 1 IS {proposal_field_resp[1]}')
+        #print(f'THIS IS THE NUM PANDAS DICT KEYS {len(pandas_dict.keys())}')
+        for proposal_number, proposal in enumerate(proposal_field_resp):
+            #print(f'Proposal: {proposal_number}')
             #LOOP OVER ALL POSSIBLE FIELDS A PROPOSAL MAY HAVE
-            for field_label in pandas_dict:
+            for field_num, field_label in enumerate(pandas_dict.keys()):
+                print(f'Getting field {field_label} for proposal {proposal_number}')
                 field_data = list(filter(lambda proposal_field: proposal_field['label'] == field_label, proposal['fields']))
                 if len(field_data) > 0:
                     field_data = field_data[0]
                 else:
                     field_data = None
+                if field_label == 'College':
+                    print(f'Field data for College {field_data}')
                 #If the field exists in the proposal
+                curr_list = pandas_dict[field_label]
                 if field_data:
                     #Field's data may be stored in a list or a string
                     if type(field_data['value']) is list and len(field_data['value']) > 0:
                         
-                        pandas_dict[field_label].append(field_data['value'][0])
+                        curr_list.append(field_data['value'][0])
+                        if field_label == 'College':
+                            print(f'Curr list: {curr_list}')
                     else:
-                        pandas_dict[field_label].append(field_data['value'])
+                        curr_list.append(field_data['value'])
                 #The field wasn't found in the given proposal
                 else:
                     #print(f'field['label'])
                     #pandas_dict[field['label']].append(np.nan)
-                    pandas_dict[field_label].append(np.nan)
-            for key, value in pandas_dict.items():
-                print(f'{key} has {len(value)} items')
-        self.concatenated_dataframe = pd.DataFrame.from_dict(pandas_dict)
+                    curr_list.append(np.nan)
+                pandas_dict[field_label] = curr_list
+            
+            print(f'There are {len(pandas_dict["College"])} values for the College key')
+        return pandas_dict
         
-        self.concatenated_dataframe.to_csv(f'PRIOR TO MERGE.tsv', sep='}')
     
     def _merge_api_responses(self):
         """The primary dataframe 'concatenated_dataframe', is composed of api responses from /api/report/proposal_field. The user may wish to include or filter based-on proposal-related data not in the /api/report/proposal_field response, e.g., Step Name. To counteract this we gather data from the proposal data from other API endpoints and join them to 'concatenated_dataframe'."""
@@ -164,7 +147,6 @@ class PandasHelper:
     def filter_concatenated_proposals(self, filters:Filter):
         """Accepts a list of Filter instances and filters concatenated_dataframe in Pandas. Stores filtered dataframe as the new value on concatenated_dataframe."""
         for filter_item in filters:
-            print(f'Looking for {filter_item.field_name} {filter_item.operator} {filter_item.values}')
             if filter_item.operator == '>':
                 self.concatenated_dataframe = self.concatenated_dataframe[self.concatenated_dataframe[filter_item.field_name] > filter_item.values[0]]
             elif filter_item.operator == '>=':
@@ -174,7 +156,6 @@ class PandasHelper:
             elif filter_item.operator == '<=':
                 self.concatenated_dataframe = self.concatenated_dataframe[self.concatenated_dataframe[filter_item.field_name] <= filter_item.values[0]]
             elif filter_item.operator == '=':
-                print('operator is =')
                 print(f'{filter_item.field_name} should equal: {filter_item.values[0]}')
                 self.concatenated_dataframe = self.concatenated_dataframe[self.concatenated_dataframe[filter_item.field_name] == filter_item.values[0]]
             elif filter_item.operator == '!=':

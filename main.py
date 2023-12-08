@@ -35,7 +35,7 @@ data_manipulator = pandas_helper.PandasHelper(
     sorting_rules= excel_parser.sorting_rules)
 data_manipulator.concatenate_proposals()
 data_manipulator.transform_column_names()
-data_manipulator.filter_concatenated_proposals(excel_parser.filters)
+#data_manipulator.filter_concatenated_proposals(excel_parser.filters)
 data_manipulator.sort_concatenated_proposals(sorting_rules=excel_parser.sorting_rules)
 data_manipulator.get_relevant_columns(excel_parser.fields)
 data_manipulator.concatenated_dataframe.to_excel('test.xlsx')
