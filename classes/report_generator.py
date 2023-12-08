@@ -51,6 +51,7 @@ class ReportGenerator:
             response = requests.post(url=url, headers=self.headers, data=request_params, allow_redirects=True)
         else:
             response = requests.post(url=url, headers=self.headers, allow_redirects=True)
+        #pprint(vars(response))
         report_id = response.json()['report_id']
         print(f'{report_type} IS UNDER REPORT ID: {report_id}')
         results = self.get_report_results(report_id)
@@ -64,7 +65,8 @@ class ReportGenerator:
         response = requests.get(url=url, headers=self.headers, allow_redirects=True)
         meta = response.json()['meta']
 
-        #print(meta)
+        print(f'META:{meta}')
+        print(f'Pulling results for report id {report_id}')
         if meta['total_results'] != meta['results_current_page']:
             err = f'There are {meta["total_results"]} total results and only {meta["results_current_page"]} results are on the current page. Please contact jspenc35@utk.edu with this error and provide the report_id {report_id}.'
             raise Exception(err)

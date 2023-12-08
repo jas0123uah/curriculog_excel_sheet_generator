@@ -59,6 +59,7 @@ class PandasHelper:
         
         
         pandas_dict = {}
+        ##DETERMINE ALL OF THE DIFFERENT FIELDS A PROPOSAL MAY HAVE. ASSUME THE PROPOSAL_FIELD_RESP HAS DIFFERENT TYPES OF PROPOSALS
         for proposal in proposal_field_resp:
             #Nest the proposal_id into the fields, so its column is in the dataframe we make
             proposal['fields'].append({
@@ -71,13 +72,35 @@ class PandasHelper:
             for field in proposal['fields']:
                 #FIELDS TO IGNORE BC THEY DONT PLAY NICE IN EXCEL
                 if field['label'] not in ['Report']:
-                    if field['label'] not in pandas_dict:
-                        pandas_dict[field['label']] = []
-                    if type(field['value']) is list:
+                    pandas_dict[field['label']] = []
+            
+            
+        
+        
+        
+        for proposal in proposal_field_resp:
+            #LOOP OVER ALL POSSIBLE FIELDS A PROPOSAL MAY HAVE
+            for field_label in pandas_dict:
+                field_data = list(filter(lambda proposal_field: proposal_field['label'] == field_label, proposal['fields']))
+                if len(field_data) > 0:
+                    field_data = field_data[0]
+                else:
+                    field_data = None
+                #If the field exists in the proposal
+                if field_data:
+                    #Field's data may be stored in a list or a string
+                    if type(field_data['value']) is list and len(field_data['value']) > 0:
                         
-                        pandas_dict[field['label']].append(field['value'][0])
+                        pandas_dict[field_label].append(field_data['value'][0])
                     else:
-                        pandas_dict[field['label']].append(field['value'])
+                        pandas_dict[field_label].append(field_data['value'])
+                #The field wasn't found in the given proposal
+                else:
+                    #print(f'field['label'])
+                    #pandas_dict[field['label']].append(np.nan)
+                    pandas_dict[field_label].append(np.nan)
+            for key, value in pandas_dict.items():
+                print(f'{key} has {len(value)} items')
         self.concatenated_dataframe = pd.DataFrame.from_dict(pandas_dict)
         
         self.concatenated_dataframe.to_csv(f'PRIOR TO MERGE.tsv', sep='}')
@@ -87,10 +110,10 @@ class PandasHelper:
         for api_endpoint, api_response in self.api_responses.items():
             normal = api_endpoint.replace('/', '_')
             self.concatenated_dataframe.to_csv(f'dataframe_for_{normal}.tsv', sep='\t')
+            self.write_json(api_response, api_endpoint.replace('/', '_'))
             if api_endpoint !=  '/api/v1/report/proposal_field/':
                 merge_on = self.proposal_field_merge_key[api_endpoint]
                 #print(f'Merging in this API response: {api_response}')
-                self.write_json(api_response, api_endpoint.replace('/', '_'))
                 api_resp_as_df = pd.DataFrame.from_dict(api_response)
                 if 'user_id' in api_resp_as_df.columns:
                     api_resp_as_df.rename(columns={'user_id':'originator_id'}, inplace=True)

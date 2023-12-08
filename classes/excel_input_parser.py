@@ -47,6 +47,9 @@ class ExcelInputParser:
                 field_name=self._get_value_in_column(row=row_cells, column='Field'), 
                 comment_field=self._get_value_in_column(row=row_cells, column='Field Comment'), 
                 filters=field_filter)
+            # print('APPENDING:\n')
+            # if(field.filters):
+            #     pprint(vars(field.filters))
             self.fields.append(field)
 
     def _get_field_filters(self, row) -> Filter: 
@@ -61,7 +64,7 @@ class ExcelInputParser:
             field_filter = Filter(field_name=vals[0], operator=vals[1], values=vals[2].split(","))
             #Keep the filter by itself for easy access later
             self.filters.append(field_filter)
-            pprint(vars(field_filter))
+            #pprint(vars(field_filter))
         return field_filter
 
 
@@ -80,10 +83,12 @@ class ExcelInputParser:
     def get_api_filters(self):
         """Loops over self.fields to get all fields that may be used in API filtering."""
         api_filters = {}
+        #print(self.fields)
+        #pprint(vars(self.fields))
         for field in self.fields:
             api_filter_field = self.api_field_name_from_user_friendly_field_name.get(field.field_name)
-            ##The only operator the api supports is =. Everything else we will do on our own
-            if api_filter_field and field.filters.operator == '=':
+            ##The only operator the api supports is =. Everything else we will do on our 
+            if api_filter_field and field.filters and field.filters.operator == '=':
                 api_filters[api_filter_field] = field.filters.values
         self.api_filters = api_filters
         print(f'THE API FILTERS {self.api_filters}')
