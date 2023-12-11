@@ -1,4 +1,4 @@
-import requests, json, re, time
+import requests, json, re, time, os
 import datetime
 from pprint import pprint
 from .field import Field
@@ -104,7 +104,10 @@ class ReportGenerator:
     
     def get_report_results(self, report_id): 
         """Given a report_id call /api/v1/report/result/{report_id} to get the results for a Curriculog report."""
-
+        if os.path.exists(f'./reports/{report_id}.json'):
+            with open(f'./reports/{report_id}.json', 'r') as f:
+                data = f.read()
+                return json.loads(data)
         api_endpoint = f'/api/v1/report/result/{report_id}'
         url = f'{self.base_url}{api_endpoint}'
         response = requests.get(url=url, headers=self.headers, allow_redirects=True)
@@ -113,8 +116,6 @@ class ReportGenerator:
         #print(f'META:{meta}')
         #print(response.json())
         print(f'Pulling results for report id {report_id}')
-        if report_id == '1486':
-            pprint(vars(response))
         no_results = 'error' in meta and 'message' in meta['error'] and 'No results' in meta['error']['message']
         if no_results:
             remaining_num_attempts = 30
@@ -131,6 +132,7 @@ class ReportGenerator:
         if meta['total_results'] != meta['results_current_page']:
             err = f'There are {meta["total_results"]} total results and only {meta["results_current_page"]} results are on the current page. Please contact jspenc35@utk.edu with this error and provide the report_id {report_id}.'
             raise Exception(err)
+        self.write_json(response.json()['results'], f'./reports/{report_id}')
         return response.json()['results']
     ######## MISC FUNCTIONS ########
     def get_ap_ids(self): 
@@ -144,15 +146,17 @@ class ReportGenerator:
 
     def pull_previous_results(self, args):
         """Wrapper function that makes it possible to recreate previous runs of the script."""
+        os.makedirs('reports', exist_ok=True)
         ### Pulling for /api/report/proposal here
     
         
         self.proposal_list = self.get_report_results(args.proposal_list_report_id) 
+        #all_results = list(filter(lambda proposal: proposal['proposal_status'] != 'deleted',all_results))
         
         ### Pulling for /api/report/user here
         self.user_list = self.get_report_results(args.user_report_id) 
         
-        self.field_differences = self.get_report_results(args.proposal_field_difference_report)
+        #self.field_differences = self.get_report_results(args.proposal_field_difference_report)
         ### Pulling for /api/report/proposal_field here
         report_id_range = args.proposal_field_report_range.split(',')
         
@@ -161,6 +165,7 @@ class ReportGenerator:
             print(f'Pulling results for report id {report_id}.')
             results = self.get_report_results(report_id)
             all_results = [*all_results, *results]
+        #Remove deleted proposals from the results
         self.all_proposal_data = all_results
     # def get_report_state(self):
     #     """Queries the Curriculog API to return the state of a given report. Reports may be in a QUEUED, RUNNING, or ERROR state."""

@@ -1,10 +1,12 @@
 from .field import Field
 from .filter import Filter
+from .flattener import Flattener
 from .sorting_rule import SortingRule
 from collections import OrderedDict
 import pandas as pd
 import json
 import numpy as np
+from pprint import pprint
 class PandasHelper:
     
     def concatenate_proposals (self): 
@@ -27,6 +29,7 @@ class PandasHelper:
     def _get_fields_from_proposals(self, proposal_field_resp):
         """Returns a dict of field names that are found in at least one proposal. Values are an empty list."""
         pandas_dict = {}
+        #NEEDS MODIFIED
         ##DETERMINE ALL OF THE DIFFERENT FIELDS A PROPOSAL MAY HAVE. ASSUME THE PROPOSAL_FIELD_RESP HAS DIFFERENT TYPES OF PROPOSALS
         for proposal in proposal_field_resp:
             #Nest the proposal_id into the fields, so its column is in the dataframe we make
@@ -38,35 +41,51 @@ class PandasHelper:
                 "value": proposal['proposal_id']
             })
             for field in proposal['fields']:
+                field_label = field['label']
+                #NORMALIZE THE FIELD LABEL/ COMBINE REDUNDANT FIELDS TO A SINGLE COLUMN
+                if field_label in self.normalized_api_field_names:
+                    field_label = self.normalized_api_field_names[field_label]
+                    
                 #FIELDS TO IGNORE BC THEY DONT PLAY NICE IN EXCEL
-                if field['label'] not in ['Report']:
-                    pandas_dict[field['label']] = []
+                if field_label not in ['Report', 'Requirements']:
+                    pandas_dict[field_label] = []
             
         return pandas_dict
     def _get_field_values_from_proposals(self, pandas_dict, proposal_field_resp):
         """Loops over proposals and all possible proposal fields. If the proposal has the field its value is appended to the field label in the pandas_dict else np.nan is appended as a  placeholder."""
+        ####NEEDS MODIFIED
         for proposal_number, proposal in enumerate(proposal_field_resp):
             #LOOP OVER ALL POSSIBLE FIELDS A PROPOSAL MAY HAVE
             for field_num, field_label in enumerate(pandas_dict.keys()):
-                print(f'Getting field {field_label} for proposal {proposal_number}')
-                field_data = list(filter(lambda proposal_field: proposal_field['label'] == field_label, proposal['fields']))
-                if len(field_data) > 0:
-                    field_data = field_data[0]
-                else:
-                    field_data = None
-                if field_label == 'College':
-                    print(f'Field data for College {field_data}')
+                #print(f'Getting field {field_label} for proposal {proposal_number}')
+                field_data = list(filter(lambda proposal_field: proposal_field['label'] == field_label or ( field_label in self.fields_represented_by_normalized_field_name and proposal_field['label'] in self.fields_represented_by_normalized_field_name[field_label]), proposal['fields']))
+                # if len(field_data) == 0:
+                #     field_data = None
+                #     field_data = field_data[0]
+                # else:
+                
                 #If the field exists in the proposal
                 curr_list = pandas_dict[field_label]
-                if field_data:
-                    #Field's data may be stored in a list or a string
-                    if type(field_data['value']) is list and len(field_data['value']) > 0:
-                        
-                        curr_list.append(field_data['value'][0])
-                        if field_label == 'College':
-                            print(f'Curr list: {curr_list}')
-                    else:
-                        curr_list.append(field_data['value'])
+                
+                ## Will return a list that is at most nested two level deep
+                #Should be a list of fields w/ each entry having the attribute 'value'
+                #print(f'FIELD LABEL {field_label}')
+                #print(f'FIELD DATA: {field_data}\n')
+                all_data_for_field = list(map(lambda datum: [datum['value']], field_data))
+                #https://realpython.com/python-flatten-list/#using-a-comprehension-to-flatten-a-list-of-lists
+                #flattened = [item for row in all_data_for_field for item in row]
+                #flattened = self.flatten(all_data_for_field)
+                flattener = Flattener()
+                #print(f'ALL_DATA_FOR_FIELD:{all_data_for_field}\nField Label:{field_label}')
+                #print(len(all_data_for_field))
+                flattened = flattener.flatten(all_data_for_field)
+                #print(f'FLATTENED:{flattened}')
+                if field_label != 'proposal_id':
+                    data_string = ", ".join(flattened)
+                else:
+                    data_string = flattened[0]
+                if data_string != "":
+                    curr_list.append(data_string)
                 #The field wasn't found in the given proposal
                 else:
                     #print(f'field['label'])
@@ -74,7 +93,6 @@ class PandasHelper:
                     curr_list.append(np.nan)
                 pandas_dict[field_label] = curr_list
             
-            print(f'There are {len(pandas_dict["College"])} values for the College key')
         return pandas_dict
         
     
@@ -86,8 +104,10 @@ class PandasHelper:
             self.write_json(api_response, api_endpoint.replace('/', '_'))
             if api_endpoint !=  '/api/v1/report/proposal_field/':
                 merge_on = self.proposal_field_merge_key[api_endpoint]
-                #print(f'Merging in this API response: {api_response}')
+                #print(self.concatenated_dataframe[merge_on])
+                #print(f'Merging in this API response: {api_response} on key {merge_on}')
                 api_resp_as_df = pd.DataFrame.from_dict(api_response)
+                
                 if 'user_id' in api_resp_as_df.columns:
                     api_resp_as_df.rename(columns={'user_id':'originator_id'}, inplace=True)
                 self.concatenated_dataframe = self.merge_dataframes(self.concatenated_dataframe, api_resp_as_df, merge_on)
@@ -125,8 +145,22 @@ class PandasHelper:
             'proposal_status': 'Proposal Status',
             'proposal_type': 'Proposal Type',
             'step_name': 'Step Name',
-            'url': 'URL'
+            'url': 'URL',
+            'course_number_and_code': 'Course Number and Code',
+            'credit_hours': 'Credit Hours',
+            'cross_listing': 'Crosslisting',
+            'department': 'Department',
+            'corequisities': 'Corequisites',
+            'equivalency_chart': 'Equivalency Chart',
+            'grading_restriction': 'Grading Restriction',
+            'crosslisting_relationship': 'Crosslisting Relationship',
+            'prerequisites': 'Prerequisites',
+            'will_be_crosslisted': 'Will be Crosslisted',
+            'transcript_name': 'Transcript Name',
+            'catalog_name': 'Catalog Name',
+            
         }
+        
         #Some fields and their labels represent the same concept (are redundant) - represent these fields with a normalized name so that their data is in a single column.
         self.normalized_api_field_names = {
             'Course Number/Code (max 3 characters)': 'course_number_and_code',
@@ -156,9 +190,20 @@ class PandasHelper:
             'Registration Enforced (RE) Prerequisite(s):': 'prerequisites',
             'Will this course be crosslisted?': 'will_be_crosslisted',
             'Will this course be cross-listed?': 'will_be_crosslisted',
+            'Transcript Name': 'transcript_name',
+            'Transcript Name (max 30 characters)': 'transcript_name',
+            'Catalog Name': 'catalog_name',
+            'Catalog Name (max 100 characters)': 'catalog_name'
             
             
         }
+        #Create a reverse of the lookup above
+        self.fields_represented_by_normalized_field_name = {}
+        for key, value in self.normalized_api_field_names.items():
+            if value not in self.fields_represented_by_normalized_field_name:
+                self.fields_represented_by_normalized_field_name[value] = [key]
+            else:
+                self.fields_represented_by_normalized_field_name[value].append(key)
 
 
 
@@ -168,7 +213,9 @@ class PandasHelper:
         return df1.merge(df2, on=merge_on)
     def filter_concatenated_proposals(self, filters:Filter):
         """Accepts a list of Filter instances and filters concatenated_dataframe in Pandas. Stores filtered dataframe as the new value on concatenated_dataframe."""
+        self.concatenated_dataframe = self.concatenated_dataframe[self.concatenated_dataframe['Proposal Status'] != 'deleted']
         for filter_item in filters:
+            pprint(vars(filter_item))
             if filter_item.operator == '>':
                 self.concatenated_dataframe = self.concatenated_dataframe[self.concatenated_dataframe[filter_item.field_name] > filter_item.values[0]]
             elif filter_item.operator == '>=':
@@ -178,8 +225,8 @@ class PandasHelper:
             elif filter_item.operator == '<=':
                 self.concatenated_dataframe = self.concatenated_dataframe[self.concatenated_dataframe[filter_item.field_name] <= filter_item.values[0]]
             elif filter_item.operator == '=':
-                print(f'{filter_item.field_name} should equal: {filter_item.values[0]}')
-                self.concatenated_dataframe = self.concatenated_dataframe[self.concatenated_dataframe[filter_item.field_name] == filter_item.values[0]]
+                print(f'{filter_item.field_name} should equal: {filter_item.values[0].lower()}')
+                self.concatenated_dataframe = self.concatenated_dataframe[self.concatenated_dataframe[filter_item.field_name] == filter_item.values[0].lower()]
             elif filter_item.operator == '!=':
                 self.concatenated_dataframe = self.concatenated_dataframe[self.concatenated_dataframe[filter_item.field_name] != filter_item.values[0]]
             elif filter_item.operator == 'IN':
@@ -198,7 +245,7 @@ class PandasHelper:
         columns = list(map(lambda sorting_rule: sorting_rule.field_name, sorting_rules))
         #Ascending works for custom bc pd.Categorical data type
         sort_orders = [sorting_rule.sort_order in ['Ascending', 'Custom'] for sorting_rule in sorting_rules]
-        print(f'Columns:\n{columns}Sort Order:{sort_orders}')
+        # print(f'Columns:\n{columns}Sort Order:{sort_orders}')
         self.concatenated_dataframe.sort_values(by=columns, ascending=sort_orders)
         
 
@@ -208,7 +255,7 @@ class PandasHelper:
             #ignore if column does not exist in results
             if sorting_rule.sort_order == 'Custom':
                 print(f'The column {sorting_rule.field_name} will be sorted in the following order {sorting_rule.values}')
-                self.concatenated_dataframe[sorting_rule.field_name] = pd.Categorical(self.concatenated_dataframe[sorting_rule.field_name], sorting_rule.values)
+                self.concatenated_dataframe[sorting_rule.field_name] = pd.Categorical(self.concatenated_dataframe[sorting_rule.field_name], sorting_rule.values.split(","))
 
     def transform_column_names(self):
         """Loops over self.concatenated_dataframe.columns checking for columns that need to be transformed to match the name given in the Input Excel. If found, the column name is transformed to the user-friendly name stored in api_field_names."""
@@ -226,7 +273,7 @@ class PandasHelper:
         columns = list(map(lambda field: field.field_name, fields))
         #Get which columns aren't in the concatenated dataframe
         missing_columns = list (filter(lambda column: column not in self.concatenated_dataframe.columns, columns))
-        print(f'The columns {", ".join(missing_columns)} are not relevant to any of the returned proposals and will not appear in the output Excel workbook. If you believe you have received this message in error please email: jspenc35@utk.edu')
+        print(f'The column(s) {", ".join(missing_columns)} are not relevant to any of the returned proposals and will not appear in the output Excel workbook. If you believe you have received this message in error please email: jspenc35@utk.edu')
         #Only ask for the columns which actually exist in the concatenated dataframe
         columns = list(filter(lambda column: column in self.concatenated_dataframe.columns, columns))
         self.concatenated_dataframe = self.concatenated_dataframe[columns]
