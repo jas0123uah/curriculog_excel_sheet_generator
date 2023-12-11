@@ -45,13 +45,7 @@ class PandasHelper:
         return pandas_dict
     def _get_field_values_from_proposals(self, pandas_dict, proposal_field_resp):
         """Loops over proposals and all possible proposal fields. If the proposal has the field its value is appended to the field label in the pandas_dict else np.nan is appended as a  placeholder."""
-        #print(f'THIS NUM PROPOSAL FIELD RESP: {len(proposal_field_resp)}')
-        #print(f'PROPOSAL FIELD RESP IS {type(proposal_field_resp)}')
-        #print(f'PROPOSAL FIELD RESP AT 0 IS {proposal_field_resp[0]}')
-        #print(f'PROPOSAL FIELD RESP AT 1 IS {proposal_field_resp[1]}')
-        #print(f'THIS IS THE NUM PANDAS DICT KEYS {len(pandas_dict.keys())}')
         for proposal_number, proposal in enumerate(proposal_field_resp):
-            #print(f'Proposal: {proposal_number}')
             #LOOP OVER ALL POSSIBLE FIELDS A PROPOSAL MAY HAVE
             for field_num, field_label in enumerate(pandas_dict.keys()):
                 print(f'Getting field {field_label} for proposal {proposal_number}')
@@ -132,6 +126,38 @@ class PandasHelper:
             'proposal_type': 'Proposal Type',
             'step_name': 'Step Name',
             'url': 'URL'
+        }
+        #Some fields and their labels represent the same concept (are redundant) - represent these fields with a normalized name so that their data is in a single column.
+        self.normalized_api_field_names = {
+            'Course Number/Code (max 3 characters)': 'course_number_and_code',
+            'Course Number/Code (max 4 characters)': 'course_number_and_code',
+            'Course Number/Code (max 4 characters: 3 numerals + optional 1 letter: N, R, S)': 'course_number_and_code',
+            'Course Number/Code (max 4 characters: 3 numerals and optional 1 letter: N, R, S)': 'course_number_and_code',
+            'Credit Hours': 'credit_hours',
+            'Credit Hours (max 4 characters)': 'credit_hours',
+            'Credit Hours (max 8 characters)': 'credit_hours',
+            'Cross-Listing': 'cross_listing',
+            'Cross-Listing?': 'cross_listing',
+            'Department (Acalog Hierarchy)': 'department',
+            'Department': 'department',
+            'Department Enforced (DE) Corequisite(s)': 'corequisites',
+            'Department Enforced (DE) Corequisite(s):': 'corequisites',
+            'Equivalency Chart': 'equivalency_chart',
+            'Equivalency Table': 'equivalency_chart',
+            'Grading Restriction': 'grading_restriction',
+            'Grading Restriction (Non-standard Grade Modes)': 'grading_restriction',
+            'Grading Restriction (Non-standard Grade Modes) ': 'grading_restriction',
+            'Grading Restriction (Other Grade Modes)': 'grading_restriction',
+            'Indicate the location on the page where this information will appear. ': 'info_location',
+            'Indicate the location on the page(s) where this information will appear. ': 'info_location',
+            'List all courses in this crosslisting relationship and note whether primary or secondary': 'crosslisting_relationship',
+            'List all courses in this crosslisting relationship and note whether primary or secondary.': 'crosslisting_relationship',
+            'Registration Enforced (RE) Prerequisite(s)': 'prerequisites',
+            'Registration Enforced (RE) Prerequisite(s):': 'prerequisites',
+            'Will this course be crosslisted?': 'will_be_crosslisted',
+            'Will this course be cross-listed?': 'will_be_crosslisted',
+            
+            
         }
 
 
