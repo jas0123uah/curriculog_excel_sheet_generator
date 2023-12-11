@@ -21,11 +21,7 @@ class PandasHelper:
         proposal_field_resp = self.api_responses['/api/v1/report/proposal_field/']
         pandas_dict = self._get_fields_from_proposals(proposal_field_resp)
         pandas_dict = self._get_field_values_from_proposals(pandas_dict, proposal_field_resp)
-        #print(f'Keys:{len(pandas_dict.keys())}')
-        #print(f'Keys:{pandas_dict.keys()}')
-        #print(f'Values:{len(pandas_dict.values())}')
         self.concatenated_dataframe = pd.DataFrame.from_dict(pandas_dict)
-        print(self.concatenated_dataframe)
         
         self.concatenated_dataframe.to_csv(f'PRIOR TO MERGE.tsv', sep='}')
     def _get_fields_from_proposals(self, proposal_field_resp):

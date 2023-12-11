@@ -1,5 +1,7 @@
-import requests, json, re
+import requests, json, re, time
+import datetime
 from pprint import pprint
+from .field import Field
 class ReportGenerator:
     def __init__(self, api_token, report_id = None) -> None:
         self.api_token = api_token
@@ -12,6 +14,17 @@ class ReportGenerator:
         self.all_proposal_data = []
         #Default empty list for api/v1/reports/user/ report
         self.user_list = []
+        
+        ##Used to identify field ids to ask for in proposal_diff report
+        self.normalized_field_names = {
+            'Course Number/Code': ['Course Number/Code (max 3 characters)',
+                                'Course Number/Code (max 4 characters: 3 numerals + optional 1 letter: N, R, S)',
+                                'Course Number/Code (max 4 characters: 3 numerals and optional 1 letter: N, R, S)']
+        }
+        
+        ## {
+            # The 'normalized' field name used in the input Excel workbook: ['Duplicate Curriculog Field Label representing the same concept', 'Represents the same concept']
+        ## }
     ######## WRAPPER FUNCTIONS W/ USER-FRIENDLY NAMES FOR RUNNING CURRICULOG API REPORTS ########
     def get_proposal_list(self):
         """Wrapper function for handling API call to'/api/v1/report/proposal/'"""
@@ -40,9 +53,41 @@ class ReportGenerator:
             all_proposals_w_data = [*all_proposals_w_data, *proposals_w_data]
         self.all_proposal_data = all_proposals_w_data
         self.write_json(all_proposals_w_data, 'proposals')
-            
-
     
+    def get_field_differences_report(self, fields): 
+        """Calls /api/v1/report/proposal_field_diff/ with a set of field_ids to get their current and original values. Accepts a list of Fields"""
+        field_ids = self._get_field_ids_from_fields(fields)
+        request_params = {'field_id': field_ids}
+        request_params = json.dumps(request_params)
+        print(f'DUMP:{request_params}')
+        self.field_differences = self.run_report(api_endpoint='/api/v1/report/proposal_field_diff/', request_params=request_params, report_type='PROPOSAL FIELD DIFF')
+        self.write_json(self.field_differences, 'proposal_field_difference')
+        return self.field_differences
+    
+    def _get_field_ids_from_fields(self, fields:list[Field]):
+        """Returns the field ids for the fields/columns requested in the output Excel workbook. Field ids are used in call to /api/v1/report/proposal_field_diff/ """
+        requested_field_names = list(map(lambda field:field.field_name, fields))
+        
+        all_field_names = []
+        for field_name in requested_field_names:
+            if field_name in self.normalized_field_names:
+                other_field_names = self.normalized_field_names[field_name]
+                all_field_names.append(other_field_names)
+            else:
+                all_field_names.append([field_name])
+        
+        all_field_names =  [item for row in all_field_names for item in row]
+        
+
+        field_ids = []
+        for proposal in self.all_proposal_data:
+            if len(field_ids) == len(all_field_names):
+                return field_ids #return early if we've found all of the requested fields field ids'
+            for field_name in all_field_names:
+                match = next((x for x in proposal['fields'] if x['label'] == field_name), None)
+                if match and match['field_id'] not in field_ids:
+                    field_ids.append(match['field_id'])
+        return field_ids
     ######## BASE-LEVEL FUNCTIONS USED BY WRAPPER FUNCTIONS TO INTERACT WITH THE API ########
     def run_report(self, *, api_endpoint, request_params= None, report_type, ):
         """Sends POST request to Curriculog api_endpoint. Report_type prints a helpful message for retrieving the report for debugging purposes."""        
@@ -51,7 +96,7 @@ class ReportGenerator:
             response = requests.post(url=url, headers=self.headers, data=request_params, allow_redirects=True)
         else:
             response = requests.post(url=url, headers=self.headers, allow_redirects=True)
-        #pprint(vars(response))
+        pprint(vars(response))
         report_id = response.json()['report_id']
         print(f'{report_type} IS UNDER REPORT ID: {report_id}')
         results = self.get_report_results(report_id)
@@ -65,8 +110,24 @@ class ReportGenerator:
         response = requests.get(url=url, headers=self.headers, allow_redirects=True)
         meta = response.json()['meta']
 
-        print(f'META:{meta}')
+        #print(f'META:{meta}')
+        #print(response.json())
         print(f'Pulling results for report id {report_id}')
+        if report_id == '1486':
+            pprint(vars(response))
+        no_results = 'error' in meta and 'message' in meta['error'] and 'No results' in meta['error']['message']
+        if no_results:
+            remaining_num_attempts = 30
+            remaining_num_attempts -= 1
+            while no_results and remaining_num_attempts:
+                now = datetime.datetime.now()
+                sixty_secs_from_now = now + datetime.timedelta(0, 60)
+                print(f"No results for report id {report_id}. Waiting 60 seconds and trying again at {sixty_secs_from_now.strftime('%I:%M:%S')}. {remaining_num_attempts} attempts remaining.")
+                time.sleep(60)
+                response = requests.get(url=url, headers=self.headers, allow_redirects=True)
+                meta = response.json()['meta']
+                no_results = 'error' in meta and 'message' in meta['error'] and 'No results' in meta['error']['message']
+        
         if meta['total_results'] != meta['results_current_page']:
             err = f'There are {meta["total_results"]} total results and only {meta["results_current_page"]} results are on the current page. Please contact jspenc35@utk.edu with this error and provide the report_id {report_id}.'
             raise Exception(err)
@@ -84,11 +145,14 @@ class ReportGenerator:
     def pull_previous_results(self, args):
         """Wrapper function that makes it possible to recreate previous runs of the script."""
         ### Pulling for /api/report/proposal here
+    
+        
         self.proposal_list = self.get_report_results(args.proposal_list_report_id) 
         
         ### Pulling for /api/report/user here
         self.user_list = self.get_report_results(args.user_report_id) 
         
+        self.field_differences = self.get_report_results(args.proposal_field_difference_report)
         ### Pulling for /api/report/proposal_field here
         report_id_range = args.proposal_field_report_range.split(',')
         
