@@ -115,7 +115,7 @@ class ReportGenerator:
 
         #print(f'META:{meta}')
         #print(response.json())
-        print(f'Pulling results for report id {report_id}')
+        print(f'Pulling results for report id {report_id}.')
         no_results = 'error' in meta and 'message' in meta['error'] and 'No results' in meta['error']['message']
         if no_results:
             remaining_num_attempts = 30

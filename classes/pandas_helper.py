@@ -72,9 +72,7 @@ class PandasHelper:
                 #print(f'FIELD LABEL {field_label}')
                 #print(f'FIELD DATA: {field_data}\n')
                 all_data_for_field = list(map(lambda datum: [datum['value']], field_data))
-                #https://realpython.com/python-flatten-list/#using-a-comprehension-to-flatten-a-list-of-lists
-                #flattened = [item for row in all_data_for_field for item in row]
-                #flattened = self.flatten(all_data_for_field)
+    
                 flattener = Flattener()
                 #print(f'ALL_DATA_FOR_FIELD:{all_data_for_field}\nField Label:{field_label}')
                 #print(len(all_data_for_field))
@@ -84,13 +82,18 @@ class PandasHelper:
                     data_string = ", ".join(flattened)
                 else:
                     data_string = flattened[0]
+                # if field_label == 'Impact Level':
+                #     print(f'IMPACT LEVEL {data_string}')
                 if data_string != "":
                     curr_list.append(data_string)
                 #The field wasn't found in the given proposal
                 else:
                     #print(f'field['label'])
                     #pandas_dict[field['label']].append(np.nan)
-                    curr_list.append(np.nan)
+                    #if field_label == 'Impact Level':
+                        #print('WE HIT ELSE')
+                    #curr_list.append(np.nan)
+                    curr_list.append('')
                 pandas_dict[field_label] = curr_list
             
         return pandas_dict
@@ -158,6 +161,7 @@ class PandasHelper:
             'will_be_crosslisted': 'Will be Crosslisted',
             'transcript_name': 'Transcript Name',
             'catalog_name': 'Catalog Name',
+            'ap_name': 'Action',
             
         }
         
@@ -245,8 +249,8 @@ class PandasHelper:
         columns = list(map(lambda sorting_rule: sorting_rule.field_name, sorting_rules))
         #Ascending works for custom bc pd.Categorical data type
         sort_orders = [sorting_rule.sort_order in ['Ascending', 'Custom'] for sorting_rule in sorting_rules]
-        # print(f'Columns:\n{columns}Sort Order:{sort_orders}')
-        self.concatenated_dataframe.sort_values(by=columns, ascending=sort_orders)
+        print(f'Columns:\n{columns}\nSort Order:{sort_orders}')
+        self.concatenated_dataframe.sort_values(by=columns, ascending=sort_orders, inplace=True)
         
 
     def convert_custom_sorts_to_categorical_columns(self, sorting_rules: list[SortingRule]):
@@ -255,7 +259,11 @@ class PandasHelper:
             #ignore if column does not exist in results
             if sorting_rule.sort_order == 'Custom':
                 print(f'The column {sorting_rule.field_name} will be sorted in the following order {sorting_rule.values}')
-                self.concatenated_dataframe[sorting_rule.field_name] = pd.Categorical(self.concatenated_dataframe[sorting_rule.field_name], sorting_rule.values.split(","))
+                sort_order = sorting_rule.values.split(",")
+                #Explicitly sort blanks last.
+                sort_order.append('')
+                print(f'SORT ORDER:{sort_order}')
+                self.concatenated_dataframe[sorting_rule.field_name] = pd.Categorical(self.concatenated_dataframe[sorting_rule.field_name], sort_order)
 
     def transform_column_names(self):
         """Loops over self.concatenated_dataframe.columns checking for columns that need to be transformed to match the name given in the Input Excel. If found, the column name is transformed to the user-friendly name stored in api_field_names."""
@@ -273,7 +281,8 @@ class PandasHelper:
         columns = list(map(lambda field: field.field_name, fields))
         #Get which columns aren't in the concatenated dataframe
         missing_columns = list (filter(lambda column: column not in self.concatenated_dataframe.columns, columns))
-        print(f'The column(s) {", ".join(missing_columns)} are not relevant to any of the returned proposals and will not appear in the output Excel workbook. If you believe you have received this message in error please email: jspenc35@utk.edu')
+        if len(missing_columns):
+            print(f'The column(s) {", ".join(missing_columns)} are not relevant to any of the returned proposals and will not appear in the output Excel workbook. If you believe you have received this message in error please email: jspenc35@utk.edu')
         #Only ask for the columns which actually exist in the concatenated dataframe
         columns = list(filter(lambda column: column in self.concatenated_dataframe.columns, columns))
         self.concatenated_dataframe = self.concatenated_dataframe[columns]
