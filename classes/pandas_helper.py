@@ -4,7 +4,7 @@ from .flattener import Flattener
 from .sorting_rule import SortingRule
 from collections import OrderedDict
 import pandas as pd
-import json
+import json, re
 import numpy as np
 from pprint import pprint
 class PandasHelper:
@@ -40,6 +40,36 @@ class PandasHelper:
                 "tracked": True,
                 "value": proposal['proposal_id']
             })
+            proposal_list_data = self._find_proposal_in_proposal_list(proposal['proposal_id'])
+            proposal['fields'].append({
+                "field_id": 90, #placeholder
+                "label": "ap_name",
+                "rich_text": False,
+                "tracked": True,
+                "value": proposal_list_data['ap_name']
+            })
+            proposal['fields'].append({
+                "field_id": 2, #placeholder
+                "label": "coll_level",
+                "rich_text": False,
+                "tracked": True,
+                "value": self._get_level_from_proposal(proposal_list_data)
+            })
+            proposal['fields'].append({
+                "field_id": 3, #placeholder
+                "label": "catalog_year",
+                "rich_text": False,
+                "tracked": True,
+                "value": self._get_catalog_year_from_proposal(proposal_list_data)
+            })
+            proposal['fields'].append({
+                "field_id": 4, #placeholder
+                "label": "trimmed_ap_name",
+                "rich_text": False,
+                "tracked": True,
+                "value": self._trim_ap_name(proposal_list_data)
+            })
+            
             for field in proposal['fields']:
                 field_label = field['label']
                 #NORMALIZE THE FIELD LABEL/ COMBINE REDUNDANT FIELDS TO A SINGLE COLUMN
@@ -59,39 +89,24 @@ class PandasHelper:
             for field_num, field_label in enumerate(pandas_dict.keys()):
                 #print(f'Getting field {field_label} for proposal {proposal_number}')
                 field_data = list(filter(lambda proposal_field: proposal_field['label'] == field_label or ( field_label in self.fields_represented_by_normalized_field_name and proposal_field['label'] in self.fields_represented_by_normalized_field_name[field_label]), proposal['fields']))
-                # if len(field_data) == 0:
-                #     field_data = None
-                #     field_data = field_data[0]
-                # else:
-                
+    
                 #If the field exists in the proposal
                 curr_list = pandas_dict[field_label]
                 
                 ## Will return a list that is at most nested two level deep
                 #Should be a list of fields w/ each entry having the attribute 'value'
-                #print(f'FIELD LABEL {field_label}')
-                #print(f'FIELD DATA: {field_data}\n')
                 all_data_for_field = list(map(lambda datum: [datum['value']], field_data))
     
                 flattener = Flattener()
-                #print(f'ALL_DATA_FOR_FIELD:{all_data_for_field}\nField Label:{field_label}')
-                #print(len(all_data_for_field))
                 flattened = flattener.flatten(all_data_for_field)
-                #print(f'FLATTENED:{flattened}')
                 if field_label != 'proposal_id':
                     data_string = ", ".join(flattened)
                 else:
                     data_string = flattened[0]
-                # if field_label == 'Impact Level':
-                #     print(f'IMPACT LEVEL {data_string}')
                 if data_string != "":
                     curr_list.append(data_string)
                 #The field wasn't found in the given proposal
                 else:
-                    #print(f'field['label'])
-                    #pandas_dict[field['label']].append(np.nan)
-                    #if field_label == 'Impact Level':
-                        #print('WE HIT ELSE')
                     #curr_list.append(np.nan)
                     curr_list.append('')
                 pandas_dict[field_label] = curr_list
@@ -99,6 +114,12 @@ class PandasHelper:
         return pandas_dict
         
     
+    def _find_proposal_in_proposal_list(self, proposal_id):
+        """Returns the data associated with a proposal id in the /api/report/proposal response."""
+        proposal_list = self.api_responses['/api/v1/report/proposal']
+        match = next((x for x in proposal_list if x['proposal_id'] == proposal_id), None)
+        return match
+        
     def _merge_api_responses(self):
         """The primary dataframe 'concatenated_dataframe', is composed of api responses from /api/report/proposal_field. The user may wish to include or filter based-on proposal-related data not in the /api/report/proposal_field response, e.g., Step Name. To counteract this we gather data from the proposal data from other API endpoints and join them to 'concatenated_dataframe'."""
         for api_endpoint, api_response in self.api_responses.items():
@@ -107,14 +128,11 @@ class PandasHelper:
             self.write_json(api_response, api_endpoint.replace('/', '_'))
             if api_endpoint !=  '/api/v1/report/proposal_field/':
                 merge_on = self.proposal_field_merge_key[api_endpoint]
-                #print(self.concatenated_dataframe[merge_on])
-                #print(f'Merging in this API response: {api_response} on key {merge_on}')
                 api_resp_as_df = pd.DataFrame.from_dict(api_response)
                 
                 if 'user_id' in api_resp_as_df.columns:
                     api_resp_as_df.rename(columns={'user_id':'originator_id'}, inplace=True)
                 self.concatenated_dataframe = self.merge_dataframes(self.concatenated_dataframe, api_resp_as_df, merge_on)
-                # self.concatenated_dataframe.to_csv(f'concatenated_dataframe_{normal}.tsv', sep='\t')
     
     def __init__(self, proposal_list_res, proposal_fields_res, user_report_res, fields:list, sorting_rules, grouping_rule): 
         """proposal_fields_res - The JSON response with proposals and their fields from /api/v1/report/proposal_field/
@@ -161,7 +179,11 @@ class PandasHelper:
             'will_be_crosslisted': 'Will be Crosslisted',
             'transcript_name': 'Transcript Name',
             'catalog_name': 'Catalog Name',
+            'catalog_year': 'Catalog Year',
+            'coll_level': 'GR/UG',
             'ap_name': 'Action',
+            'If yes, which Connections category?': 'Connections Categories',
+            'trimmed_ap_name': 'Trimmed Action'
             
         }
         
@@ -209,9 +231,6 @@ class PandasHelper:
             else:
                 self.fields_represented_by_normalized_field_name[value].append(key)
 
-
-
-
     def merge_dataframes(self, df1, df2, merge_on):
         """Given two dataframes and a key/column to merge on, merge them and return the resulting dataframe. Used to merge API responses from Curriculog API and allow user access to more fields."""
         return df1.merge(df2, on=merge_on)
@@ -219,25 +238,32 @@ class PandasHelper:
         """Accepts a list of Filter instances and filters concatenated_dataframe in Pandas. Stores filtered dataframe as the new value on concatenated_dataframe."""
         self.concatenated_dataframe = self.concatenated_dataframe[self.concatenated_dataframe['Proposal Status'] != 'deleted']
         for filter_item in filters:
-            pprint(vars(filter_item))
             if filter_item.operator == '>':
+                print(f'{filter_item.field_name} should be >: {filter_item.values[0]}')
                 self.concatenated_dataframe = self.concatenated_dataframe[self.concatenated_dataframe[filter_item.field_name] > filter_item.values[0]]
             elif filter_item.operator == '>=':
+                print(f'{filter_item.field_name} should be >=: {filter_item.values[0]}')
                 self.concatenated_dataframe = self.concatenated_dataframe[self.concatenated_dataframe[filter_item.field_name] >= filter_item.values[0]]
             elif filter_item.operator == '<':
+                print(f'{filter_item.field_name} should be <: {filter_item.values[0]}')
                 self.concatenated_dataframe = self.concatenated_dataframe[self.concatenated_dataframe[filter_item.field_name] < filter_item.values[0]]
             elif filter_item.operator == '<=':
+                print(f'{filter_item.field_name} should be <=: {filter_item.values[0]}')
                 self.concatenated_dataframe = self.concatenated_dataframe[self.concatenated_dataframe[filter_item.field_name] <= filter_item.values[0]]
             elif filter_item.operator == '=':
                 print(f'{filter_item.field_name} should equal: {filter_item.values[0].lower()}')
                 self.concatenated_dataframe = self.concatenated_dataframe[self.concatenated_dataframe[filter_item.field_name] == filter_item.values[0].lower()]
             elif filter_item.operator == '!=':
+                print(f'{filter_item.field_name} should NOT equal: {filter_item.values[0].lower()}')
                 self.concatenated_dataframe = self.concatenated_dataframe[self.concatenated_dataframe[filter_item.field_name] != filter_item.values[0]]
             elif filter_item.operator == 'IN':
+                print(f'{filter_item.field_name} should contain one of the following values: {", ".join(filter_item.values)}')
                 self.concatenated_dataframe = self.concatenated_dataframe[self.concatenated_dataframe[filter_item.field_name] in filter_item.values]
             elif filter_item.operator == 'NOT IN':
+                print(f'{filter_item.field_name} should NOT contain one of the following values: {", ".join(filter_item.values)}')
                 self.concatenated_dataframe = self.concatenated_dataframe[self.concatenated_dataframe[filter_item.field_name]  not in filter_item.values]
             elif filter_item.operator == 'BETWEEN':
+                print(f'{filter_item.field_name} should be between: {filter_item.values[0]} and {filter_item.values[1]}')
                 self.concatenated_dataframe = self.concatenated_dataframe[self.concatenated_dataframe[filter_item.field_name].between(filter_item.values[0], filter_item.values[1])]
 
     def sort_concatenated_proposals(self, sorting_rules:list[SortingRule]): 
@@ -262,7 +288,6 @@ class PandasHelper:
                 sort_order = sorting_rule.values.split(",")
                 #Explicitly sort blanks last.
                 sort_order.append('')
-                print(f'SORT ORDER:{sort_order}')
                 self.concatenated_dataframe[sorting_rule.field_name] = pd.Categorical(self.concatenated_dataframe[sorting_rule.field_name], sort_order)
 
     def transform_column_names(self):
@@ -303,3 +328,36 @@ class PandasHelper:
             """Write out an API response"""
             with open(f'{file_name}.json', 'w', encoding='utf-8') as f:
                 json.dump(data, f, ensure_ascii=False, indent=4)
+    def _get_catalog_year_from_proposal(self, proposal):
+        """Parse the ap_name to get the catalog year for a given proposal."""
+        proposal_action = proposal['ap_name']
+        pattern = r"(20\d{2})-(20\d{2})\s"
+
+        match = re.search(pattern, proposal_action)
+        if match:
+            return f'{match.group(1)}-{match.group(2)}'
+        return ''
+
+    def _get_level_from_proposal(self, proposal):
+        """Parse the ap_name to get the catalog year for a given proposal. Return empty string if UG or GR not found."""
+        proposal_action = proposal['ap_name']
+        words = proposal_action.split(' ')
+        if "GR" in words:
+            return "GR"
+        elif "UG" in words:
+            return 'UG'
+        else:
+            return ""
+    def _trim_ap_name(self, proposal):
+        """Removes text up to and including, GR or UG from proposal action"""
+        proposal_action = proposal['ap_name']
+        words = proposal_action.split(' ')
+        if "GR" in words:
+            i = words.index("GR")
+            return " ".join(words[i+1:])
+        elif "UG" in words:
+            i = words.index("UG")
+            return " ".join(words[i+1:])
+        else:
+            return proposal_action
+    
