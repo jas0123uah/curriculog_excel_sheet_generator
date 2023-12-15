@@ -76,7 +76,7 @@ class ExcelWriter:
 
     def find_cell_by_column(self, row:pd.Series, column_name:str): 
         """Given an input row and column_name, find the cell corresponding to column_name and return its value."""
-        #print(f'COLUMN LOOKUP:{self.col_lookup}')
+        print(f'COLUMN LOOKUP:{self.col_lookup}')
         
         idx = self.col_lookup[column_name]
         
