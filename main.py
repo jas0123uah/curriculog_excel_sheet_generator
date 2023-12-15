@@ -1,11 +1,11 @@
 #import classes.proposal_crawler as proposal_crawler
 from classes import report_generator, excel_writer, excel_input_parser, pandas_helper
-import argparse, time
-import pandas as pd
-from pprint import pprint
+import argparse
+
 parser = argparse.ArgumentParser()
 parser.add_argument('-a', '--api_token', help="The token associated with your API key. Used to pull data from Curriculog. Tokens expire every 25 hours so make sure you have a recent token.")
 parser.add_argument('-i', '--input_excel', help="The input excel workbook specifying which proposal fields should appear in the output Excel workbook. Specifies filters and sorting rules for output Excel workbook as well.")
+
 parser.add_argument('-plr', '--proposal_list_report_id', nargs='?', help= 'Report ID corresponding to Curriculog Proposal report.')
 parser.add_argument('-pfdr', '--proposal_field_difference_report', nargs='?', help= 'Report ID corresponding to Curriculog Proposal Field Difference Report.')
 
@@ -42,4 +42,7 @@ data_manipulator.transform_column_names()
 data_manipulator.filter_concatenated_proposals(excel_parser.filters)
 data_manipulator.sort_concatenated_proposals(sorting_rules=excel_parser.sorting_rules)
 data_manipulator.get_relevant_columns(excel_parser.fields)
+
+writer = excel_writer.ExcelWriter(data_manipulator.concatenated_dataframe, data_manipulator.additional_dataframes, excel_parser.fields)
 data_manipulator.concatenated_dataframe.to_excel('test.xlsx')
+writer.create_workbook()

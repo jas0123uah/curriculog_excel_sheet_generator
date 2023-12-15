@@ -303,11 +303,18 @@ class PandasHelper:
         Filters concatenated_dataframe to include only columns corresponding to the passed in fields. Stores the filtered dataframe as the new value on concatenated_dataframe.
 
         fields A list of Fields passed in from the ExcelInputParser instance that should appear in the output Excel Workbook."""
+        #Get all columns we are asking for in input excel
         columns = list(map(lambda field: field.field_name, fields))
-        #Get which columns aren't in the concatenated dataframe
+        
+        for field in fields:
+            if field.comment_field:
+                columns.append(field.comment_field)
+        #Get which columns user asked for that aren't in the concatenated dataframe so we can warn the user
+        print(f'THESE ARE COLUMNS {columns}')
         missing_columns = list (filter(lambda column: column not in self.concatenated_dataframe.columns, columns))
         if len(missing_columns):
             print(f'The column(s) {", ".join(missing_columns)} are not relevant to any of the returned proposals and will not appear in the output Excel workbook. If you believe you have received this message in error please email: jspenc35@utk.edu')
+        
         #Only ask for the columns which actually exist in the concatenated dataframe
         columns = list(filter(lambda column: column in self.concatenated_dataframe.columns, columns))
         self.concatenated_dataframe = self.concatenated_dataframe[columns]

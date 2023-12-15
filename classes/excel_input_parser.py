@@ -64,12 +64,11 @@ class ExcelInputParser:
             field_filter = Filter(field_name=vals[0], operator=vals[1], values=vals[2].split(","))
             #Keep the filter by itself for easy access later
             self.filters.append(field_filter)
-            #pprint(vars(field_filter))
         return field_filter
 
 
     def _get_sorting_rules(self): 
-        """Parses the Sort By, Sort Order, and Custom Sort columns to create an array of SortingRules. Returns a list of SortingRules to pass to the PandasHelper constructor."""
+        """Parses the Sort By, Sort Order, and Custom Sort columns to create an array/list of SortingRules. Returns a list of SortingRules to pass to the PandasHelper constructor."""
         for row_cells in self.workbook.active.iter_rows(min_row=2, max_row=self.workbook.active.max_row):
             field_name = self._get_value_in_column(row=row_cells, column ='Sort By')
             #If there is no value in the column 'Sort By', assume no SortingRule for the row
