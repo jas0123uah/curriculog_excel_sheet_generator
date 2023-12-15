@@ -17,7 +17,7 @@ excel_parser = excel_input_parser.ExcelInputParser(args.input_excel)
 excel_parser.parse_workbook()
 excel_parser.get_api_filters()
 
-report_runner = report_generator.ReportGenerator(args.api_token, args.proposal_field_report_range)
+report_runner = report_generator.ReportGenerator(args.api_token)
 
 
 if args.proposal_list_report_id and  args.proposal_field_report_range:
@@ -43,6 +43,6 @@ data_manipulator.filter_concatenated_proposals(excel_parser.filters)
 data_manipulator.sort_concatenated_proposals(sorting_rules=excel_parser.sorting_rules)
 data_manipulator.get_relevant_columns(excel_parser.fields)
 
-writer = excel_writer.ExcelWriter(data_manipulator.concatenated_dataframe, data_manipulator.additional_dataframes, excel_parser.fields)
 data_manipulator.concatenated_dataframe.to_excel('test.xlsx')
+writer = excel_writer.ExcelWriter(data_manipulator.concatenated_dataframe, data_manipulator.additional_dataframes, excel_parser.fields)
 writer.create_workbook()

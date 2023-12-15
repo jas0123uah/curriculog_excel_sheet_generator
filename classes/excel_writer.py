@@ -27,37 +27,21 @@ class ExcelWriter:
         
         ##Convert dataframe
         #self._convert_dataframe_to_workbook_worksheet(self.concatenated_dataframe)
+        self.get_column_names_needing_comments()
         for row in self.workbook.active.iter_rows():
-            # print(f'ROW IS: {type(row)}')
-            # print(row)
-            # print(f'Row number: {row[0].row}')
-            # print(f'Column number: {row[0].column}')
-            
             
             self.set_cells_needing_comment(row)
-        
+        self.delete_comment_columns()
         self.workbook.save('my_workbook.xlsx')
         
-
-    # def _convert_dataframe_to_workbook_worksheet(self, dataframe):
-    #     """Given a pandas dataframe add it to an existing workbook as a single worksheet.."""
-    #     #https://stackoverflow.com/questions/36657288/copy-pandas-dataframe-to-excel-using-openpyxl
         
-    #     rows = dataframe_to_rows(dataframe)
-    #     #Looping and put in values
-    #     print(f' PANDAS DF ROW TOTAL: {len(dataframe.index)}')
-    #     for r in dataframe_to_rows(dataframe, header=True):
-    #         self.current_sheet.append(r)
-    #     # for r_idx, row in enumerate(rows, 1):
-    #     #     print(f'Outer Loop {r_idx}')
-    #     #     for c_idx, value in enumerate(row, 1):
-    #     #         print(f'Inner Loop {c_idx}')
-    #     #         self.workbook.active.cell(row=r_idx, column=c_idx, value=value)
-        
-    def get_column_names_needing_comments(self, fields:list[Field]): 
+    def get_column_names_needing_comments(self): 
         """Loops over a list of fields to determine which should have a comment. Excel columns which should have comments are stored as column_names_needing_comments."""
         ### Map over fields, returning field_name
-        column_names = ''
+        column_names = []
+        for field in self.fields:
+            if field.comment_field:
+                column_names.append(field.comment_field)
         self.column_names_needing_comments = column_names
 
     def set_cells_needing_comment(self, row): 
@@ -70,7 +54,7 @@ class ExcelWriter:
             cell_needing_comment = self.find_cell_by_column(row, target_column )
             ##Find other column which contains the comment text
             cell_with_comment = self.find_cell_by_column(row, comment_column)
-            ##Call set_cell_comment
+            ##Call set_cell_comment IGNORES THE HEADER
             if cell_with_comment.value != comment_column:
                 self.set_cell_comment(cell_needing_comment, cell_with_comment.value)
 
@@ -99,6 +83,6 @@ class ExcelWriter:
     def delete_comment_columns(self): 
         """Delete columns from rows which contain comment text as a value. (Comments are stored as fields in the pandas dataframe this step removes those columns)."""
         #Loop over column_names_needing_comments
-        
-        col_idx = self.col_lookup[col_name]
-        self.current_sheet.delete_cols(col_idx, 1)
+        for col_name in self.column_names_needing_comments:
+            col_idx = self.col_lookup[col_name]
+            self.workbook.active.delete_cols(col_idx+1, 1)

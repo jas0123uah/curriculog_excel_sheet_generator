@@ -22,14 +22,25 @@ class PandasHelper:
         """In the API response for the Curriculog Proposal Field Report, the response nests the fields for a proposal under a list called 'fields'. This function loops over those the api_responses and the nested fields to create a pandas dataframe with a column for each field. If the field, does not exist in given proposal it will be filled with NA."""
         proposal_field_resp = self.api_responses['/api/v1/report/proposal_field/']
         pandas_dict = self._get_fields_from_proposals(proposal_field_resp)
+        {
+            'URL': [],
+            'Catalog Year': [],
+            'GR/UG': [],
+            'Trimmed Action': []	
+        }
         pandas_dict = self._get_field_values_from_proposals(pandas_dict, proposal_field_resp)
+        {
+            'URL': ['https://utk.curriculog.com/proposal:972/form'],
+            'Catalog Year': ['2024-2025'],
+            'GR/UG': ['GR'],
+            'Trimmed Action': ['End Program']	
+        }
         self.concatenated_dataframe = pd.DataFrame.from_dict(pandas_dict)
         
-        self.concatenated_dataframe.to_csv(f'PRIOR TO MERGE.tsv', sep='}')
+        #self.concatenated_dataframe.to_csv(f'PRIOR TO MERGE.tsv', sep='}')
     def _get_fields_from_proposals(self, proposal_field_resp):
         """Returns a dict of field names that are found in at least one proposal. Values are an empty list."""
         pandas_dict = {}
-        #NEEDS MODIFIED
         ##DETERMINE ALL OF THE DIFFERENT FIELDS A PROPOSAL MAY HAVE. ASSUME THE PROPOSAL_FIELD_RESP HAS DIFFERENT TYPES OF PROPOSALS
         for proposal in proposal_field_resp:
             #Nest the proposal_id into the fields, so its column is in the dataframe we make
@@ -124,8 +135,8 @@ class PandasHelper:
         """The primary dataframe 'concatenated_dataframe', is composed of api responses from /api/report/proposal_field. The user may wish to include or filter based-on proposal-related data not in the /api/report/proposal_field response, e.g., Step Name. To counteract this we gather data from the proposal data from other API endpoints and join them to 'concatenated_dataframe'."""
         for api_endpoint, api_response in self.api_responses.items():
             normal = api_endpoint.replace('/', '_')
-            self.concatenated_dataframe.to_csv(f'dataframe_for_{normal}.tsv', sep='\t')
-            self.write_json(api_response, api_endpoint.replace('/', '_'))
+            #self.concatenated_dataframe.to_csv(f'dataframe_for_{normal}.tsv', sep='\t')
+            #self.write_json(api_response, api_endpoint.replace('/', '_'))
             if api_endpoint !=  '/api/v1/report/proposal_field/':
                 merge_on = self.proposal_field_merge_key[api_endpoint]
                 api_resp_as_df = pd.DataFrame.from_dict(api_response)
@@ -270,7 +281,7 @@ class PandasHelper:
         """Accepts a list of SortingRule instances and sorts**concatenated_dataframe** in Pandas. Sorting is done by the first SortingRule followed by subsequent SortingRules, so SortingRule order matters. Stores sorted dataframe as the new value on concatenated_dataframe."""
         #Keep only the sorting rules that are pertinent to columns in our concatenated dataframe
         sorting_rules = list(filter(lambda sorting_rule: sorting_rule.field_name in self.concatenated_dataframe.columns, sorting_rules))
-        self.concatenated_dataframe.to_csv(f'BEFORE_SORT.tsv', sep='\t')
+        #self.concatenated_dataframe.to_csv(f'BEFORE_SORT.tsv', sep='\t')
         self.convert_custom_sorts_to_categorical_columns(sorting_rules)
         columns = list(map(lambda sorting_rule: sorting_rule.field_name, sorting_rules))
         #Ascending works for custom bc pd.Categorical data type
@@ -310,7 +321,7 @@ class PandasHelper:
             if field.comment_field:
                 columns.append(field.comment_field)
         #Get which columns user asked for that aren't in the concatenated dataframe so we can warn the user
-        print(f'THESE ARE COLUMNS {columns}')
+        #print(f'THESE ARE COLUMNS {columns}')
         missing_columns = list (filter(lambda column: column not in self.concatenated_dataframe.columns, columns))
         if len(missing_columns):
             print(f'The column(s) {", ".join(missing_columns)} are not relevant to any of the returned proposals and will not appear in the output Excel workbook. If you believe you have received this message in error please email: jspenc35@utk.edu')

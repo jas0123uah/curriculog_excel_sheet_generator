@@ -3,10 +3,9 @@ import datetime
 from pprint import pprint
 from .field import Field
 class ReportGenerator:
-    def __init__(self, api_token, report_id = None) -> None:
+    def __init__(self, api_token) -> None:
         self.api_token = api_token
         self.base_url = 'https://utk.curriculog.com'
-        self.report_id = report_id
         self.headers = {
             'Content-Type': 'application/json',
             'Authorization': f'Bearer {self.api_token}'
@@ -52,42 +51,42 @@ class ReportGenerator:
 
             all_proposals_w_data = [*all_proposals_w_data, *proposals_w_data]
         self.all_proposal_data = all_proposals_w_data
-        self.write_json(all_proposals_w_data, 'proposals')
+        #self.write_json(all_proposals_w_data, 'proposals')
     
-    def get_field_differences_report(self, fields): 
-        """Calls /api/v1/report/proposal_field_diff/ with a set of field_ids to get their current and original values. Accepts a list of Fields"""
-        field_ids = self._get_field_ids_from_fields(fields)
-        request_params = {'field_id': field_ids}
-        request_params = json.dumps(request_params)
-        print(f'DUMP:{request_params}')
-        self.field_differences = self.run_report(api_endpoint='/api/v1/report/proposal_field_diff/', request_params=request_params, report_type='PROPOSAL FIELD DIFF')
-        self.write_json(self.field_differences, 'proposal_field_difference')
-        return self.field_differences
+    # def get_field_differences_report(self, fields): 
+    #     """Calls /api/v1/report/proposal_field_diff/ with a set of field_ids to get their current and original values. Accepts a list of Fields"""
+    #     field_ids = self._get_field_ids_from_fields(fields)
+    #     request_params = {'field_id': field_ids}
+    #     request_params = json.dumps(request_params)
+    #     print(f'DUMP:{request_params}')
+    #     self.field_differences = self.run_report(api_endpoint='/api/v1/report/proposal_field_diff/', request_params=request_params, report_type='PROPOSAL FIELD DIFF')
+    #     self.write_json(self.field_differences, 'proposal_field_difference')
+    #     return self.field_differences
     
-    def _get_field_ids_from_fields(self, fields:list[Field]):
-        """Returns the field ids for the fields/columns requested in the output Excel workbook. Field ids are used in call to /api/v1/report/proposal_field_diff/ """
-        requested_field_names = list(map(lambda field:field.field_name, fields))
+    # def _get_field_ids_from_fields(self, fields:list[Field]):
+    #     """Returns the field ids for the fields/columns requested in the output Excel workbook. Field ids are used in call to /api/v1/report/proposal_field_diff/ """
+    #     requested_field_names = list(map(lambda field:field.field_name, fields))
         
-        all_field_names = []
-        for field_name in requested_field_names:
-            if field_name in self.normalized_field_names:
-                other_field_names = self.normalized_field_names[field_name]
-                all_field_names.append(other_field_names)
-            else:
-                all_field_names.append([field_name])
+    #     all_field_names = []
+    #     for field_name in requested_field_names:
+    #         if field_name in self.normalized_field_names:
+    #             other_field_names = self.normalized_field_names[field_name]
+    #             all_field_names.append(other_field_names)
+    #         else:
+    #             all_field_names.append([field_name])
         
-        all_field_names =  [item for row in all_field_names for item in row]
+    #     all_field_names =  [item for row in all_field_names for item in row]
         
 
-        field_ids = []
-        for proposal in self.all_proposal_data:
-            if len(field_ids) == len(all_field_names):
-                return field_ids #return early if we've found all of the requested fields field ids'
-            for field_name in all_field_names:
-                match = next((x for x in proposal['fields'] if x['label'] == field_name), None)
-                if match and match['field_id'] not in field_ids:
-                    field_ids.append(match['field_id'])
-        return field_ids
+    #     field_ids = []
+    #     for proposal in self.all_proposal_data:
+    #         if len(field_ids) == len(all_field_names):
+    #             return field_ids #return early if we've found all of the requested fields field ids'
+    #         for field_name in all_field_names:
+    #             match = next((x for x in proposal['fields'] if x['label'] == field_name), None)
+    #             if match and match['field_id'] not in field_ids:
+    #                 field_ids.append(match['field_id'])
+    #     return field_ids
     ######## BASE-LEVEL FUNCTIONS USED BY WRAPPER FUNCTIONS TO INTERACT WITH THE API ########
     def run_report(self, *, api_endpoint, request_params= None, report_type, ):
         """Sends POST request to Curriculog api_endpoint. Report_type prints a helpful message for retrieving the report for debugging purposes."""        
@@ -167,8 +166,7 @@ class ReportGenerator:
             all_results = [*all_results, *results]
         #Remove deleted proposals from the results
         self.all_proposal_data = all_results
-    # def get_report_state(self):
-    #     """Queries the Curriculog API to return the state of a given report. Reports may be in a QUEUED, RUNNING, or ERROR state."""
+
     
     def write_json(self, data, file_name):
         """Write out an API response"""
