@@ -37,6 +37,7 @@ class ReportGenerator:
         
     def get_all_proposal_field_reports(self, api_filters):
         """Wrapper function for handling API call to '/api/v1/report/proposal_field'. Loops over self.ap_ids to gather proposal fields for all proposals. Stores API responses in all_proposal_data. """
+        report_ids = []
         all_proposals_w_data = []
         self.get_ap_ids()
         for ap_id in self.ap_ids:
@@ -46,12 +47,16 @@ class ReportGenerator:
             request_params.update(api_filters)
             request_params = json.dumps(request_params)
             
-            proposals_w_data = self.run_report(api_endpoint='/api/v1/report/proposal_field/', request_params=request_params, report_type='PROPOSAL FIELD' )
+            report_id = self.run_report(api_endpoint='/api/v1/report/proposal_field/', request_params=request_params, report_type='PROPOSAL FIELD', wait_for_results=False )
+            report_ids.append(report_id)
 
+        for report_id in report_ids:
+            proposals_w_data = self.get_report_results(report_id)
             all_proposals_w_data = [*all_proposals_w_data, *proposals_w_data]
+        
         self.all_proposal_data = all_proposals_w_data
     ######## BASE-LEVEL FUNCTIONS USED BY WRAPPER FUNCTIONS TO INTERACT WITH THE API ########
-    def run_report(self, *, api_endpoint, request_params= None, report_type, ):
+    def run_report(self, *, api_endpoint, request_params= None, wait_for_results=True, report_type, ):
         """Sends POST request to Curriculog api_endpoint. Report_type prints a helpful message for retrieving the report for debugging purposes."""        
         url = f'{self.base_url}{api_endpoint}'
         if request_params: 
@@ -61,8 +66,10 @@ class ReportGenerator:
         #pprint(vars(response))
         report_id = response.json()['report_id']
         print(f'{report_type} IS UNDER REPORT ID: {report_id}')
-        results = self.get_report_results(report_id)
-        return results
+        if wait_for_results:
+            results = self.get_report_results(report_id)
+            return results
+        return report_id
     
     def get_report_results(self, report_id): 
         """Given a report_id call /api/v1/report/result/{report_id} to get the results for a Curriculog report."""
