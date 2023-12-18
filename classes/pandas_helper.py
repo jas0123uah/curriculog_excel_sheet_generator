@@ -284,7 +284,9 @@ class PandasHelper:
         columns = list(map(lambda sorting_rule: sorting_rule.field_name, sorting_rules))
         #Ascending works for custom bc pd.Categorical data type
         sort_orders = [sorting_rule.sort_order in ['Ascending', 'Custom'] for sorting_rule in sorting_rules]
-        print(f'Columns:\n{columns}\nSort Order:{sort_orders}')
+        #print(f'Columns:\n{columns}\nSort Order:{sort_orders}')
+        order_string = "\n".join([sorting_rule.sort_order if sorting_rule.sort_order != 'Custom' else sorting_rule.values for sorting_rule in sorting_rules])
+        print(f'Data will be sorted by {" then by ".join(columns)} in the following orders respectively:\n {order_string} ')
         self.concatenated_dataframe.sort_values(by=columns, ascending=sort_orders, inplace=True)
         
 
@@ -293,7 +295,7 @@ class PandasHelper:
         for sorting_rule in sorting_rules:
             #ignore if column does not exist in results
             if sorting_rule.sort_order == 'Custom':
-                print(f'The column {sorting_rule.field_name} will be sorted in the following order {sorting_rule.values}')
+                #print(f'The column {sorting_rule.field_name} will be sorted in the following order {sorting_rule.values}')
                 sort_order = sorting_rule.values.split(",")
                 #Explicitly sort blanks last.
                 sort_order.append('')
@@ -303,7 +305,7 @@ class PandasHelper:
         """Loops over self.concatenated_dataframe.columns checking for columns that need to be transformed to match the name given in the Input Excel. If found, the column name is transformed to the user-friendly name stored in api_field_names."""
         for col in self.concatenated_dataframe.columns:
             if col in self.api_field_names:
-                print(f'Renaming {col} to {self.api_field_names[col]}')
+                #print(f'Renaming {col} to {self.api_field_names[col]}')
                 self.concatenated_dataframe.rename(columns={col:self.api_field_names[col]}, inplace=True)
         
 
@@ -330,7 +332,6 @@ class PandasHelper:
     def get_additional_dataframes(self):
         """Using the self.grouping_rule, concatenated_dataframe is filtered to create a new dataframe for each unique value found in the appropriate Field column. Additional dataframes are stored as entries in additional_dataframes. concatenated_dataframe is not mutated."""
         if self.grouping_rule:
-            print(self.grouping_rule)
             self.get_additional_dataframe_names(self.grouping_rule)
             for additional_dataframe_name in self.additional_dataframe_names:
                 additional_dataframe = self.concatenated_dataframe[self.concatenated_dataframe[self.grouping_rule] == additional_dataframe_name]

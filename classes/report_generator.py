@@ -39,7 +39,6 @@ class ReportGenerator:
         """Wrapper function for handling API call to '/api/v1/report/proposal_field'. Loops over self.ap_ids to gather proposal fields for all proposals. Stores API responses in all_proposal_data. """
         all_proposals_w_data = []
         self.get_ap_ids()
-        print(self.ap_ids)
         for ap_id in self.ap_ids:
             print(f'Getting proposal fields for ap_id {ap_id}')
             
@@ -59,7 +58,7 @@ class ReportGenerator:
             response = requests.post(url=url, headers=self.headers, data=request_params, allow_redirects=True)
         else:
             response = requests.post(url=url, headers=self.headers, allow_redirects=True)
-        pprint(vars(response))
+        #pprint(vars(response))
         report_id = response.json()['report_id']
         print(f'{report_type} IS UNDER REPORT ID: {report_id}')
         results = self.get_report_results(report_id)
@@ -67,6 +66,7 @@ class ReportGenerator:
     
     def get_report_results(self, report_id): 
         """Given a report_id call /api/v1/report/result/{report_id} to get the results for a Curriculog report."""
+        print(f'Pulling results for report id {report_id}.')
         if os.path.exists(f'./reports/{report_id}.json'):
             with open(f'./reports/{report_id}.json', 'r') as f:
                 data = f.read()
@@ -78,7 +78,6 @@ class ReportGenerator:
 
         #print(f'META:{meta}')
         #print(response.json())
-        print(f'Pulling results for report id {report_id}.')
         no_results = 'error' in meta and 'message' in meta['error'] and 'No results' in meta['error']['message']
         if no_results:
             remaining_num_attempts = 30
@@ -97,6 +96,14 @@ class ReportGenerator:
             raise Exception(err)
         self.write_json(response.json()['results'], f'./reports/{report_id}')
         return response.json()['results']
+    def refresh_api_token(self):
+        """Refreshes the Curriculog API token to prevent token expiration errors."""
+        print('Refreshing API token.')
+        api_endpoint = f'/api/v1/token/refresh/'
+        url = f'{self.base_url}{api_endpoint}'
+        response = requests.get(url=url, headers=self.headers, allow_redirects=True)
+        print(response)
+        
     ######## MISC FUNCTIONS ########
     def get_ap_ids(self): 
         """Loops over proposal_list to return a unique list of ap_ids."""
@@ -109,7 +116,6 @@ class ReportGenerator:
 
     def pull_previous_results(self, args):
         """Wrapper function that makes it possible to recreate previous runs of the script."""
-        os.makedirs('reports', exist_ok=True)
         ### Pulling for /api/report/proposal here
         self.proposal_list = self.get_report_results(args.proposal_list_report_id) 
         
@@ -121,7 +127,6 @@ class ReportGenerator:
         
         all_results = []
         for report_id in range(int(report_id_range[0].strip()), int(report_id_range[1].strip())+1):
-            print(f'Pulling results for report id {report_id}.')
             results = self.get_report_results(report_id)
             all_results = [*all_results, *results]
         self.all_proposal_data = all_results
