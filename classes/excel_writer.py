@@ -36,7 +36,6 @@ class ExcelWriter:
         
         self.get_column_names_needing_comments()
         for row in self.workbook.active.iter_rows():
-            
             self.set_cells_needing_comment(row)
         self.delete_comment_columns(self.workbook.active)
         self.add_additional_sheets()
@@ -54,6 +53,8 @@ class ExcelWriter:
                     for j in range(1, additional_workbook.active.max_column+1): 
                         cell_obj = additional_workbook.active.cell(row=i, column=j) 
                         additional_sheet.cell(row=i, column=j).value = cell_obj.value
+                        if(i == 1 or j == 1):
+                            additional_sheet.cell(row=i, column=j).style = 'Pandas'
             
                 for row in additional_sheet.iter_rows():
             
