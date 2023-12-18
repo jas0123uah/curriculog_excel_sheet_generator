@@ -38,6 +38,7 @@ class ExcelInputParser:
         self._get_worksheet_by_columns()
         self._get_requested_fields()
         self._get_sorting_rules()
+        self.get_grouping_rule()
 
     def _get_requested_fields(self): 
         """Parses the Field column in the Excel workbook to identify which proposal fields are needed from the Curriculog API. Returns an array/list of Field instances which contain filtering information specific to the Field for passing to the PandasHelper constructor ."""
@@ -94,7 +95,7 @@ class ExcelInputParser:
 
     def get_grouping_rule(self): 
         """Parses the Separate Sheets By column to get the field which should be used for creating additional_dataframes in the PandasHelper instance."""
-        self.grouping_rule = self.workbook.active.cell(row = 2, column = self.workbook.active.max_col).value
+        self.grouping_rule = self.workbook.active.cell(row = 2, column = self.workbook.active.max_column).value
     def _get_worksheet_by_columns(self):
         """Creates a dict of values in a given column of the active Excel spreadsheet"""
         #https://stackoverflow.com/questions/51478413/select-a-column-by-its-name-openpyxl

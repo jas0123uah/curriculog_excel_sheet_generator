@@ -330,17 +330,19 @@ class PandasHelper:
         columns = list(filter(lambda column: column in self.concatenated_dataframe.columns, columns))
         self.concatenated_dataframe = self.concatenated_dataframe[columns]
 
-    def get_additional_dataframes(self, field):
-        """Using the passed in Field, concatenated_dataframe is filtered to create a new dataframe for each unique value found in the appropriate Field column. Additional dataframes are stored as entries in additional_dataframes. concatenated_dataframe is not mutated."""
-        self.get_additional_dataframe_names(field)
-        for additional_dataframe_name in self.additional_dataframe_names:
-            additional_dataframe = self.concatenated_dataframe[self.concatenated_dataframe[field.field_name] == additional_dataframe_name]
-            self.additional_dataframes.append(additional_dataframe)
-        
+    def get_additional_dataframes(self):
+        """Using the self.grouping_rule, concatenated_dataframe is filtered to create a new dataframe for each unique value found in the appropriate Field column. Additional dataframes are stored as entries in additional_dataframes. concatenated_dataframe is not mutated."""
+        if self.grouping_rule:
+            print(self.grouping_rule)
+            self.get_additional_dataframe_names(self.grouping_rule)
+            print(f'ADDITIONAL DF NAMES {self.additional_dataframe_names}')
+            for additional_dataframe_name in self.additional_dataframe_names:
+                additional_dataframe = self.concatenated_dataframe[self.concatenated_dataframe[self.grouping_rule] == additional_dataframe_name]
+                self.additional_dataframes.append({additional_dataframe_name: additional_dataframe})
 
     def get_additional_dataframe_names(self, field:Field): 
         """Using the passed in Field,identify unique values within a column of concatenated_dataframe. Stores unique values as additional_dataframe_names."""
-        self.additional_dataframe_names = list(self.concatenated_dataframe[field.field_name].unique())
+        self.additional_dataframe_names = list(self.concatenated_dataframe[field].unique())
 
     def write_json(self, data, file_name):
             """Write out an API response"""

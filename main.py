@@ -7,7 +7,7 @@ parser.add_argument('-a', '--api_token', help="The token associated with your AP
 parser.add_argument('-i', '--input_excel', help="The input excel workbook specifying which proposal fields should appear in the output Excel workbook. Specifies filters and sorting rules for output Excel workbook as well.")
 
 parser.add_argument('-plr', '--proposal_list_report_id', nargs='?', help= 'Report ID corresponding to Curriculog Proposal report.')
-parser.add_argument('-pfdr', '--proposal_field_difference_report', nargs='?', help= 'Report ID corresponding to Curriculog Proposal Field Difference Report.')
+
 
 parser.add_argument('-pfrr', '--proposal_field_report_range', nargs='?', help= 'Comma-separated range of report IDs corresponding to Curriculog Proposal Field Reports. This can be used in cases where the Excel sheet did not format as expected./for debugging purposes. For example, to get reports 1-10 enter 1,10')
 parser.add_argument('-ur', '--user_report_id', help= 'Report ID corresponding to Curriculog User report.')
@@ -22,12 +22,10 @@ report_runner = report_generator.ReportGenerator(args.api_token)
 
 if args.proposal_list_report_id and  args.proposal_field_report_range:
     report_runner.pull_previous_results(args)
-    #report_runner.get_field_differences_report(excel_parser.fields)
 else:
     report_runner.get_proposal_list()
     report_runner.get_user_list()
     report_runner.get_all_proposal_field_reports(excel_parser.api_filters)
-    #report_runner.get_field_differences_report(excel_parser.fields)
 
 
 data_manipulator = pandas_helper.PandasHelper(
@@ -42,7 +40,9 @@ data_manipulator.transform_column_names()
 data_manipulator.filter_concatenated_proposals(excel_parser.filters)
 data_manipulator.sort_concatenated_proposals(sorting_rules=excel_parser.sorting_rules)
 data_manipulator.get_relevant_columns(excel_parser.fields)
+data_manipulator.get_additional_dataframes()
 
 data_manipulator.concatenated_dataframe.to_excel('test.xlsx')
 writer = excel_writer.ExcelWriter(data_manipulator.concatenated_dataframe, data_manipulator.additional_dataframes, excel_parser.fields)
+print(excel_parser.grouping_rule)
 writer.create_workbook()

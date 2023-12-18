@@ -1,20 +1,29 @@
 from openpyxl.comments import Comment
-from openpyxl.utils.dataframe import dataframe_to_rows
-import openpyxl
-
-from pprint import pprint
+import openpyxl, re
+from openpyxl.workbook.child import INVALID_TITLE_REGEX
 class ExcelWriter:
     import pandas as pd
     from .field import Field
-    #from openpyxl.comments import Comment
     def __init__(self, concatenated_dataframe:pd.DataFrame, additional_dataframes:list[pd.DataFrame], fields:list[Field] ): 
         """Constructor for ExcelWriter instance. Converts dataframes to rows with openpyxl's dataframe_to_rows. concatenated_dataframe is stored as concatenated_rows. additional_dataframes are stored as additional_rows"""
         self.col_lookup = {}
         self.target_comment_column_map = {}
         self.concatenated_dataframe = concatenated_dataframe
         self.additional_dataframes = additional_dataframes
+        self.additional_workbook_paths = {}
+        #Write the additional dataframes we have to Excel workbooks. OpenPyxl doesn't play nice w/ pandas dfs, but does load xlsx files fine.
+        for df_data in self.additional_dataframes:
+            for df_name, df in df_data.items():
+                df_name = re.sub(INVALID_TITLE_REGEX, '_', df_name)
+                #Happens in cases where one of the values in the group by is empty
+                if df_name == '':
+                    df_name = 'EMPTY'
+                df.to_excel(f'additional_dataframe_{df_name}.xlsx', sheet_name=df_name)
+                self.additional_workbook_paths[df_name] = f'additional_dataframe_{df_name}.xlsx'
+        self.additional_workbooks = [{sheet_name: openpyxl.load_workbook(additional_workbook_path)} for sheet_name, additional_workbook_path in self.additional_workbook_paths.items()]
         self.fields = fields
         self.workbook = openpyxl.load_workbook('./test.xlsx')
+        self.workbook.active.title = 'Main'
         self.current_sheet = self.workbook.active
         for field in self.fields:
             if field.comment_field:
@@ -25,13 +34,29 @@ class ExcelWriter:
     def create_workbook(self): 
         """Creates an output Excel workbook titled 'output_TIMESTAMP'.xlsx TIMESTAMP is the current timestamp when the output Excel workbook is being generated. The first sheet titled "Main" is the concatenated_rows. Additional sheets correspond to additional_rows , with the sheets having names corresponding to additional_dataframe_names."""
         
-        ##Convert dataframe
-        #self._convert_dataframe_to_workbook_worksheet(self.concatenated_dataframe)
         self.get_column_names_needing_comments()
         for row in self.workbook.active.iter_rows():
             
             self.set_cells_needing_comment(row)
-        self.delete_comment_columns()
+        self.delete_comment_columns(self.workbook.active)
+        
+        print(f'{len(self.additional_dataframes)} ADDITIONAL DFS')
+        for wb_container in self.additional_workbooks:
+            for sheet_name, additional_workbook in wb_container.items():
+                print(f'Adding sheet for {sheet_name}')
+                additional_sheet = self.workbook.create_sheet(sheet_name)
+                for i in range(1, additional_workbook.active.max_row+1): 
+                    
+                    for j in range(1, additional_workbook.active.max_column+1): 
+                        cell_obj = additional_workbook.active.cell(row=i, column=j) 
+                        additional_sheet.cell(row=i, column=j).value = cell_obj.value
+            
+                for row in additional_sheet.iter_rows():
+            
+                    self.set_cells_needing_comment(row)
+                self.delete_comment_columns(additional_sheet)
+                #self.workbook.copy_worksheet(additional_workbook.active)
+            
         self.workbook.save('my_workbook.xlsx')
         
         
@@ -47,20 +72,18 @@ class ExcelWriter:
     def set_cells_needing_comment(self, row): 
         """Given an input row use column_names_needing_comments to find which cells in a row need a comment and give them a comment."""
         ##Loop over a dict mapping columns that need comments (target columns) to (comment_columns)
-        print(self.target_comment_column_map)
         for target_column, comment_column in self.target_comment_column_map.items():
             
             ##Get cell in row needing comment.
             cell_needing_comment = self.find_cell_by_column(row, target_column )
             ##Find other column which contains the comment text
             cell_with_comment = self.find_cell_by_column(row, comment_column)
-            ##Call set_cell_comment IGNORES THE HEADER
+            ##Call set_cell_comment IF CHECK IGNORES THE HEADER
             if cell_with_comment.value != comment_column:
                 self.set_cell_comment(cell_needing_comment, cell_with_comment.value)
 
-    def find_cell_by_column(self, row:pd.Series, column_name:str): 
+    def find_cell_by_column(self, row, column_name:str): 
         """Given an input row and column_name, find the cell corresponding to column_name and return its value."""
-        print(f'COLUMN LOOKUP:{self.col_lookup}')
         
         idx = self.col_lookup[column_name]
         
@@ -80,9 +103,9 @@ class ExcelWriter:
             col_lookup[col[0].value] = column_idx
             column_idx += 1
         self.col_lookup = col_lookup
-    def delete_comment_columns(self): 
+    def delete_comment_columns(self, worksheet): 
         """Delete columns from rows which contain comment text as a value. (Comments are stored as fields in the pandas dataframe this step removes those columns)."""
         #Loop over column_names_needing_comments
         for col_name in self.column_names_needing_comments:
             col_idx = self.col_lookup[col_name]
-            self.workbook.active.delete_cols(col_idx+1, 1)
+            worksheet.delete_cols(col_idx+1, 1)
