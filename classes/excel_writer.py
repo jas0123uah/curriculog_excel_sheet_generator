@@ -1,5 +1,5 @@
+import openpyxl, re, datetime, os
 from openpyxl.comments import Comment
-import openpyxl, re
 from openpyxl.workbook.child import INVALID_TITLE_REGEX
 class ExcelWriter:
     import pandas as pd
@@ -39,8 +39,12 @@ class ExcelWriter:
             
             self.set_cells_needing_comment(row)
         self.delete_comment_columns(self.workbook.active)
+        self.add_additional_sheets()
+        self.workbook.save(f'output_{datetime.datetime.now().strftime("%m_%d_%Y_%H:%M:%S_%p")}.xlsx')
+        self.delete_temp_workbooks()
         
-        print(f'{len(self.additional_dataframes)} ADDITIONAL DFS')
+    def add_additional_sheets(self):
+        """Adds sheets for workbooks in self.additional_workbooks."""
         for wb_container in self.additional_workbooks:
             for sheet_name, additional_workbook in wb_container.items():
                 print(f'Adding sheet for {sheet_name}')
@@ -55,10 +59,12 @@ class ExcelWriter:
             
                     self.set_cells_needing_comment(row)
                 self.delete_comment_columns(additional_sheet)
-                #self.workbook.copy_worksheet(additional_workbook.active)
-            
-        self.workbook.save('my_workbook.xlsx')
-        
+    
+    def delete_temp_workbooks(self):
+        """Delete the workbooks we temporarily created due to openpyxl not playing nice with pandas."""
+        os.remove('test.xlsx')
+        for temp_workbook in self.additional_workbook_paths.values():
+            os.remove(temp_workbook)
         
     def get_column_names_needing_comments(self): 
         """Loops over a list of fields to determine which should have a comment. Excel columns which should have comments are stored as column_names_needing_comments."""
