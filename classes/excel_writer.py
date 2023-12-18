@@ -46,7 +46,6 @@ class ExcelWriter:
         """Adds sheets for workbooks in self.additional_workbooks."""
         for wb_container in self.additional_workbooks:
             for sheet_name, additional_workbook in wb_container.items():
-                print(f'Adding sheet for {sheet_name}')
                 additional_sheet = self.workbook.create_sheet(sheet_name)
                 for i in range(1, additional_workbook.active.max_row+1): 
                     

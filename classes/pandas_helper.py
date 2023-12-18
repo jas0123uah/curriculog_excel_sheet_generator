@@ -94,7 +94,6 @@ class PandasHelper:
         return pandas_dict
     def _get_field_values_from_proposals(self, pandas_dict, proposal_field_resp):
         """Loops over proposals and all possible proposal fields. If the proposal has the field its value is appended to the field label in the pandas_dict else np.nan is appended as a  placeholder."""
-        ####NEEDS MODIFIED
         for proposal_number, proposal in enumerate(proposal_field_resp):
             #LOOP OVER ALL POSSIBLE FIELDS A PROPOSAL MAY HAVE
             for field_num, field_label in enumerate(pandas_dict.keys()):
@@ -110,6 +109,8 @@ class PandasHelper:
     
                 flattener = Flattener()
                 flattened = flattener.flatten(all_data_for_field)
+                #Remove empty strings from list of values
+                flattened = list(filter(lambda val: val !='',flattened))
                 if field_label != 'proposal_id':
                     data_string = ", ".join(flattened)
                 else:
@@ -118,7 +119,6 @@ class PandasHelper:
                     curr_list.append(data_string)
                 #The field wasn't found in the given proposal
                 else:
-                    #curr_list.append(np.nan)
                     curr_list.append('')
                 pandas_dict[field_label] = curr_list
             
@@ -155,7 +155,6 @@ class PandasHelper:
 
         grouping_rule - A string indicating which field to use for creating additional_dataframes from concatenated_dataframes.
         """
-        # self.proposal_list = proposal_list
         self.fields = fields
         self.sorting_rules = sorting_rules
         self.grouping_rule = grouping_rule
@@ -281,7 +280,6 @@ class PandasHelper:
         """Accepts a list of SortingRule instances and sorts**concatenated_dataframe** in Pandas. Sorting is done by the first SortingRule followed by subsequent SortingRules, so SortingRule order matters. Stores sorted dataframe as the new value on concatenated_dataframe."""
         #Keep only the sorting rules that are pertinent to columns in our concatenated dataframe
         sorting_rules = list(filter(lambda sorting_rule: sorting_rule.field_name in self.concatenated_dataframe.columns, sorting_rules))
-        #self.concatenated_dataframe.to_csv(f'BEFORE_SORT.tsv', sep='\t')
         self.convert_custom_sorts_to_categorical_columns(sorting_rules)
         columns = list(map(lambda sorting_rule: sorting_rule.field_name, sorting_rules))
         #Ascending works for custom bc pd.Categorical data type
@@ -321,7 +319,6 @@ class PandasHelper:
             if field.comment_field:
                 columns.append(field.comment_field)
         #Get which columns user asked for that aren't in the concatenated dataframe so we can warn the user
-        #print(f'THESE ARE COLUMNS {columns}')
         missing_columns = list (filter(lambda column: column not in self.concatenated_dataframe.columns, columns))
         if len(missing_columns):
             print(f'The column(s) {", ".join(missing_columns)} are not relevant to any of the returned proposals and will not appear in the output Excel workbook. If you believe you have received this message in error please email: jspenc35@utk.edu')
@@ -335,7 +332,6 @@ class PandasHelper:
         if self.grouping_rule:
             print(self.grouping_rule)
             self.get_additional_dataframe_names(self.grouping_rule)
-            print(f'ADDITIONAL DF NAMES {self.additional_dataframe_names}')
             for additional_dataframe_name in self.additional_dataframe_names:
                 additional_dataframe = self.concatenated_dataframe[self.concatenated_dataframe[self.grouping_rule] == additional_dataframe_name]
                 self.additional_dataframes.append({additional_dataframe_name: additional_dataframe})
