@@ -15,6 +15,9 @@ class ExcelWriter:
         for df_data in self.additional_dataframes:
             for df_name, df in df_data.items():
                 df_name = re.sub(INVALID_TITLE_REGEX, '_', df_name)
+                #Excel sheet titles can't be > 31 characters. Trimming to supress warning message.
+                if len(df_name) > 31:
+                    df_name = df_name[:31]
                 #Happens in cases where one of the values in the group by is empty
                 if df_name == '':
                     df_name = 'EMPTY'
@@ -39,7 +42,9 @@ class ExcelWriter:
             self.set_cells_needing_comment(row)
         self.delete_comment_columns(self.workbook.active)
         self.add_additional_sheets()
-        self.workbook.save(f'output_{datetime.datetime.now().strftime("%m_%d_%Y_%H:%M:%S_%p")}.xlsx')
+        output_dir = f'output/{datetime.datetime.now().strftime("%Y_%m_%d")}/'
+        os.makedirs(output_dir, exist_ok=True)
+        self.workbook.save(f'{output_dir}/output_{datetime.datetime.now().strftime("%m_%d_%Y_%H:%M:%S_%p")}.xlsx')
         self.delete_temp_workbooks()
         
     def add_additional_sheets(self):

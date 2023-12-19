@@ -7,6 +7,27 @@ import pandas as pd
 import json, re
 import numpy as np
 from pprint import pprint
+import logging, sys
+# Configure root logger  
+logging.basicConfig(format='%(asctime)s | %(name)s | %(levelname)s |', 
+                    filename='log.txt',
+                    filemode='a',
+                    level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+
+
+
+# Log to file
+file_handler = logging.FileHandler('log.txt')  
+logger.addHandler(file_handler)
+
+# Log to console
+console_handler = logging.StreamHandler(sys.stdout)
+console_handler.setLevel(logging.INFO)
+logger.addHandler(console_handler)
+
+
 class PandasHelper:
     
     def concatenate_proposals (self): 
@@ -181,7 +202,8 @@ class PandasHelper:
             'credit_hours': 'Credit Hours',
             'cross_listing': 'Crosslisting',
             'department': 'Department',
-            'corequisities': 'Corequisites',
+            'department_corequisites': 'Department Enforced Corequisites',
+            
             'equivalency_chart': 'Equivalency Chart',
             'grading_restriction': 'Grading Restriction',
             'crosslisting_relationship': 'Crosslisting Relationship',
@@ -193,11 +215,19 @@ class PandasHelper:
             'coll_level': 'GR/UG',
             'ap_name': 'Action',
             'If yes, which Connections category?': 'Connections Categories',
-            'trimmed_ap_name': 'Trimmed Action'
+            'trimmed_ap_name': 'Trimmed Action',
+            'email': 'Proposal Submitter Email',
+            'first_name': 'Proposal Submitter First Name',
+            'last_name': 'Proposal Submitter Last Name',
+            'is_remote': 'Is Remote',
+            'launch_date': 'Proposal Launch Date',
+            'If yes, which Vol Core categories?': 'Vol Core Categories',
+            'Vol Core categories': 'Vol Core Categories',
+            
             
         }
         
-        #Some fields and their labels represent the same concept (are redundant) - represent these fields with a normalized name so that their data is in a single column.
+        #Some fields and their labels represent the same concept (are redundant) - represent these fields with a normalized column name in the pandas df so that their data is in a single column.
         self.normalized_api_field_names = {
             'Course Number/Code (max 3 characters)': 'course_number_and_code',
             'Course Number/Code (max 4 characters)': 'course_number_and_code',
@@ -210,8 +240,8 @@ class PandasHelper:
             'Cross-Listing?': 'cross_listing',
             'Department (Acalog Hierarchy)': 'department',
             'Department': 'department',
-            'Department Enforced (DE) Corequisite(s)': 'corequisites',
-            'Department Enforced (DE) Corequisite(s):': 'corequisites',
+            'Department Enforced (DE) Corequisite(s)': 'department_corequisites',
+            'Department Enforced (DE) Corequisite(s):': 'department_corequisites',
             'Equivalency Chart': 'equivalency_chart',
             'Equivalency Table': 'equivalency_chart',
             'Grading Restriction': 'grading_restriction',
@@ -229,9 +259,9 @@ class PandasHelper:
             'Transcript Name': 'transcript_name',
             'Transcript Name (max 30 characters)': 'transcript_name',
             'Catalog Name': 'catalog_name',
-            'Catalog Name (max 100 characters)': 'catalog_name'
-            
-            
+            'Catalog Name (max 100 characters)': 'catalog_name',
+            'If yes, which Vol Core categories?': 'Vol Core Categories',
+            'Vol Core categories': 'Vol Core Categories',
         }
         #Create a reverse of the lookup above
         self.fields_represented_by_normalized_field_name = {}
@@ -263,7 +293,7 @@ class PandasHelper:
             elif filter_item.operator == '=':
                 print(f'{filter_item.field_name} should equal: {filter_item.values[0].lower()}')
                 self.concatenated_dataframe = self.concatenated_dataframe[self.concatenated_dataframe[filter_item.field_name] == filter_item.values[0].lower()]
-            elif filter_item.operator == '!=':
+            elif filter_item.operator == 'NOT EQUAL TO':
                 print(f'{filter_item.field_name} should NOT equal: {filter_item.values[0].lower()}')
                 self.concatenated_dataframe = self.concatenated_dataframe[self.concatenated_dataframe[filter_item.field_name] != filter_item.values[0]]
             elif filter_item.operator == 'IN':
@@ -286,7 +316,7 @@ class PandasHelper:
         sort_orders = [sorting_rule.sort_order in ['Ascending', 'Custom'] for sorting_rule in sorting_rules]
         #print(f'Columns:\n{columns}\nSort Order:{sort_orders}')
         order_string = "\n".join([sorting_rule.sort_order if sorting_rule.sort_order != 'Custom' else sorting_rule.values for sorting_rule in sorting_rules])
-        print(f'Data will be sorted by {" then by ".join(columns)} in the following orders respectively:\n {order_string} ')
+        logger.info(f'Data will be sorted by {" then by ".join(columns)} in the following orders respectively:\n {order_string} ')
         self.concatenated_dataframe.sort_values(by=columns, ascending=sort_orders, inplace=True)
         
 
@@ -323,7 +353,7 @@ class PandasHelper:
         #Get which columns user asked for that aren't in the concatenated dataframe so we can warn the user
         missing_columns = list (filter(lambda column: column not in self.concatenated_dataframe.columns, columns))
         if len(missing_columns):
-            print(f'The column(s) {", ".join(missing_columns)} are not relevant to any of the returned proposals and will not appear in the output Excel workbook. If you believe you have received this message in error please email: jspenc35@utk.edu')
+            logger.info(f'The column(s) {", ".join(missing_columns)} are not relevant to any of the returned proposals and will not appear in the output Excel workbook. If you believe you have received this message in error please email: jspenc35@utk.edu')
         
         #Only ask for the columns which actually exist in the concatenated dataframe
         columns = list(filter(lambda column: column in self.concatenated_dataframe.columns, columns))
