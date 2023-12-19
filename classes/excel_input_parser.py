@@ -77,7 +77,7 @@ class ExcelInputParser:
                 sorting_rule = SortingRule(
                     field_name= field_name,
                     sort_order= self._get_value_in_column(row=row_cells, column ='Sort Order'),
-                    values= self._get_value_in_column(row=row_cells, column ='Custom Sort'),       
+                    values= self._get_value_in_column(row=row_cells, column ='Custom Sort', delimiter=","),       
                 )
                 self.sorting_rules.append(sorting_rule)
     def get_api_filters(self):
@@ -105,6 +105,13 @@ class ExcelInputParser:
             col_names[COL[0].value] = Current
             Current += 1
         self.columns = col_names
-    def _get_value_in_column(self, row, column:str) -> str:
+    def _get_value_in_column(self, row, column:str, delimiter=None) -> str:
         """Given a row and column name return the value in column"""
-        return row[self.columns[column]].value
+        data = row[self.columns[column]].value
+        if delimiter is None:
+            return data
+        data = data.split(delimiter)
+        #Remove spaces the user likely put between words in delimiter 
+        data = list(map(lambda word: word.strip(), data))
+        #Return values of interest as comma separated string. No spaces.
+        return ",".join(data)
