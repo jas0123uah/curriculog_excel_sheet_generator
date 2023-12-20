@@ -262,6 +262,8 @@ class PandasHelper:
             'Catalog Name (max 100 characters)': 'catalog_name',
             'If yes, which Vol Core categories?': 'Vol Core Categories',
             'Vol Core categories': 'Vol Core Categories',
+            'New / Rename Academic Unit?': 'New Academic Unit Name',
+            'New / Renamed Academic Unit Name': 'New Academic Unit Name' 
         }
         #Create a reverse of the lookup above
         self.fields_represented_by_normalized_field_name = {}
