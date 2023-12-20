@@ -219,6 +219,7 @@ class PandasHelper:
         
         #Some fields and their labels represent the same concept (are redundant) - represent these fields with a normalized column name in the pandas df so that their data is in a single column.
         self.normalized_api_field_names = {
+            'Course Title (max 100 characters)': 'Course Title',
             'Course Number/Code (max 3 characters)': 'course_number_and_code',
             'Course Number/Code (max 4 characters)': 'course_number_and_code',
             'Course Number/Code (max 4 characters: 3 numerals + optional 1 letter: N, R, S)': 'course_number_and_code',
