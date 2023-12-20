@@ -46,7 +46,7 @@ class ExcelWriter:
         self.add_additional_sheets()
         output_dir = f'output/{datetime.datetime.now().strftime("%Y_%m_%d")}/'
         os.makedirs(output_dir, exist_ok=True)
-        self.workbook.save(f'{output_dir}/output_{datetime.datetime.now().strftime("%m_%d_%Y_%H:%M:%S_%p")}.xlsx')
+        self.workbook.save(f'{output_dir}output_{datetime.datetime.now().strftime("%m_%d_%Y_%H:%M:%S_%p")}.xlsx')
         self.delete_temp_workbooks()
         
     def add_additional_sheets(self):
