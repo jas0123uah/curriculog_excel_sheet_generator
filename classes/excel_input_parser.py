@@ -2,6 +2,28 @@ from .field import Field
 from .filter import Filter
 from .sorting_rule import SortingRule
 from pprint import pprint
+import logging, sys
+# Configure root logger  
+logging.basicConfig(format='%(asctime)s | %(name)s | %(levelname)s |', 
+                    filename='log.txt',
+                    filemode='a',
+                    level=logging.INFO)
+
+logger = logging.getLogger(__name__)
+
+
+# Log to file
+file_handler = logging.FileHandler('log.txt')  
+logger.addHandler(file_handler)
+
+# Log to console
+console_handler = logging.StreamHandler(sys.stdout)
+console_handler.setLevel(logging.INFO)
+logger.addHandler(console_handler)
+
+
+
+
 class ExcelInputParser:
     def __init__(self, input_workbook): 
         """Constructor for ExcelInputParser instance. Accepts the path to an Excel Workbook"""
@@ -18,7 +40,7 @@ class ExcelInputParser:
             'Completed Date': 'completed_date',
             'Completed Date After': 'completed_date_after',
             'Completed Date Before': 'completed_date_before',
-            'Launch Date': 'launch_date',
+            
             'Launch Date After': 'launch_date_after',
             'Launch Date Before': 'launch_date_before',
             'Proposed By': 'originator_id',
@@ -30,7 +52,12 @@ class ExcelInputParser:
             'Current Step Started (Date)': 'step_start_date',
             'Current Step Started Before (Date)': 'step_start_date_before',
             'Current Step Started After (Date)': 'step_start_date_after',
-            'Current Step Status': 'step_status'
+            'Current Step Status': 'step_status',
+            'Proposal Submitter First Name': 'first_name',
+            'Proposal Submitter Last Name': 'last_name',
+            'Proposal Submitter Email': 'email',
+            'Is Remote': 'is_remote',
+            'Proposal Launch Date': 'launch_date' 
         }
 
     def parse_workbook(self): 
@@ -77,7 +104,7 @@ class ExcelInputParser:
                 sorting_rule = SortingRule(
                     field_name= field_name,
                     sort_order= self._get_value_in_column(row=row_cells, column ='Sort Order'),
-                    values= self._get_value_in_column(row=row_cells, column ='Custom Sort'),       
+                    values= self._get_value_in_column(row=row_cells, column ='Custom Sort', delimiter=","),       
                 )
                 self.sorting_rules.append(sorting_rule)
     def get_api_filters(self):
@@ -91,7 +118,8 @@ class ExcelInputParser:
             if api_filter_field and field.filters and field.filters.operator == '=':
                 api_filters[api_filter_field] = field.filters.values
         self.api_filters = api_filters
-        print(f'THE API FILTERS {self.api_filters}')
+        logging.info(msg=f'THE API FILTERS {self.api_filters}')
+        
 
     def get_grouping_rule(self): 
         """Parses the Separate Sheets By column to get the field which should be used for creating additional_dataframes in the PandasHelper instance."""
@@ -105,6 +133,16 @@ class ExcelInputParser:
             col_names[COL[0].value] = Current
             Current += 1
         self.columns = col_names
-    def _get_value_in_column(self, row, column:str) -> str:
+    def _get_value_in_column(self, row, column:str, delimiter=None) -> str:
         """Given a row and column name return the value in column"""
-        return row[self.columns[column]].value
+        data = row[self.columns[column]].value
+        if data is None:
+            return ''
+        if delimiter is None:
+            return data
+        
+        data = data.split(delimiter)
+        #Remove spaces the user likely put between words in delimiter 
+        data = list(map(lambda word: word.strip(), data))
+        #Return values of interest as comma separated string. No spaces.
+        return ",".join(data)

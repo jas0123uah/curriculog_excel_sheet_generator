@@ -2,6 +2,27 @@ import requests, json, re, time, os
 import datetime
 from pprint import pprint
 from .field import Field
+import logging, sys
+
+# Configure root logger  
+logging.basicConfig(format='%(asctime)s | %(name)s | %(levelname)s |', 
+                    filename='log.txt',
+                    filemode='a',
+                    level=logging.INFO)
+logger = logging.getLogger()
+
+
+
+# Log to file
+file_handler = logging.FileHandler('log.txt')  
+logger.addHandler(file_handler)
+
+# Log to console
+console_handler = logging.StreamHandler(sys.stdout)
+console_handler.setLevel(logging.INFO)
+logger.addHandler(console_handler)
+
+
 class ReportGenerator:
     def __init__(self, api_token) -> None:
         self.api_token = api_token
@@ -41,7 +62,7 @@ class ReportGenerator:
         all_proposals_w_data = []
         self.get_ap_ids()
         for ap_id in self.ap_ids:
-            print(f'Getting proposal fields for ap_id {ap_id}')
+            logger.info(f'Submitting Proposal Field Report request for ap_id {ap_id}')
             
             request_params = {'ap_id': ap_id}
             request_params.update(api_filters)
@@ -65,7 +86,7 @@ class ReportGenerator:
             response = requests.post(url=url, headers=self.headers, allow_redirects=True)
         #pprint(vars(response))
         report_id = response.json()['report_id']
-        print(f'{report_type} IS UNDER REPORT ID: {report_id}')
+        logger.info(f'{report_type} IS UNDER REPORT ID: {report_id}')
         if wait_for_results:
             results = self.get_report_results(report_id)
             return results
@@ -73,7 +94,7 @@ class ReportGenerator:
     
     def get_report_results(self, report_id): 
         """Given a report_id call /api/v1/report/result/{report_id} to get the results for a Curriculog report."""
-        print(f'Pulling results for report id {report_id}.')
+        logger.info(f'Pulling results for report id {report_id}.')
         if os.path.exists(f'./reports/{report_id}.json'):
             with open(f'./reports/{report_id}.json', 'r') as f:
                 data = f.read()
@@ -92,7 +113,7 @@ class ReportGenerator:
             while no_results and remaining_num_attempts:
                 now = datetime.datetime.now()
                 sixty_secs_from_now = now + datetime.timedelta(0, 60)
-                print(f"No results for report id {report_id}. Waiting 60 seconds and trying again at {sixty_secs_from_now.strftime('%I:%M:%S')}. {remaining_num_attempts} attempts remaining.")
+                logger.info(f"No results for report id {report_id}. Waiting 60 seconds and trying again at {sixty_secs_from_now.strftime('%I:%M:%S')}. {remaining_num_attempts} attempts remaining.")
                 time.sleep(60)
                 response = requests.get(url=url, headers=self.headers, allow_redirects=True)
                 meta = response.json()['meta']
@@ -100,16 +121,17 @@ class ReportGenerator:
         
         if meta['total_results'] != meta['results_current_page']:
             err = f'There are {meta["total_results"]} total results and only {meta["results_current_page"]} results are on the current page. Please contact jspenc35@utk.edu with this error and provide the report_id {report_id}.'
+            logger.error(err)
             raise Exception(err)
         self.write_json(response.json()['results'], f'./reports/{report_id}')
         return response.json()['results']
     def refresh_api_token(self):
         """Refreshes the Curriculog API token to prevent token expiration errors."""
-        print('Refreshing API token.')
+        logger.info('Refreshing API token.')
         api_endpoint = f'/api/v1/token/refresh/'
         url = f'{self.base_url}{api_endpoint}'
         response = requests.get(url=url, headers=self.headers, allow_redirects=True)
-        print(response)
+        logger.info(response)
         
     ######## MISC FUNCTIONS ########
     def get_ap_ids(self): 

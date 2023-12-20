@@ -11,10 +11,9 @@ parser.add_argument('-plr', '--proposal_list_report_id', nargs='?', help= 'Repor
 
 parser.add_argument('-pfrr', '--proposal_field_report_range', nargs='?', help= 'Comma-separated range of report IDs corresponding to Curriculog Proposal Field Reports. This can be used in cases where the Excel sheet did not format as expected./for debugging purposes. For example, to get reports 1-10 enter 1,10')
 parser.add_argument('-ur', '--user_report_id', help= 'Report ID corresponding to Curriculog User report.')
-parser.add_argument('-d', '--debug_mode', default=False, help="Flag to indicate if API responses from Curriculog should be stored locally under reports directory. Useful when debugging or adding new features.")
+parser.add_argument('-d', '--debug_mode', action=argparse.BooleanOptionalAction, help="Flag to indicate if API responses from Curriculog should be stored locally under reports directory. Useful when debugging or adding new features.")
 args = parser.parse_args()
 os.makedirs('reports', exist_ok=True)
-
 excel_parser = excel_input_parser.ExcelInputParser(args.input_excel)
 excel_parser.parse_workbook()
 excel_parser.get_api_filters()
@@ -49,3 +48,4 @@ writer = excel_writer.ExcelWriter(data_manipulator.concatenated_dataframe, data_
 writer.create_workbook()
 if args.debug_mode == False:
     shutil.rmtree('./reports')
+os.remove('log.txt')
