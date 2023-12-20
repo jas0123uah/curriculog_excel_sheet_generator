@@ -284,6 +284,7 @@ class PandasHelper:
                 print(f'{filter_item.field_name} should be <=: {filter_item.values[0]}')
                 self.concatenated_dataframe = self.concatenated_dataframe[self.concatenated_dataframe[filter_item.field_name] <= filter_item.values[0]]
             elif filter_item.operator == '=':
+                #comment
                 print(f'{filter_item.field_name} should equal: {filter_item.values[0].lower()}')
                 self.concatenated_dataframe = self.concatenated_dataframe[self.concatenated_dataframe[filter_item.field_name] == filter_item.values[0]]
             elif filter_item.operator == 'NOT EQUAL TO':
