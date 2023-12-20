@@ -83,6 +83,7 @@ class ExcelWriter:
     def set_cells_needing_comment(self, row): 
         """Given an input row use column_names_needing_comments to find which cells in a row need a comment and give them a comment."""
         ##Loop over a dict mapping columns that need comments (target columns) to (comment_columns)
+        print(self.col_lookup)
         for target_column, comment_column in self.target_comment_column_map.items():
             
             ##Get cell in row needing comment.

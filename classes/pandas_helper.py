@@ -43,21 +43,13 @@ class PandasHelper:
         """In the API response for the Curriculog Proposal Field Report, the response nests the fields for a proposal under a list called 'fields'. This function loops over those the api_responses and the nested fields to create a pandas dataframe with a column for each field. If the field, does not exist in given proposal it will be filled with NA."""
         proposal_field_resp = self.api_responses['/api/v1/report/proposal_field/']
         pandas_dict = self._get_fields_from_proposals(proposal_field_resp)
-        {
-            'URL': [],
-            'Catalog Year': [],
-            'GR/UG': [],
-            'Trimmed Action': []	
-        }
+       
+        print(f'The column ap_name is in concatenated_df before merging in api responses: LINE 52!!! {"ap_name" in pandas_dict.keys()}')
         pandas_dict = self._get_field_values_from_proposals(pandas_dict, proposal_field_resp)
-        {
-            'URL': ['https://utk.curriculog.com/proposal:972/form'],
-            'Catalog Year': ['2024-2025'],
-            'GR/UG': ['GR'],
-            'Trimmed Action': ['End Program']	
-        }
-        self.concatenated_dataframe = pd.DataFrame.from_dict(pandas_dict)
+        print(f'The column ap_name is in concatenated_df before merging in api responses: LINE 54!!! {"ap_name" in pandas_dict.keys()}')
         
+        self.concatenated_dataframe = pd.DataFrame.from_dict(pandas_dict)
+        print(f'The column ap_name is in concatenated_df before merging in api responses: LINE 62!!! {"ap_name" in self.concatenated_dataframe.columns}')
         #self.concatenated_dataframe.to_csv(f'PRIOR TO MERGE.tsv', sep='}')
     def _get_fields_from_proposals(self, proposal_field_resp):
         """Returns a dict of field names that are found in at least one proposal. Values are an empty list."""
@@ -73,13 +65,7 @@ class PandasHelper:
                 "value": proposal['proposal_id']
             })
             proposal_list_data = self._find_proposal_in_proposal_list(proposal['proposal_id'])
-            proposal['fields'].append({
-                "field_id": 90, #placeholder
-                "label": "ap_name",
-                "rich_text": False,
-                "tracked": True,
-                "value": proposal_list_data['ap_name']
-            })
+            
             proposal['fields'].append({
                 "field_id": 2, #placeholder
                 "label": "coll_level",
@@ -154,6 +140,7 @@ class PandasHelper:
         
     def _merge_api_responses(self):
         """The primary dataframe 'concatenated_dataframe', is composed of api responses from /api/report/proposal_field. The user may wish to include or filter based-on proposal-related data not in the /api/report/proposal_field response, e.g., Step Name. To counteract this we gather data from the proposal data from other API endpoints and join them to 'concatenated_dataframe'."""
+        print(f'The column ap_name is in concatenated_df before merging in api responses: {"ap_name" in self.concatenated_dataframe.columns}')
         for api_endpoint, api_response in self.api_responses.items():
             normal = api_endpoint.replace('/', '_')
             #self.concatenated_dataframe.to_csv(f'dataframe_for_{normal}.tsv', sep='\t')
@@ -161,10 +148,14 @@ class PandasHelper:
             if api_endpoint !=  '/api/v1/report/proposal_field/':
                 merge_on = self.proposal_field_merge_key[api_endpoint]
                 api_resp_as_df = pd.DataFrame.from_dict(api_response)
+                #print(f'COLUMNS IN {api_endpoint} {api_resp_as_df.columns}')
                 
                 if 'user_id' in api_resp_as_df.columns:
                     api_resp_as_df.rename(columns={'user_id':'originator_id'}, inplace=True)
+                
                 self.concatenated_dataframe = self.merge_dataframes(self.concatenated_dataframe, api_resp_as_df, merge_on)
+                #print(f'COLUMNS IN MERGED DF {self.concatenated_dataframe.columns}')
+                print(f'The column ap_name is in concatenated_df after merging in response from {api_endpoint}: {"ap_name" in self.concatenated_dataframe.columns}')
     
     def __init__(self, proposal_list_res, proposal_fields_res, user_report_res, fields:list, sorting_rules, grouping_rule): 
         """proposal_fields_res - The JSON response with proposals and their fields from /api/v1/report/proposal_field/
@@ -294,7 +285,7 @@ class PandasHelper:
                 self.concatenated_dataframe = self.concatenated_dataframe[self.concatenated_dataframe[filter_item.field_name] <= filter_item.values[0]]
             elif filter_item.operator == '=':
                 print(f'{filter_item.field_name} should equal: {filter_item.values[0].lower()}')
-                self.concatenated_dataframe = self.concatenated_dataframe[self.concatenated_dataframe[filter_item.field_name] == filter_item.values[0].lower()]
+                self.concatenated_dataframe = self.concatenated_dataframe[self.concatenated_dataframe[filter_item.field_name] == filter_item.values[0]]
             elif filter_item.operator == 'NOT EQUAL TO':
                 print(f'{filter_item.field_name} should NOT equal: {filter_item.values[0].lower()}')
                 self.concatenated_dataframe = self.concatenated_dataframe[self.concatenated_dataframe[filter_item.field_name] != filter_item.values[0]]
@@ -337,7 +328,7 @@ class PandasHelper:
         """Loops over self.concatenated_dataframe.columns checking for columns that need to be transformed to match the name given in the Input Excel. If found, the column name is transformed to the user-friendly name stored in api_field_names."""
         for col in self.concatenated_dataframe.columns:
             if col in self.api_field_names:
-                #print(f'Renaming {col} to {self.api_field_names[col]}')
+               # print(f'Renaming {col} to {self.api_field_names[col]}')
                 self.concatenated_dataframe.rename(columns={col:self.api_field_names[col]}, inplace=True)
         
 
@@ -354,6 +345,9 @@ class PandasHelper:
                 columns.append(field.comment_field)
         #Get which columns user asked for that aren't in the concatenated dataframe so we can warn the user
         missing_columns = list (filter(lambda column: column not in self.concatenated_dataframe.columns, columns))
+        print(f'Concatenated df has {len(self.concatenated_dataframe.index)} rows.')
+        print(self.concatenated_dataframe.loc[[200]])
+        self.concatenated_dataframe.to_csv('test.csv', sep=',')
         if len(missing_columns):
             logger.info(f'The column(s) {", ".join(missing_columns)} are not relevant to any of the returned proposals and will not appear in the output Excel workbook. If you believe you have received this message in error please email: jspenc35@utk.edu')
         
