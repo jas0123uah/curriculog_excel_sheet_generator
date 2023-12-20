@@ -48,4 +48,3 @@ writer = excel_writer.ExcelWriter(data_manipulator.concatenated_dataframe, data_
 writer.create_workbook()
 if args.debug_mode == False:
     shutil.rmtree('./reports')
-os.remove('log.txt')

@@ -96,7 +96,7 @@ class ReportGenerator:
         """Given a report_id call /api/v1/report/result/{report_id} to get the results for a Curriculog report."""
         logger.info(f'Pulling results for report id {report_id}.')
         if os.path.exists(f'./reports/{report_id}.json'):
-            with open(f'./reports/{report_id}.json', 'r') as f:
+            with open(f'./reports/{report_id}.json', 'r', encoding='utf-8', errors="ignore") as f:
                 data = f.read()
                 return json.loads(data)
         api_endpoint = f'/api/v1/report/result/{report_id}'

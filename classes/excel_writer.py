@@ -44,9 +44,9 @@ class ExcelWriter:
         self.delete_comment_columns(self.workbook.active)
         self.delete_group_by_col_name(self.workbook.active)
         self.add_additional_sheets()
-        output_dir = f'output/{datetime.datetime.now().strftime("%Y_%m_%d")}/'
+        output_dir = f'./output/'
         os.makedirs(output_dir, exist_ok=True)
-        self.workbook.save(f'{output_dir}output_{datetime.datetime.now().strftime("%m_%d_%Y_%H:%M:%S_%p")}.xlsx')
+        self.workbook.save(f'{output_dir}output.xlsx')
         self.delete_temp_workbooks()
         
     def add_additional_sheets(self):
