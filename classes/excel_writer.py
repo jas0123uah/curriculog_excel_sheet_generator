@@ -4,7 +4,7 @@ from openpyxl.workbook.child import INVALID_TITLE_REGEX
 class ExcelWriter:
     import pandas as pd
     from .field import Field
-    def __init__(self, concatenated_dataframe:pd.DataFrame, additional_dataframes:list[pd.DataFrame], fields:list[Field] ): 
+    def __init__(self, concatenated_dataframe:pd.DataFrame, additional_dataframes:list[pd.DataFrame], fields:list[Field], grouping_rule:str ): 
         """Constructor for ExcelWriter instance. Converts dataframes to rows with openpyxl's dataframe_to_rows. concatenated_dataframe is stored as concatenated_rows. additional_dataframes are stored as additional_rows"""
         self.col_lookup = {}
         self.target_comment_column_map = {}
@@ -25,6 +25,7 @@ class ExcelWriter:
                 self.additional_workbook_paths[df_name] = f'additional_dataframe_{df_name}.xlsx'
         self.additional_workbooks = [{sheet_name: openpyxl.load_workbook(additional_workbook_path)} for sheet_name, additional_workbook_path in self.additional_workbook_paths.items()]
         self.fields = fields
+        self.grouping_rule = grouping_rule
         self.workbook = openpyxl.load_workbook('./test.xlsx')
         self.workbook.active.title = 'Main'
         self.current_sheet = self.workbook.active
@@ -41,6 +42,7 @@ class ExcelWriter:
         for row in self.workbook.active.iter_rows():
             self.set_cells_needing_comment(row)
         self.delete_comment_columns(self.workbook.active)
+        self.delete_group_by_col_name(self.workbook.active)
         self.add_additional_sheets()
         output_dir = f'output/{datetime.datetime.now().strftime("%Y_%m_%d")}/'
         os.makedirs(output_dir, exist_ok=True)
@@ -64,6 +66,7 @@ class ExcelWriter:
             
                     self.set_cells_needing_comment(row)
                 self.delete_comment_columns(additional_sheet)
+                self.delete_group_by_col_name(additional_sheet)
     
     def delete_temp_workbooks(self):
         """Delete the workbooks we temporarily created due to openpyxl not playing nice with pandas."""
@@ -83,7 +86,6 @@ class ExcelWriter:
     def set_cells_needing_comment(self, row): 
         """Given an input row use column_names_needing_comments to find which cells in a row need a comment and give them a comment."""
         ##Loop over a dict mapping columns that need comments (target columns) to (comment_columns)
-        print(self.col_lookup)
         for target_column, comment_column in self.target_comment_column_map.items():
             
             ##Get cell in row needing comment.
@@ -121,3 +123,9 @@ class ExcelWriter:
         for col_name in self.column_names_needing_comments:
             col_idx = self.col_lookup[col_name]
             worksheet.delete_cols(col_idx+1, 1)
+    def delete_group_by_col_name(self,worksheet):
+        """Looks for a column used to create additional sheets in the output excel workbook. If that field was not requested, that column is deleted."""
+        requested_columns = list(map(lambda field: field.field_name, self.fields))
+        if self.grouping_rule and self.grouping_rule not in requested_columns:
+            col_idx = self.col_lookup[self.grouping_rule]
+            worksheet.delete_cols(col_idx, 1) 

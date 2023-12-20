@@ -2,6 +2,7 @@ from .field import Field
 from .filter import Filter
 from .sorting_rule import SortingRule
 from pprint import pprint
+import datetime
 import logging, sys
 # Configure root logger  
 logging.basicConfig(format='%(asctime)s | %(name)s | %(levelname)s |', 
@@ -89,7 +90,11 @@ class ExcelInputParser:
             vals.append(val)
         field_filter = None
         if vals[1]: ##if there is no operator assume no filter.
-            field_filter = Filter(field_name=vals[0], operator=vals[1], values=vals[2].split(","))
+            if type(vals[2]) is not datetime.datetime:
+                values=vals[2].split(",")
+            else:
+                values=vals[2].strftime('%Y-%m-%d')
+            field_filter = Filter(field_name=vals[0], operator=vals[1], values=values)
             #Keep the filter by itself for easy access later
             self.filters.append(field_filter)
         return field_filter

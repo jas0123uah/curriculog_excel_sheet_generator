@@ -44,7 +44,7 @@ data_manipulator.get_relevant_columns(excel_parser.fields)
 data_manipulator.get_additional_dataframes()
 
 data_manipulator.concatenated_dataframe.to_excel('test.xlsx')
-writer = excel_writer.ExcelWriter(data_manipulator.concatenated_dataframe, data_manipulator.additional_dataframes, excel_parser.fields)
+writer = excel_writer.ExcelWriter(data_manipulator.concatenated_dataframe, data_manipulator.additional_dataframes, excel_parser.fields, data_manipulator.grouping_rule)
 writer.create_workbook()
 if args.debug_mode == False:
     shutil.rmtree('./reports')
