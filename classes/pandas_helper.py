@@ -42,6 +42,7 @@ class PandasHelper:
     def _convert_proposal_field_report_to_pandas_dataframe(self):
         """In the API response for the Curriculog Proposal Field Report, the response nests the fields for a proposal under a list called 'fields'. This function loops over those the api_responses and the nested fields to create a pandas dataframe with a column for each field. If the field, does not exist in given proposal it will be filled with NA."""
         proposal_field_resp = self.api_responses['/api/v1/report/proposal_field/']
+        #print(proposal_field_resp)
         pandas_dict = self._get_fields_from_proposals(proposal_field_resp)
        
         pandas_dict = self._get_field_values_from_proposals(pandas_dict, proposal_field_resp)
@@ -62,7 +63,9 @@ class PandasHelper:
                 "value": proposal['proposal_id']
             })
             proposal_list_data = self._find_proposal_in_proposal_list(proposal['proposal_id'])
-            
+            if proposal_list_data is None:
+                logger.warn(f"A proposal with proposal id {proposal['proposal_id']} was not found in the proposal list api response. This may be because the proposal was launched as the Curriculog script was running! Check https://utk.curriculog.com/proposal:{proposal['proposal_id']}/form and verify the launch time of the proposal roughly coincides with the time you ran this script. If it does not, contact jspenc35@utk.edu for help. If you need data for this proposal you will have to run this script again.")
+                continue
             proposal['fields'].append({
                 "field_id": 2, #placeholder
                 "label": "coll_level",
@@ -166,6 +169,8 @@ class PandasHelper:
         self.grouping_rule = grouping_rule
         self.concatenated_dataframe = pd.DataFrame()
         self.additional_dataframes = []
+        self.graduate_programs = None
+        self.undergraduate_programs = None
         # Use an ordered dict to indicate the order the API responses should be merged in 
         self.api_responses = OrderedDict({
             '/api/v1/report/proposal_field/': proposal_fields_res,
@@ -368,6 +373,12 @@ class PandasHelper:
         """Using the passed in Field,identify unique values within a column of concatenated_dataframe. Stores unique values as additional_dataframe_names."""
         self.additional_dataframe_names = list(self.concatenated_dataframe[field].unique())
 
+    def get_programs(self):
+        """Filter concatenated_proposals to identify only those that are for a Graduate or Undergraduate program. Stores programs under graduate_programs and undergraduate_programs, respectively."""
+        self.undergraduate_programs = self.concatenated_dataframe[(self.concatenated_dataframe['GR/UG'] == 'UG') &  (self.concatenated_dataframe['Proposal Type'] == 'program')]
+        self.graduate_programs = self.concatenated_dataframe[(self.concatenated_dataframe['GR/UG'] == 'GR') &  (self.concatenated_dataframe['Proposal Type'] == 'program')]
+        self.undergraduate_programs.sort_values(by='completed_date', ascending=True, inplace=True)
+        self.graduate_programs.sort_values(by='completed_date', ascending=True, inplace=True)
     def write_json(self, data, file_name):
             """Write out an API response"""
             with open(f'{file_name}.json', 'w', encoding='utf-8') as f:
