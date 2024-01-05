@@ -5,6 +5,8 @@ from selenium.webdriver.edge.service import Service as EdgeService
 from webdriver_manager.microsoft import EdgeChromiumDriverManager
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
+from selenium.common.exceptions import NoSuchElementException
+
 #driver = webdriver.Edge(service=EdgeService(EdgeChromiumDriverManager().install()))
 class ShowcaseDownloader:
     def __init__(self, undergraduate_program_proposals, graduate_program_proposals, args):
@@ -47,41 +49,50 @@ class ShowcaseDownloader:
         self._login()
         college_types = ['undergraduate', 'graduate']
         for college_type in college_types:
-            print(list(self.undergraduate_program_proposals.columns))
+            #print(list(self.undergraduate_program_proposals.columns))
             if college_type == 'undergraduate':
-                colleges_in_college_type = self.undergraduate_program_proposals['College'].unique()
+                target_program_type = self.undergraduate_program_proposals
+                #colleges_in_college_type = self.undergraduate_program_proposals['College'].unique()
             else:
-                colleges_in_college_type = self.graduate_program_proposals['College'].unique()
+                target_program_type = self.graduate_program_proposals
+                #colleges_in_college_type = self.graduate_program_proposals['College'].unique()
+            colleges_in_college_type = target_program_type['College'].unique()
 
         
             for college in colleges_in_college_type:
+                print(f'This is the college: {college}')
                 undergrad_showcases_in_college = Doc(college, college_type)
                 #self.concatenated_dataframe = self.concatenated_dataframe[self.concatenated_dataframe[filter_item.field_name] == filter_item.values[0]]
-                proposals_in_colllege = self.undergraduate_program_proposals[self.undergraduate_program_proposals['College'] == college] 
-                program_proposal_types = self.undergraduate_program_proposals['Action'].unique()
+                proposals_in_colllege = target_program_type[target_program_type['College'] == college] 
+                program_proposal_types = target_program_type['Action'].unique()
                 for program_type in program_proposal_types:
+                    print(f'Getting {college_type} proposals in college {college} for program type {program_type}')
                     undergrad_showcases_in_college.add_page_for_datatype(program_type)
-                    print(f'This is the program type: {program_type}')
-                    print(proposals_in_colllege)
-                    print(proposals_in_colllege.columns)
+                    print(f'These are proposals in college {proposals_in_colllege}')
+
                     proposals_in_colllege = proposals_in_colllege[proposals_in_colllege['Action'] == program_type]
                     for idx, row in proposals_in_colllege.iterrows():
                         url = row['URL']
+                        print(f'Getting showcase at url: {url}')
                         self.driver.get(url)
                         time.sleep(5)
                         showcase_html = self.open_showcase_window()
                         #time.sleep(20)
                         undergrad_showcases_in_college.write_html(showcase_html, url)
+                        undergrad_showcases_in_college.raw_data += showcase_html
                         print("SUCCESSFULLY WROTE HTML")
                 undergrad_showcases_in_college.save_pdf()
     def open_showcase_window(self):
         """Opens the showcase window from the current page. Returns the html of the showcase window."""
-        preview_curriculum_button = self.driver.find_element(By.CLASS_NAME, 'preview-curriculum')
+        try:
+            preview_curriculum_button = self.driver.find_element(By.CLASS_NAME, 'preview-curriculum')
+        except NoSuchElementException:
+            return 'No preview found'
         # self.driver.execute_script("arguments[0].scrollIntoView();", preview_curriculum_button)
         # time.sleep(7)
         preview_curriculum_button.click()
-        #time.sleep(5)
-        self.driver.switch_to.window(self.driver.window_handles[1])
+        time.sleep(7)
+        self.driver.switch_to.window(self.driver.window_handles[-1])
         images = self.driver.find_elements(By.TAG_NAME, 'img')
         anchors = self.driver.find_elements(By.TAG_NAME, 'a')
         tables = self.driver.find_elements(By.TAG_NAME, 'table')
@@ -97,9 +108,10 @@ class ShowcaseDownloader:
 
         html = self.driver.page_source
         
-        #html = self.driver.find_element(By.TAG_NAME, 'html')
-        print(html)
-        #self.driver.close()
+        #html = self.driver.find_element(By.TAG_NAME, 'html').text
+        print(f'This is HTML: {html}')
+        self.driver.close()
+        self.driver.switch_to.window(self.driver.window_handles[0])
         return html
 
 
