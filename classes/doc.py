@@ -21,10 +21,11 @@ from html.parser import HTMLParser
 import html
 #h2p = HTML2FPDF(self, image_map)
 class Doc:
-    def __init__(self, college, college_type):
+    def __init__(self, college, college_type, program_type):
         """Constructor for a Showcase Doc for a given college. Showcase Docs have a page indicating the start of each data type, e.g., START 2023-2024 UG Add Program."""
         self.college = college
         self.college_type = college_type
+        self.program_type = program_type
         self.output_file_path = ''
         self._get_output_file_path()
         self.pdf = MyFPDF()
@@ -38,7 +39,7 @@ class Doc:
         college = college.split()
         college = "_".join(college)
         self.college = college
-        self.output_file_path = f'{college}_{self.college_type}_showcases.pdf'
+        self.output_file_path = f'{college}_{self.college_type}_{self.program_type}_showcases.pdf'
         #self.output_file_path = f'{os.getcwd()}/{self.college_type}_showcases/{college}_showcases.pdf'
         output_file_path_length = len(self.output_file_path)
         if output_file_path_length > 255:
@@ -46,7 +47,6 @@ class Doc:
             max_length_college_name = 254 - output_file_path_length_wo_college
             college = college[0: max_length_college_name]
             self.output_file_path = f'{os.getcwd()}/showcases/{college}_showcases.pdf'
-            print(f'Got this output file path: {self.output_file_path}')
     def add_page_for_datatype(self, data_type):
         """Adds a title page to the growing PDF doc indicating the start of a new type of program proposal."""
         if data_type not in self.data_types:
@@ -64,9 +64,12 @@ class Doc:
         self.pdf.add_page()
     def save_pdf(self):
         """Writes self.pdf to pdf doc."""
-        os.makedirs(f'showcases/{self.college_type}_showcases', exist_ok=True)
-        print(f'Saving file to {self.output_file_path}')
-        with open(f'{self.college}_{self.college_type}_showcases.html', 'a+', encoding='utf-8', errors='ignore') as html_file:
-            html_file.write(self.raw_data)
-            print(f'{self.raw_data} SUCCESSFULLY WROTE TO {self.college}_{self.college_type}_showcases.html')
-        #self.pdf.output(self.output_file_path)
+        output_dir = f'showcases/{self.college_type}_showcases/{self.college}/'
+        os.makedirs(output_dir, exist_ok=True)
+        # print(f'Saving file to {self.output_file_path}')
+        if len(self.raw_data) > 0:
+            with open(f'{output_dir}{self.college}_{self.college_type}_{self.program_type}_showcases.html', 'w+', encoding='utf-8', errors='ignore') as html_file:
+                html_file.write(self.raw_data)
+                #print(f'Raw data {self.raw_data}')
+                print(f' SUCCESSFULLY WROTE TO{output_dir}{self.college}_{self.college_type}_{self.program_type}_showcases.html')
+        # self.pdf.output(self.output_file_path)

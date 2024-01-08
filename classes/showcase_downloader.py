@@ -14,10 +14,14 @@ class ShowcaseDownloader:
         self.undergraduate_program_proposals = undergraduate_program_proposals
         self.graduate_program_proposals = graduate_program_proposals
         service = webdriver.ChromeService()
-        print('Using ChromeDriver')
         self.driver =webdriver.Chrome(service=service)
-        print('EdgeDriver Loaded')
         self.args = args
+        with open(f'showcase_css.css', 'r', encoding='utf-8') as  css_file:
+            css = css_file.read()
+            self.css = css
+           
+
+
         #self.driver = webdriver.Edge(EdgeChromiumDriverManager().install())
     def _open_login(self):
         """Clicks the login button to navigate to the login page.
@@ -60,56 +64,70 @@ class ShowcaseDownloader:
 
         
             for college in colleges_in_college_type:
-                print(f'This is the college: {college}')
-                undergrad_showcases_in_college = Doc(college, college_type)
-                #self.concatenated_dataframe = self.concatenated_dataframe[self.concatenated_dataframe[filter_item.field_name] == filter_item.values[0]]
-                proposals_in_colllege = target_program_type[target_program_type['College'] == college] 
-                program_proposal_types = target_program_type['Action'].unique()
-                for program_type in program_proposal_types:
-                    print(f'Getting {college_type} proposals in college {college} for program type {program_type}')
-                    undergrad_showcases_in_college.add_page_for_datatype(program_type)
-                    print(f'These are proposals in college {proposals_in_colllege}')
+                college = 'No College' if college == '' else college 
 
-                    proposals_in_colllege = proposals_in_colllege[proposals_in_colllege['Action'] == program_type]
-                    for idx, row in proposals_in_colllege.iterrows():
+                proposals_in_college = target_program_type[target_program_type['College'] == college] 
+                program_proposal_types = proposals_in_college['Action'].unique()
+                for program_type in program_proposal_types:
+                    undergrad_showcases_in_college = Doc(college, college_type, program_type)
+                    print(f'Getting {college_type} proposals in college {college} for program type {program_type}')
+                    #undergrad_showcases_in_college.add_page_for_datatype(program_type)
+                   #print(f'These are proposals in college {proposals_in_college}')
+
+                    proposals_of_given_type_in_college = proposals_in_college[proposals_in_college['Action'] == program_type]
+                    for idx, row in proposals_of_given_type_in_college.iterrows():
                         url = row['URL']
                         print(f'Getting showcase at url: {url}')
                         self.driver.get(url)
-                        time.sleep(5)
+                        time.sleep(10)
                         showcase_html = self.open_showcase_window()
                         #time.sleep(20)
-                        undergrad_showcases_in_college.write_html(showcase_html, url)
+                        #undergrad_showcases_in_college.write_html(showcase_html, url)
                         undergrad_showcases_in_college.raw_data += showcase_html
-                        print("SUCCESSFULLY WROTE HTML")
-                undergrad_showcases_in_college.save_pdf()
+                    undergrad_showcases_in_college.save_pdf()
     def open_showcase_window(self):
         """Opens the showcase window from the current page. Returns the html of the showcase window."""
+        proposal_url = self.driver.current_url
         try:
             preview_curriculum_button = self.driver.find_element(By.CLASS_NAME, 'preview-curriculum')
         except NoSuchElementException:
-            return 'No preview found'
+            print(f'No preview found for proposal found at {proposal_url}')
+            return f'No preview found for proposal found at {proposal_url}'
         # self.driver.execute_script("arguments[0].scrollIntoView();", preview_curriculum_button)
         # time.sleep(7)
         preview_curriculum_button.click()
         time.sleep(7)
         self.driver.switch_to.window(self.driver.window_handles[-1])
         images = self.driver.find_elements(By.TAG_NAME, 'img')
-        anchors = self.driver.find_elements(By.TAG_NAME, 'a')
+        buttons = []
+        buttons = self.driver.find_elements(By.TAG_NAME, 'button')
         tables = self.driver.find_elements(By.TAG_NAME, 'table')
         for table in tables:
             self.driver.execute_script("arguments[0].setAttribute('width',arguments[1])",table, '100')
-        els = [*anchors, *images]
+        els = [*buttons]
         for image in els:
             self.driver.execute_script("""
             var element = arguments[0];
             element.parentNode.removeChild(element);
             """, image)
-            print('REMOVED IMAGE')
+        head = self.driver.find_element(By.TAG_NAME, 'head')
+        add_css_script = """
+            var node = document.createElement("style");
+            node.type = "text/css";
+            node.appendChild(document.createTextNode(arguments[0]))        
+            arguments[1].appendChild(node);
+            """
+        self.driver.execute_script(add_css_script, self.css, head)
+        add_proposal_url_to_body_script = """
+            var h1 = document.createElement("h1");
+            h1.innerHTML = `The proposal below may be viewed <a href=${arguments[0]}>here</a>.`;
+            arguments[1].prepend(h1);
+            """
+        body = self.driver.find_element(By.TAG_NAME, 'body')
+        self.driver.execute_script(add_proposal_url_to_body_script, proposal_url, body)
 
         html = self.driver.page_source
         
-        #html = self.driver.find_element(By.TAG_NAME, 'html').text
-        print(f'This is HTML: {html}')
         self.driver.close()
         self.driver.switch_to.window(self.driver.window_handles[0])
         return html

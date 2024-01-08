@@ -46,7 +46,7 @@ data_manipulator.sort_concatenated_proposals(sorting_rules=excel_parser.sorting_
 data_manipulator.get_programs()
 downloader = showcase_downloader.ShowcaseDownloader(data_manipulator.undergraduate_programs, data_manipulator.graduate_programs, args)
 downloader.download_showcases()
-print(data_manipulator.undergraduate_programs['URL'])
+#print(data_manipulator.undergraduate_programs['URL'])
 
 
 data_manipulator.get_relevant_columns(excel_parser.fields)
