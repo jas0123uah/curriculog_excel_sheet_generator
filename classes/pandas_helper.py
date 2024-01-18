@@ -36,6 +36,7 @@ class PandasHelper:
         self._convert_proposal_field_report_to_pandas_dataframe()
         ##Merge the other api responses (user list & proposal list so we have access to additional data in our dataframe.)
         self._merge_api_responses()
+        self._transform_college_names()
         self.concatenated_dataframe.to_csv('concatenated_dataframe.tsv', sep='\t')
         
         
@@ -345,7 +346,8 @@ class PandasHelper:
 
         fields A list of Fields passed in from the ExcelInputParser instance that should appear in the output Excel Workbook."""
         #Get all columns we are asking for in input excel
-        columns = list(map(lambda field: field.field_name, fields))
+        fields_to_keep = list(filter(lambda field: field.dont_return_field == False, fields))
+        columns = list(map(lambda field: field.field_name, fields_to_keep))
         
         for field in fields:
             if field.comment_field:
@@ -416,3 +418,24 @@ class PandasHelper:
         else:
             return proposal_action
     
+    def _transform_college_names(self):
+        """Transforms college names to match shortened named. Shortened name is what is returned when the user asks for a college name."""
+        college_lookup = {
+            'College of Arts and Sciences' :'CAS',
+            'Herbert College of Agriculture':'HCA',
+            'Howard H. Baker Jr. School of Public Policy and Public Affairs':'HBS',
+            'Tickle College of Engineering': 'TCE',
+            'College of Architecture and Design': 'CAD',
+            'College of Communication and Information': 'CCI',
+            'College of Education, Health, and Human Sciences': 'CEHHS',
+            'College of Emerging and Collaborative Studies': 'CECS',
+            'College of Law': 'CoL',
+            'College of Nursing': 'CoN',
+            'College of Social Work': 'CSW',
+            'College of Music': 'CoM',
+            'College of Veterinary Medicine': 'VetMed',
+            'Haslam College of Business': 'HCB',
+            'Reserve Officers Training Corps (ROTC)': 'ROTC',
+        }
+        for old_name, new_name in college_lookup.items():
+            self.concatenated_dataframe.replace(old_name, new_name, inplace=True)
