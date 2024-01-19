@@ -1,5 +1,5 @@
 #import classes.proposal_crawler as proposal_crawler
-from classes import report_generator, excel_writer, excel_input_parser, pandas_helper
+from classes import report_generator, excel_writer, excel_input_parser, pandas_helper, showcase_downloader
 import argparse, shutil, os
 
 parser = argparse.ArgumentParser()
@@ -12,6 +12,9 @@ parser.add_argument('-plr', '--proposal_list_report_id', nargs='?', help= 'Repor
 parser.add_argument('-pfrr', '--proposal_field_report_range', nargs='?', help= 'Comma-separated range of report IDs corresponding to Curriculog Proposal Field Reports. This can be used in cases where the Excel sheet did not format as expected./for debugging purposes. For example, to get reports 1-10 enter 1,10')
 parser.add_argument('-ur', '--user_report_id', help= 'Report ID corresponding to Curriculog User report.')
 parser.add_argument('-d', '--debug_mode', action=argparse.BooleanOptionalAction, help="Flag to indicate if API responses from Curriculog should be stored locally under reports directory. Useful when debugging or adding new features.")
+parser.add_argument('-gsc', '--get_showcases', action=argparse.BooleanOptionalAction, help="Flag to indicate if program showcase docs should be created for each college.")
+parser.add_argument('-n', '--netid', help= 'The NetID to log into Curriculog to retrieve program showcases.', required=False)
+parser.add_argument('-p', '--password', help= 'The password to log into Curriculog to retrieve program showcases.', required=False)
 args = parser.parse_args()
 os.makedirs('reports', exist_ok=True)
 excel_parser = excel_input_parser.ExcelInputParser(args.input_excel)
@@ -40,10 +43,18 @@ data_manipulator.concatenate_proposals()
 data_manipulator.transform_column_names()
 data_manipulator.filter_concatenated_proposals(excel_parser.filters)
 data_manipulator.sort_concatenated_proposals(sorting_rules=excel_parser.sorting_rules)
+if args.get_showcases:
+    data_manipulator.get_programs()
+    downloader = showcase_downloader.ShowcaseDownloader(data_manipulator.undergraduate_programs, data_manipulator.graduate_programs, args)
+    downloader.download_showcases()
+#print(data_manipulator.undergraduate_programs['URL'])
+
+
 data_manipulator.get_relevant_columns(excel_parser.fields)
 data_manipulator.get_additional_dataframes()
 
 data_manipulator.concatenated_dataframe.to_excel('test.xlsx')
+
 writer = excel_writer.ExcelWriter(data_manipulator.concatenated_dataframe, data_manipulator.additional_dataframes, excel_parser.fields, data_manipulator.grouping_rule)
 writer.create_workbook()
 if args.debug_mode == False:

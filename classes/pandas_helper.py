@@ -36,6 +36,7 @@ class PandasHelper:
         self._convert_proposal_field_report_to_pandas_dataframe()
         ##Merge the other api responses (user list & proposal list so we have access to additional data in our dataframe.)
         self._merge_api_responses()
+        self._transform_college_names()
         self.concatenated_dataframe.to_csv('concatenated_dataframe.tsv', sep='\t')
         
         
@@ -62,7 +63,9 @@ class PandasHelper:
                 "value": proposal['proposal_id']
             })
             proposal_list_data = self._find_proposal_in_proposal_list(proposal['proposal_id'])
-            
+            if proposal_list_data is None:
+                logger.warn(f"A proposal with proposal id {proposal['proposal_id']} was not found in the proposal list api response. This may be because the proposal was launched as the Curriculog script was running! Check https://utk.curriculog.com/proposal:{proposal['proposal_id']}/form and verify the launch time of the proposal roughly coincides with the time you ran this script. If it does not, contact jspenc35@utk.edu for help. If you need data for this proposal you will have to run this script again.")
+                continue
             proposal['fields'].append({
                 "field_id": 2, #placeholder
                 "label": "coll_level",
@@ -84,7 +87,13 @@ class PandasHelper:
                 "tracked": True,
                 "value": self._trim_ap_name(proposal_list_data)
             })
-            
+            # proposal['fields'].append({
+            #     "field_id": 5, #placeholder
+            #     "label": "completed_date",
+            #     "rich_text": False,
+            #     "tracked": True,
+            #     "value": proposal_list_data['completed_date']
+            # })
             for field in proposal['fields']:
                 field_label = field['label']
                 #NORMALIZE THE FIELD LABEL/ COMBINE REDUNDANT FIELDS TO A SINGLE COLUMN
@@ -103,7 +112,6 @@ class PandasHelper:
             for field_num, field_label in enumerate(pandas_dict.keys()):
                 #print(f'Getting field {field_label} for proposal {proposal_number}')
                 field_data = list(filter(lambda proposal_field: proposal_field['label'] == field_label or ( field_label in self.fields_represented_by_normalized_field_name and proposal_field['label'] in self.fields_represented_by_normalized_field_name[field_label]), proposal['fields']))
-    
                 #If the field exists in the proposal
                 curr_list = pandas_dict[field_label]
                 
@@ -116,6 +124,7 @@ class PandasHelper:
                 #Remove empty strings from list of values
                 flattened = list(filter(lambda val: val !='',flattened))
                 if field_label != 'proposal_id':
+                    
                     data_string = ", ".join(flattened)
                 else:
                     data_string = flattened[0]
@@ -166,6 +175,8 @@ class PandasHelper:
         self.grouping_rule = grouping_rule
         self.concatenated_dataframe = pd.DataFrame()
         self.additional_dataframes = []
+        self.graduate_programs = None
+        self.undergraduate_programs = None
         # Use an ordered dict to indicate the order the API responses should be merged in 
         self.api_responses = OrderedDict({
             '/api/v1/report/proposal_field/': proposal_fields_res,
@@ -340,7 +351,8 @@ class PandasHelper:
 
         fields A list of Fields passed in from the ExcelInputParser instance that should appear in the output Excel Workbook."""
         #Get all columns we are asking for in input excel
-        columns = list(map(lambda field: field.field_name, fields))
+        fields_to_keep = list(filter(lambda field: field.dont_return_field == False, fields))
+        columns = list(map(lambda field: field.field_name, fields_to_keep))
         
         for field in fields:
             if field.comment_field:
@@ -368,6 +380,12 @@ class PandasHelper:
         """Using the passed in Field,identify unique values within a column of concatenated_dataframe. Stores unique values as additional_dataframe_names."""
         self.additional_dataframe_names = list(self.concatenated_dataframe[field].unique())
 
+    def get_programs(self):
+        """Filter concatenated_proposals to identify only those that are for a Graduate or Undergraduate program. Stores programs under graduate_programs and undergraduate_programs, respectively."""
+        self.undergraduate_programs = self.concatenated_dataframe[(self.concatenated_dataframe['GR/UG'] == 'UG') &  (self.concatenated_dataframe['Proposal Type'] == 'program') &  (self.concatenated_dataframe['completed_date'] != None)]
+        self.graduate_programs = self.concatenated_dataframe[(self.concatenated_dataframe['GR/UG'] == 'GR') &  (self.concatenated_dataframe['Proposal Type'] == 'program') &  (self.concatenated_dataframe['completed_date'] != None)]
+        self.undergraduate_programs.sort_values(by='completed_date', ascending=True, inplace=True)
+        self.graduate_programs.sort_values(by='completed_date', ascending=True, inplace=True)
     def write_json(self, data, file_name):
             """Write out an API response"""
             with open(f'{file_name}.json', 'w', encoding='utf-8') as f:
@@ -405,3 +423,24 @@ class PandasHelper:
         else:
             return proposal_action
     
+    def _transform_college_names(self):
+        """Transforms college names to match shortened named. Shortened name is what is returned when the user asks for a college name."""
+        college_lookup = {
+            'College of Arts and Sciences' :'CAS',
+            'Herbert College of Agriculture':'HCA',
+            'Howard H. Baker Jr. School of Public Policy and Public Affairs':'HBS',
+            'Tickle College of Engineering': 'TCE',
+            'College of Architecture and Design': 'CAD',
+            'College of Communication and Information': 'CCI',
+            'College of Education, Health, and Human Sciences': 'CEHHS',
+            'College of Emerging and Collaborative Studies': 'CECS',
+            'College of Law': 'CoL',
+            'College of Nursing': 'CoN',
+            'College of Social Work': 'CSW',
+            'College of Music': 'CoM',
+            'College of Veterinary Medicine': 'VetMed',
+            'Haslam College of Business': 'HCB',
+            'Reserve Officers Training Corps (ROTC)': 'ROTC',
+        }
+        for old_name, new_name in college_lookup.items():
+            self.concatenated_dataframe.replace(old_name, new_name, inplace=True)

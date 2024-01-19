@@ -72,10 +72,15 @@ class ExcelInputParser:
         """Parses the Field column in the Excel workbook to identify which proposal fields are needed from the Curriculog API. Returns an array/list of Field instances which contain filtering information specific to the Field for passing to the PandasHelper constructor ."""
         for row_cells in self.workbook.active.iter_rows(min_row=2, max_row=self.workbook.active.max_row):
             field_filter = self._get_field_filters(row_cells)
+            dont_return_field = self._get_value_in_column(row=row_cells, column="Don't Return Field")
+            embed_url = self._get_value_in_column(row=row_cells, column="Embed URL")
             field = Field(
                 field_name=self._get_value_in_column(row=row_cells, column='Field'), 
                 comment_field=self._get_value_in_column(row=row_cells, column='Field Comment'), 
-                filters=field_filter)
+                filters=field_filter,
+                dont_return_field= dont_return_field if dont_return_field else False, 
+                embed_url= embed_url if embed_url else False
+                )
             # print('APPENDING:\n')
             # if(field.filters):
             #     pprint(vars(field.filters))
