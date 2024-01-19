@@ -8,6 +8,7 @@ class ExcelWriter:
         """Constructor for ExcelWriter instance. Converts dataframes to rows with openpyxl's dataframe_to_rows. concatenated_dataframe is stored as concatenated_rows. additional_dataframes are stored as additional_rows"""
         self.col_lookup = {}
         self.target_comment_column_map = {}
+        self.columns_with_embedded_urls = []
         self.concatenated_dataframe = concatenated_dataframe
         self.additional_dataframes = additional_dataframes
         self.additional_workbook_paths = {}
@@ -32,6 +33,8 @@ class ExcelWriter:
         for field in self.fields:
             if field.comment_field:
                 self.target_comment_column_map[field.field_name] = field.comment_field
+            if field.embed_url:
+                self.columns_with_embedded_urls.append(field.field_name)
         
         self.get_column_indices_by_name()
 
@@ -41,6 +44,7 @@ class ExcelWriter:
         self.get_column_names_needing_comments()
         for row in self.workbook.active.iter_rows():
             self.set_cells_needing_comment(row)
+            self.set_cells_needing_embedded_url(row)
         self.delete_comment_columns(self.workbook.active)
         self.delete_group_by_col_name(self.workbook.active)
         self.add_additional_sheets()
@@ -95,7 +99,15 @@ class ExcelWriter:
             ##Call set_cell_comment IF CHECK IGNORES THE HEADER
             if cell_with_comment.value != comment_column:
                 self.set_cell_comment(cell_needing_comment, cell_with_comment.value)
-
+    def set_cells_needing_embedded_url(self, row):
+        """Given an input row use columns_with_embedded_urls to find which cells in a row need the proposal url embedded and embed the url.""" 
+        for column_name in self.columns_with_embedded_urls:
+            cell_needing_embedded_url = self.find_cell_by_column(row, column_name)
+            cell_with_embedded_url = self.find_cell_by_column(row, 'URL')
+            url = cell_with_embedded_url.value
+            if cell_needing_embedded_url.value!= column_name:
+                cell_needing_embedded_url.hyperlink = url
+                cell_needing_embedded_url.style = 'Hyperlink'
     def find_cell_by_column(self, row, column_name:str): 
         """Given an input row and column_name, find the cell corresponding to column_name and return its value."""
         
