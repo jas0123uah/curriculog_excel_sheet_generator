@@ -61,6 +61,9 @@ class ShowcaseDownloader:
                 target_program_type = self.graduate_program_proposals
                 #colleges_in_college_type = self.graduate_program_proposals['College'].unique()
             colleges_in_college_type = target_program_type['College'].unique()
+            print(f'This is target program type {target_program_type}')
+            print(f'These are the colleges {colleges_in_college_type}')
+
 
         
             for college in colleges_in_college_type:
@@ -71,8 +74,6 @@ class ShowcaseDownloader:
                 for program_type in program_proposal_types:
                     undergrad_showcases_in_college = Doc(college, college_type, program_type)
                     print(f'Getting {college_type} proposals in college {college} for program type {program_type}')
-                    #undergrad_showcases_in_college.add_page_for_datatype(program_type)
-                   #print(f'These are proposals in college {proposals_in_college}')
 
                     proposals_of_given_type_in_college = proposals_in_college[proposals_in_college['Action'] == program_type]
                     for idx, row in proposals_of_given_type_in_college.iterrows():
@@ -82,7 +83,6 @@ class ShowcaseDownloader:
                         time.sleep(10)
                         showcase_html = self.open_showcase_window()
                         #time.sleep(20)
-                        #undergrad_showcases_in_college.write_html(showcase_html, url)
                         undergrad_showcases_in_college.raw_data += showcase_html
                     undergrad_showcases_in_college.save_pdf()
     def open_showcase_window(self):
