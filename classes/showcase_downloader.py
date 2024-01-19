@@ -20,9 +20,6 @@ class ShowcaseDownloader:
             css = css_file.read()
             self.css = css
            
-
-
-        #self.driver = webdriver.Edge(EdgeChromiumDriverManager().install())
     def _open_login(self):
         """Clicks the login button to navigate to the login page.
         """   
@@ -53,15 +50,11 @@ class ShowcaseDownloader:
         self._login()
         college_types = ['undergraduate', 'graduate']
         for college_type in college_types:
-            #print(list(self.undergraduate_program_proposals.columns))
             if college_type == 'undergraduate':
                 target_program_type = self.undergraduate_program_proposals
-                #colleges_in_college_type = self.undergraduate_program_proposals['College'].unique()
             else:
                 target_program_type = self.graduate_program_proposals
-                #colleges_in_college_type = self.graduate_program_proposals['College'].unique()
             colleges_in_college_type = target_program_type['College'].unique()
-            print(f'This is target program type {target_program_type}')
             print(f'These are the colleges {colleges_in_college_type}')
 
 
@@ -82,7 +75,6 @@ class ShowcaseDownloader:
                         self.driver.get(url)
                         time.sleep(10)
                         showcase_html = self.open_showcase_window()
-                        #time.sleep(20)
                         undergrad_showcases_in_college.raw_data += showcase_html
                     undergrad_showcases_in_college.save_pdf()
     def open_showcase_window(self):
@@ -93,8 +85,7 @@ class ShowcaseDownloader:
         except NoSuchElementException:
             print(f'No preview found for proposal found at {proposal_url}')
             return f'No preview found for proposal found at {proposal_url}'
-        # self.driver.execute_script("arguments[0].scrollIntoView();", preview_curriculum_button)
-        # time.sleep(7)
+
         preview_curriculum_button.click()
         time.sleep(7)
         self.driver.switch_to.window(self.driver.window_handles[-1])

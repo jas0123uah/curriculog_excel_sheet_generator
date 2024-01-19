@@ -43,7 +43,6 @@ class PandasHelper:
     def _convert_proposal_field_report_to_pandas_dataframe(self):
         """In the API response for the Curriculog Proposal Field Report, the response nests the fields for a proposal under a list called 'fields'. This function loops over those the api_responses and the nested fields to create a pandas dataframe with a column for each field. If the field, does not exist in given proposal it will be filled with NA."""
         proposal_field_resp = self.api_responses['/api/v1/report/proposal_field/']
-        #print(proposal_field_resp)
         pandas_dict = self._get_fields_from_proposals(proposal_field_resp)
        
         pandas_dict = self._get_field_values_from_proposals(pandas_dict, proposal_field_resp)
@@ -88,7 +87,13 @@ class PandasHelper:
                 "tracked": True,
                 "value": self._trim_ap_name(proposal_list_data)
             })
-            
+            # proposal['fields'].append({
+            #     "field_id": 5, #placeholder
+            #     "label": "completed_date",
+            #     "rich_text": False,
+            #     "tracked": True,
+            #     "value": proposal_list_data['completed_date']
+            # })
             for field in proposal['fields']:
                 field_label = field['label']
                 #NORMALIZE THE FIELD LABEL/ COMBINE REDUNDANT FIELDS TO A SINGLE COLUMN
@@ -107,7 +112,7 @@ class PandasHelper:
             for field_num, field_label in enumerate(pandas_dict.keys()):
                 #print(f'Getting field {field_label} for proposal {proposal_number}')
                 field_data = list(filter(lambda proposal_field: proposal_field['label'] == field_label or ( field_label in self.fields_represented_by_normalized_field_name and proposal_field['label'] in self.fields_represented_by_normalized_field_name[field_label]), proposal['fields']))
-    
+                #print(field_data)
                 #If the field exists in the proposal
                 curr_list = pandas_dict[field_label]
                 
@@ -120,6 +125,7 @@ class PandasHelper:
                 #Remove empty strings from list of values
                 flattened = list(filter(lambda val: val !='',flattened))
                 if field_label != 'proposal_id':
+                    
                     data_string = ", ".join(flattened)
                 else:
                     data_string = flattened[0]
@@ -377,10 +383,8 @@ class PandasHelper:
 
     def get_programs(self):
         """Filter concatenated_proposals to identify only those that are for a Graduate or Undergraduate program. Stores programs under graduate_programs and undergraduate_programs, respectively."""
-        #self.undergraduate_programs = self.concatenated_dataframe[(self.concatenated_dataframe['GR/UG'] == 'UG') &  (self.concatenated_dataframe['Proposal Type'] == 'program') &  (self.concatenated_dataframe['completed_date'].notnull())]
-        self.undergraduate_programs = self.concatenated_dataframe[(self.concatenated_dataframe['GR/UG'] == 'UG') &  (self.concatenated_dataframe['Proposal Type'] == 'program')]
-        print(f'THESE ARE UNDERGRADUATE PROGRAMS {self.undergraduate_programs}')
-        self.graduate_programs = self.concatenated_dataframe[(self.concatenated_dataframe['GR/UG'] == 'GR') &  (self.concatenated_dataframe['Proposal Type'] == 'program')]
+        self.undergraduate_programs = self.concatenated_dataframe[(self.concatenated_dataframe['GR/UG'] == 'UG') &  (self.concatenated_dataframe['Proposal Type'] == 'program') &  (self.concatenated_dataframe['completed_date'] != None)]
+        self.graduate_programs = self.concatenated_dataframe[(self.concatenated_dataframe['GR/UG'] == 'GR') &  (self.concatenated_dataframe['Proposal Type'] == 'program') &  (self.concatenated_dataframe['completed_date'] != None)]
         self.undergraduate_programs.sort_values(by='completed_date', ascending=True, inplace=True)
         self.graduate_programs.sort_values(by='completed_date', ascending=True, inplace=True)
     def write_json(self, data, file_name):
