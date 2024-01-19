@@ -112,7 +112,6 @@ class PandasHelper:
             for field_num, field_label in enumerate(pandas_dict.keys()):
                 #print(f'Getting field {field_label} for proposal {proposal_number}')
                 field_data = list(filter(lambda proposal_field: proposal_field['label'] == field_label or ( field_label in self.fields_represented_by_normalized_field_name and proposal_field['label'] in self.fields_represented_by_normalized_field_name[field_label]), proposal['fields']))
-                #print(field_data)
                 #If the field exists in the proposal
                 curr_list = pandas_dict[field_label]
                 
