@@ -1,5 +1,6 @@
-import openpyxl, re, datetime, os
+import openpyxl, re, os
 from openpyxl.comments import Comment
+from openpyxl.styles import Color, PatternFill, Font
 from openpyxl.workbook.child import INVALID_TITLE_REGEX
 class ExcelWriter:
     import pandas as pd
@@ -45,6 +46,7 @@ class ExcelWriter:
         for row in self.workbook.active.iter_rows():
             self.set_cells_needing_comment(row)
             self.set_cells_needing_embedded_url(row)
+            self.format_impact_cell(row)
         self.delete_comment_columns(self.workbook.active)
         self.delete_group_by_col_name(self.workbook.active)
         self.add_additional_sheets()
@@ -67,7 +69,7 @@ class ExcelWriter:
                             additional_sheet.cell(row=i, column=j).style = 'Pandas'
             
                 for row in additional_sheet.iter_rows():
-            
+                    self.format_impact_cell(row)
                     self.set_cells_needing_comment(row)
                 self.delete_comment_columns(additional_sheet)
                 self.delete_group_by_col_name(additional_sheet)
@@ -141,3 +143,41 @@ class ExcelWriter:
         if self.grouping_rule and self.grouping_rule not in requested_columns:
             col_idx = self.col_lookup[self.grouping_rule]
             worksheet.delete_cols(col_idx, 1) 
+    
+    def get_impact_color(self, impact):
+        """Returns the color the cell should be based on its impact"""
+        red_fill = PatternFill(start_color='FFC7CE',
+                   end_color='FFC7CE',
+                   fill_type='solid')
+        gold_fill = PatternFill(start_color='FFEB9C',
+                   end_color='FFEB9C',
+                   fill_type='solid')
+        green_fill = PatternFill(start_color='C6EFCC',
+                   end_color='C6EFCC',
+                   fill_type='solid')
+        
+        if impact == 'High':
+            return red_fill
+        elif impact == 'Mid':
+            return gold_fill
+            
+        elif impact == 'Low':
+            return green_fill
+        else:
+            return None
+    
+    def get_text_color(self, impact):
+        if impact == 'High':
+            return Color(rgb='9C0006')
+        elif impact == 'Mid':
+            return Color(rgb='9C5700')
+        elif impact == 'Low':
+            return Color(rgb='006100')
+    def format_impact_cell(self, row):
+        """Function for formatting the impact column cells with proper background and font color"""
+        cell = self.find_cell_by_column(row, 'Impact Level')
+        cell_color = self.get_impact_color(cell.value)
+        text_color = self.get_text_color(cell.value)
+        if cell_color != None:
+            cell.fill = cell_color #https://stackoverflow.com/questions/30484220/fill-cells-with-colors-using-openpyxl
+            cell.font = Font(color=text_color)
