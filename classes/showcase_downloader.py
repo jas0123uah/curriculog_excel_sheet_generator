@@ -55,8 +55,6 @@ class ShowcaseDownloader:
             else:
                 target_program_type = self.graduate_program_proposals
             colleges_in_college_type = target_program_type['College'].unique()
-            colleges_in_college_type = ['TCE', 'University Exploratory' ,'University Honors',
- 'University Transition']
          
             print(f'These are the colleges {colleges_in_college_type}')
 

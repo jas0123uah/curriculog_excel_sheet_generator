@@ -16,8 +16,6 @@ parser.add_argument('-gsc', '--get_showcases', action=argparse.BooleanOptionalAc
 parser.add_argument('-n', '--netid', help= 'The NetID to log into Curriculog to retrieve program showcases.', required=False)
 parser.add_argument('-p', '--password', help= 'The password to log into Curriculog to retrieve program showcases.', required=False)
 args = parser.parse_args()
-#args, unknown = parser.parse_known_args()
-print(args)
 os.makedirs('reports', exist_ok=True)
 excel_parser = excel_input_parser.ExcelInputParser(args.input_excel)
 excel_parser.parse_workbook()
