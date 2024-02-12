@@ -71,6 +71,7 @@ class ExcelWriter:
                 for row in additional_sheet.iter_rows():
                     self.format_impact_cell(row)
                     self.set_cells_needing_comment(row)
+                    self.set_cells_needing_embedded_url(row)
                 self.delete_comment_columns(additional_sheet)
                 self.delete_group_by_col_name(additional_sheet)
     

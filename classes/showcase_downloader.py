@@ -48,13 +48,14 @@ class ShowcaseDownloader:
         """Iterates over the undergraduate and graduate program proposals and creates concatenated PDF for each college."""
         self._open_login()
         self._login()
-        college_types = ['undergraduate', 'graduate']
+        college_types = ['undergraduate']
         for college_type in college_types:
             if college_type == 'undergraduate':
                 target_program_type = self.undergraduate_program_proposals
             else:
                 target_program_type = self.graduate_program_proposals
             colleges_in_college_type = target_program_type['College'].unique()
+         
             print(f'These are the colleges {colleges_in_college_type}')
 
 
@@ -73,7 +74,8 @@ class ShowcaseDownloader:
                         url = row['URL']
                         print(f'Getting showcase at url: {url}')
                         self.driver.get(url)
-                        time.sleep(10)
+                        time.sleep(4)
+                        #time.sleep(10)
                         showcase_html = self.open_showcase_window()
                         undergrad_showcases_in_college.raw_data += showcase_html
                     undergrad_showcases_in_college.save_pdf()
@@ -87,8 +89,11 @@ class ShowcaseDownloader:
             return f'No preview found for proposal found at {proposal_url}'
 
         preview_curriculum_button.click()
-        time.sleep(7)
+        #time.sleep(7)
+        time.sleep(2)
         self.driver.switch_to.window(self.driver.window_handles[-1])
+        self.driver.find_element(By.CSS_SELECTOR, 'button#markup').click()
+        time.sleep(6)
         images = self.driver.find_elements(By.TAG_NAME, 'img')
         buttons = []
         buttons = self.driver.find_elements(By.TAG_NAME, 'button')
