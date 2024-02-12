@@ -68,7 +68,7 @@ class PandasHelper:
                 continue
             proposal['fields'].append({
                 "field_id": 2, #placeholder
-                "label": "coll_level",
+                "label": "GR/UG",
                 "rich_text": False,
                 "tracked": True,
                 "value": self._get_level_from_proposal(proposal_list_data)
@@ -208,7 +208,7 @@ class PandasHelper:
             'transcript_name': 'Transcript Name',
             'catalog_name': 'Catalog Name',
             'catalog_year': 'Catalog Year',
-            'coll_level': 'GR/UG',
+            'GR/UG': 'GR/UG',
             'ap_name': 'Action',
             'If yes, which Connections category?': 'Connections Categories',
             'trimmed_ap_name': 'Trimmed Action',
@@ -281,8 +281,12 @@ class PandasHelper:
     def filter_concatenated_proposals(self, filters:Filter):
         """Accepts a list of Filter instances and filters concatenated_dataframe in Pandas. Stores filtered dataframe as the new value on concatenated_dataframe."""
         self.concatenated_dataframe = self.concatenated_dataframe[self.concatenated_dataframe['Proposal Status'] != 'deleted']
-        filters = list(filter(lambda f: f in self.concatenated_dataframe.columns, filters))
         for filter_item in filters:
+            pprint(vars(filter_item))
+        #print(list(self.concatenated_dataframe.columns))
+        filters = list(filter(lambda f: f.field_name in self.concatenated_dataframe.columns, filters))
+        for filter_item in filters:
+            pprint(vars(filter_item))
             if filter_item.operator == '>':
                 print(f'{filter_item.field_name} should be >: {filter_item.values[0]}')
                 self.concatenated_dataframe = self.concatenated_dataframe[self.concatenated_dataframe[filter_item.field_name] > filter_item.values[0]]
@@ -298,7 +302,11 @@ class PandasHelper:
             elif filter_item.operator == '=':
                 #comment
                 print(f'{filter_item.field_name} should equal: {filter_item.values[0].lower()}')
-                self.concatenated_dataframe = self.concatenated_dataframe[self.concatenated_dataframe[filter_item.field_name] == filter_item.values[0]]
+                print(filter_item.values[0])
+                #self.concatenated_dataframe = self.concatenated_dataframe.loc[self.concatenated_dataframe[filter_item.field_name] == filter_item.values[0]]
+                #rslt_df = dataframe.loc[dataframe['Percentage'] > 70] 
+                print(self.concatenated_dataframe)
+                #self.concatenated_dataframe = self.concatenated_dataframe[self.concatenated_dataframe[filter_item.field_name] == filter_item.values[0]]
             elif filter_item.operator == 'NOT EQUAL TO':
                 print(f'{filter_item.field_name} should NOT equal: {filter_item.values[0].lower()}')
                 self.concatenated_dataframe = self.concatenated_dataframe[self.concatenated_dataframe[filter_item.field_name] != filter_item.values[0]]
@@ -382,10 +390,12 @@ class PandasHelper:
 
     def get_programs(self):
         """Filter concatenated_proposals to identify only those that are for a Graduate or Undergraduate program. Stores programs under graduate_programs and undergraduate_programs, respectively."""
-        self.undergraduate_programs = self.concatenated_dataframe[(self.concatenated_dataframe['GR/UG'] == 'UG') &  (self.concatenated_dataframe['Proposal Type'] == 'program') &  (self.concatenated_dataframe['completed_date'] != None)]
-        self.graduate_programs = self.concatenated_dataframe[(self.concatenated_dataframe['GR/UG'] == 'GR') &  (self.concatenated_dataframe['Proposal Type'] == 'program') &  (self.concatenated_dataframe['completed_date'] != None)]
-        self.undergraduate_programs.sort_values(by='completed_date', ascending=True, inplace=True)
-        self.graduate_programs.sort_values(by='completed_date', ascending=True, inplace=True)
+        # self.undergraduate_programs = self.concatenated_dataframe[(self.concatenated_dataframe['GR/UG'] == 'UG') &  (self.concatenated_dataframe['Proposal Type'] == 'program') &  (self.concatenated_dataframe['completed_date'] != None)]
+        # self.graduate_programs = self.concatenated_dataframe[(self.concatenated_dataframe['GR/UG'] == 'GR') &  (self.concatenated_dataframe['Proposal Type'] == 'program') &  (self.concatenated_dataframe['completed_date'] != None)]
+        self.undergraduate_programs = self.concatenated_dataframe[(self.concatenated_dataframe['GR/UG'] == 'UG') &  (self.concatenated_dataframe['Proposal Type'] == 'program')]
+        self.graduate_programs = self.concatenated_dataframe[(self.concatenated_dataframe['GR/UG'] == 'GR') &  (self.concatenated_dataframe['Proposal Type'] == 'program')]
+        #self.undergraduate_programs.sort_values(by='completed_date', ascending=True, inplace=True)
+        #self.graduate_programs.sort_values(by='completed_date', ascending=True, inplace=True)
     def write_json(self, data, file_name):
             """Write out an API response"""
             with open(f'{file_name}.json', 'w', encoding='utf-8') as f:
