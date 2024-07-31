@@ -36,13 +36,13 @@ class PandasHelper:
         self._convert_proposal_field_report_to_pandas_dataframe()
         ##Merge the other api responses (user list & proposal list so we have access to additional data in our dataframe.)
         self._merge_api_responses()
+        self._transform_college_names()
         self.concatenated_dataframe.to_csv('concatenated_dataframe.tsv', sep='\t')
         
         
     def _convert_proposal_field_report_to_pandas_dataframe(self):
         """In the API response for the Curriculog Proposal Field Report, the response nests the fields for a proposal under a list called 'fields'. This function loops over those the api_responses and the nested fields to create a pandas dataframe with a column for each field. If the field, does not exist in given proposal it will be filled with NA."""
         proposal_field_resp = self.api_responses['/api/v1/report/proposal_field/']
-        #print(proposal_field_resp)
         pandas_dict = self._get_fields_from_proposals(proposal_field_resp)
        
         pandas_dict = self._get_field_values_from_proposals(pandas_dict, proposal_field_resp)
@@ -68,7 +68,7 @@ class PandasHelper:
                 continue
             proposal['fields'].append({
                 "field_id": 2, #placeholder
-                "label": "coll_level",
+                "label": "GR/UG",
                 "rich_text": False,
                 "tracked": True,
                 "value": self._get_level_from_proposal(proposal_list_data)
@@ -87,7 +87,13 @@ class PandasHelper:
                 "tracked": True,
                 "value": self._trim_ap_name(proposal_list_data)
             })
-            
+            # proposal['fields'].append({
+            #     "field_id": 5, #placeholder
+            #     "label": "completed_date",
+            #     "rich_text": False,
+            #     "tracked": True,
+            #     "value": proposal_list_data['completed_date']
+            # })
             for field in proposal['fields']:
                 field_label = field['label']
                 #NORMALIZE THE FIELD LABEL/ COMBINE REDUNDANT FIELDS TO A SINGLE COLUMN
@@ -106,7 +112,6 @@ class PandasHelper:
             for field_num, field_label in enumerate(pandas_dict.keys()):
                 #print(f'Getting field {field_label} for proposal {proposal_number}')
                 field_data = list(filter(lambda proposal_field: proposal_field['label'] == field_label or ( field_label in self.fields_represented_by_normalized_field_name and proposal_field['label'] in self.fields_represented_by_normalized_field_name[field_label]), proposal['fields']))
-    
                 #If the field exists in the proposal
                 curr_list = pandas_dict[field_label]
                 
@@ -119,6 +124,7 @@ class PandasHelper:
                 #Remove empty strings from list of values
                 flattened = list(filter(lambda val: val !='',flattened))
                 if field_label != 'proposal_id':
+                    
                     data_string = ", ".join(flattened)
                 else:
                     data_string = flattened[0]
@@ -202,7 +208,7 @@ class PandasHelper:
             'transcript_name': 'Transcript Name',
             'catalog_name': 'Catalog Name',
             'catalog_year': 'Catalog Year',
-            'coll_level': 'GR/UG',
+            'GR/UG': 'GR/UG',
             'ap_name': 'Action',
             'If yes, which Connections category?': 'Connections Categories',
             'trimmed_ap_name': 'Trimmed Action',
@@ -285,8 +291,12 @@ class PandasHelper:
     def filter_concatenated_proposals(self, filters:Filter):
         """Accepts a list of Filter instances and filters concatenated_dataframe in Pandas. Stores filtered dataframe as the new value on concatenated_dataframe."""
         self.concatenated_dataframe = self.concatenated_dataframe[self.concatenated_dataframe['Proposal Status'] != 'deleted']
-        filters = list(filter(lambda f: f in self.concatenated_dataframe.columns, filters))
         for filter_item in filters:
+            pprint(vars(filter_item))
+        #print(list(self.concatenated_dataframe.columns))
+        filters = list(filter(lambda f: f.field_name in self.concatenated_dataframe.columns, filters))
+        for filter_item in filters:
+            pprint(vars(filter_item))
             if filter_item.operator == '>':
                 print(f'{filter_item.field_name} should be >: {filter_item.values[0]}')
                 self.concatenated_dataframe = self.concatenated_dataframe[self.concatenated_dataframe[filter_item.field_name] > filter_item.values[0]]
@@ -302,7 +312,11 @@ class PandasHelper:
             elif filter_item.operator == '=':
                 #comment
                 print(f'{filter_item.field_name} should equal: {filter_item.values[0].lower()}')
-                self.concatenated_dataframe = self.concatenated_dataframe[self.concatenated_dataframe[filter_item.field_name] == filter_item.values[0]]
+                print(filter_item.values[0])
+                #self.concatenated_dataframe = self.concatenated_dataframe.loc[self.concatenated_dataframe[filter_item.field_name] == filter_item.values[0]]
+                #rslt_df = dataframe.loc[dataframe['Percentage'] > 70] 
+                print(self.concatenated_dataframe)
+                #self.concatenated_dataframe = self.concatenated_dataframe[self.concatenated_dataframe[filter_item.field_name] == filter_item.values[0]]
             elif filter_item.operator == 'NOT EQUAL TO':
                 print(f'{filter_item.field_name} should NOT equal: {filter_item.values[0].lower()}')
                 self.concatenated_dataframe = self.concatenated_dataframe[self.concatenated_dataframe[filter_item.field_name] != filter_item.values[0]]
@@ -355,7 +369,8 @@ class PandasHelper:
 
         fields A list of Fields passed in from the ExcelInputParser instance that should appear in the output Excel Workbook."""
         #Get all columns we are asking for in input excel
-        columns = list(map(lambda field: field.field_name, fields))
+        fields_to_keep = list(filter(lambda field: field.dont_return_field == False, fields))
+        columns = list(map(lambda field: field.field_name, fields_to_keep))
         
         for field in fields:
             if field.comment_field:
@@ -387,9 +402,13 @@ class PandasHelper:
         """Filter concatenated_proposals to identify only those that are for a Graduate or Undergraduate program. Stores programs under graduate_programs and undergraduate_programs, respectively."""
         print( self.concatenated_dataframe.columns)
         self.undergraduate_programs = self.concatenated_dataframe[(self.concatenated_dataframe['GR/UG'] == 'UG') &  (self.concatenated_dataframe['Proposal Type'] == 'program') &  (self.concatenated_dataframe['completed_date'].notnull())]
+
+        # self.undergraduate_programs = self.concatenated_dataframe[(self.concatenated_dataframe['GR/UG'] == 'UG') &  (self.concatenated_dataframe['Proposal Type'] == 'program') &  (self.concatenated_dataframe['completed_date'] != None)]
+        # self.graduate_programs = self.concatenated_dataframe[(self.concatenated_dataframe['GR/UG'] == 'GR') &  (self.concatenated_dataframe['Proposal Type'] == 'program') &  (self.concatenated_dataframe['completed_date'] != None)]
+        # self.undergraduate_programs = self.concatenated_dataframe[(self.concatenated_dataframe['GR/UG'] == 'UG') &  (self.concatenated_dataframe['Proposal Type'] == 'program')]
         self.graduate_programs = self.concatenated_dataframe[(self.concatenated_dataframe['GR/UG'] == 'GR') &  (self.concatenated_dataframe['Proposal Type'] == 'program')]
-        self.undergraduate_programs.sort_values(by='completed_date', ascending=True, inplace=True)
-        self.graduate_programs.sort_values(by='completed_date', ascending=True, inplace=True)
+        #self.undergraduate_programs.sort_values(by='completed_date', ascending=True, inplace=True)
+        #self.graduate_programs.sort_values(by='completed_date', ascending=True, inplace=True)
     def write_json(self, data, file_name):
             """Write out an API response"""
             with open(f'{file_name}.json', 'w', encoding='utf-8') as f:
@@ -427,3 +446,24 @@ class PandasHelper:
         else:
             return proposal_action
     
+    def _transform_college_names(self):
+        """Transforms college names to match shortened named. Shortened name is what is returned when the user asks for a college name."""
+        college_lookup = {
+            'College of Arts and Sciences' :'CAS',
+            'Herbert College of Agriculture':'HCA',
+            'Howard H. Baker Jr. School of Public Policy and Public Affairs':'HBS',
+            'Tickle College of Engineering': 'TCE',
+            'College of Architecture and Design': 'CAD',
+            'College of Communication and Information': 'CCI',
+            'College of Education, Health, and Human Sciences': 'CEHHS',
+            'College of Emerging and Collaborative Studies': 'CECS',
+            'College of Law': 'CoL',
+            'College of Nursing': 'CoN',
+            'College of Social Work': 'CSW',
+            'College of Music': 'CoM',
+            'College of Veterinary Medicine': 'VetMed',
+            'Haslam College of Business': 'HCB',
+            'Reserve Officers Training Corps (ROTC)': 'ROTC',
+        }
+        for old_name, new_name in college_lookup.items():
+            self.concatenated_dataframe.replace(old_name, new_name, inplace=True)
