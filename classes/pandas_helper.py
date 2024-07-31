@@ -277,6 +277,16 @@ class PandasHelper:
 
     def merge_dataframes(self, df1, df2, merge_on):
         """Given two dataframes and a key/column to merge on, merge them and return the resulting dataframe. Used to merge API responses from Curriculog API and allow user access to more fields."""
+        # print(df1)
+        # print(df2)
+        # if df2.empty and df1.empty == False:
+        #     return df1
+        # elif df1.empty and df2.empty == False: 
+        #     return df2
+        # else:
+        #     return df1.merge(df2, on=merge_on)
+        #return df1 if df2.empty else 
+        
         return df1.merge(df2, on=merge_on)
     def filter_concatenated_proposals(self, filters:Filter):
         """Accepts a list of Filter instances and filters concatenated_dataframe in Pandas. Stores filtered dataframe as the new value on concatenated_dataframe."""
@@ -390,9 +400,12 @@ class PandasHelper:
 
     def get_programs(self):
         """Filter concatenated_proposals to identify only those that are for a Graduate or Undergraduate program. Stores programs under graduate_programs and undergraduate_programs, respectively."""
+        print( self.concatenated_dataframe.columns)
+        self.undergraduate_programs = self.concatenated_dataframe[(self.concatenated_dataframe['GR/UG'] == 'UG') &  (self.concatenated_dataframe['Proposal Type'] == 'program') &  (self.concatenated_dataframe['completed_date'].notnull())]
+
         # self.undergraduate_programs = self.concatenated_dataframe[(self.concatenated_dataframe['GR/UG'] == 'UG') &  (self.concatenated_dataframe['Proposal Type'] == 'program') &  (self.concatenated_dataframe['completed_date'] != None)]
         # self.graduate_programs = self.concatenated_dataframe[(self.concatenated_dataframe['GR/UG'] == 'GR') &  (self.concatenated_dataframe['Proposal Type'] == 'program') &  (self.concatenated_dataframe['completed_date'] != None)]
-        self.undergraduate_programs = self.concatenated_dataframe[(self.concatenated_dataframe['GR/UG'] == 'UG') &  (self.concatenated_dataframe['Proposal Type'] == 'program')]
+        # self.undergraduate_programs = self.concatenated_dataframe[(self.concatenated_dataframe['GR/UG'] == 'UG') &  (self.concatenated_dataframe['Proposal Type'] == 'program')]
         self.graduate_programs = self.concatenated_dataframe[(self.concatenated_dataframe['GR/UG'] == 'GR') &  (self.concatenated_dataframe['Proposal Type'] == 'program')]
         #self.undergraduate_programs.sort_values(by='completed_date', ascending=True, inplace=True)
         #self.graduate_programs.sort_values(by='completed_date', ascending=True, inplace=True)

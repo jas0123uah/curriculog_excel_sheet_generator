@@ -56,6 +56,14 @@ class ReportGenerator:
         self.user_list = self.run_report(api_endpoint='/api/v1/report/user/', report_type='USER LIST')
         return self.user_list
         
+    def get_attachments(self, report_id=None):
+        """Wrapper function for handling API call to '/api/v1/attachments'. Returns a list of all attachments for the report."""
+        if report_id is None:
+            attachments_list = self.run_report(api_endpoint='/api/v1/attachments/3', report_type='ATTACHMENTS')
+            print(attachments_list)
+            return attachments_list
+        else:
+            attachments = self.run_report(api_endpoint=f'/api/v1/attachments/{report_id}')
     def get_all_proposal_field_reports(self, api_filters):
         """Wrapper function for handling API call to '/api/v1/report/proposal_field'. Loops over self.ap_ids to gather proposal fields for all proposals. Stores API responses in all_proposal_data. """
         report_ids = []
@@ -80,11 +88,15 @@ class ReportGenerator:
     def run_report(self, *, api_endpoint, request_params= None, wait_for_results=True, report_type, ):
         """Sends POST request to Curriculog api_endpoint. Report_type prints a helpful message for retrieving the report for debugging purposes."""        
         url = f'{self.base_url}{api_endpoint}'
-        if request_params: 
+        
+        if report_type == 'ATTACHMENTS':
+            response = requests.get(url=url, headers=self.headers, allow_redirects=True)
+            return response._content
+        elif request_params: 
             response = requests.post(url=url, headers=self.headers, data=request_params, allow_redirects=True)
         else:
             response = requests.post(url=url, headers=self.headers, allow_redirects=True)
-        #pprint(vars(response))
+        pprint(vars(response))
         report_id = response.json()['report_id']
         logger.info(f'{report_type} IS UNDER REPORT ID: {report_id}')
         if wait_for_results:
@@ -113,11 +125,13 @@ class ReportGenerator:
             while no_results and remaining_num_attempts:
                 now = datetime.datetime.now()
                 sixty_secs_from_now = now + datetime.timedelta(0, 60)
+                print(meta['error'])
                 logger.info(f"No results for report id {report_id}. Waiting 60 seconds and trying again at {sixty_secs_from_now.strftime('%I:%M:%S')}. {remaining_num_attempts} attempts remaining.")
                 time.sleep(60)
                 response = requests.get(url=url, headers=self.headers, allow_redirects=True)
                 meta = response.json()['meta']
                 no_results = 'error' in meta and 'message' in meta['error'] and 'No results' in meta['error']['message']
+                remaining_num_attempts -= 1
         
         if meta['total_results'] != meta['results_current_page']:
             err = f'There are {meta["total_results"]} total results and only {meta["results_current_page"]} results are on the current page. Please contact jspenc35@utk.edu with this error and provide the report_id {report_id}.'

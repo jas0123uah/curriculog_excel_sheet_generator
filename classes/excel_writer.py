@@ -77,7 +77,7 @@ class ExcelWriter:
     
     def delete_temp_workbooks(self):
         """Delete the workbooks we temporarily created due to openpyxl not playing nice with pandas."""
-        os.remove('test.xlsx')
+        #os.remove('test.xlsx')
         for temp_workbook in self.additional_workbook_paths.values():
             os.remove(temp_workbook)
         

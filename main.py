@@ -1,4 +1,5 @@
 #import classes.proposal_crawler as proposal_crawler
+
 from classes import report_generator, excel_writer, excel_input_parser, pandas_helper, showcase_downloader
 import argparse, shutil, os
 
@@ -24,6 +25,11 @@ excel_parser.get_api_filters()
 report_runner = report_generator.ReportGenerator(args.api_token)
 #report_runner.refresh_api_token()
 
+attachments = report_runner.get_attachments()
+
+with open('reports/attachments.pdf', 'wb') as f:
+    f.write(attachments)
+sys.exit()
 if args.proposal_list_report_id and  args.proposal_field_report_range:
     report_runner.pull_previous_results(args)
 else:
@@ -43,6 +49,8 @@ data_manipulator.concatenate_proposals()
 data_manipulator.transform_column_names()
 data_manipulator.filter_concatenated_proposals(excel_parser.filters)
 data_manipulator.sort_concatenated_proposals(sorting_rules=excel_parser.sorting_rules)
+data_manipulator.get_programs()
+print(data_manipulator.undergraduate_programs['URL'])
 if args.get_showcases:
     data_manipulator.get_programs()
     downloader = showcase_downloader.ShowcaseDownloader(data_manipulator.undergraduate_programs, data_manipulator.graduate_programs, args)
