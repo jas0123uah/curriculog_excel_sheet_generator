@@ -322,7 +322,10 @@ class PandasHelper:
                 self.concatenated_dataframe = self.concatenated_dataframe[self.concatenated_dataframe[filter_item.field_name] != filter_item.values[0]]
             elif filter_item.operator == 'IN':
                 print(f'{filter_item.field_name} should contain one of the following values: {", ".join(filter_item.values)}')
-                self.concatenated_dataframe = self.concatenated_dataframe[self.concatenated_dataframe[filter_item.field_name] in filter_item.values]
+                #Filter to have only rows where filter_item.field_name's value is in filter_item.values
+                print(filter_item.values)
+                self.concatenated_dataframe = self.concatenated_dataframe[self.concatenated_dataframe[filter_item.field_name].apply(lambda x: any(item in str(x) for item in filter_item.values))]
+                #self.concatenated_dataframe = self.concatenated_dataframe[self.concatenated_dataframe[filter_item.field_name] in filter_item.values]
             elif filter_item.operator == 'NOT IN':
                 print(f'{filter_item.field_name} should NOT contain one of the following values: {", ".join(filter_item.values)}')
                 self.concatenated_dataframe = self.concatenated_dataframe[self.concatenated_dataframe[filter_item.field_name]  not in filter_item.values]

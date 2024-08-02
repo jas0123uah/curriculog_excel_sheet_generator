@@ -51,6 +51,24 @@ class ReportGenerator:
         self.proposal_list = self.run_report(api_endpoint='/api/v1/report/proposal/', report_type='PROPOSAL LIST')
         return self.proposal_list
     
+    def get_ap_names(self):
+        """Wrapper function for getting a proposal list and looping over it to get all ap_names & their corresponding ap_id."""
+        self.get_proposal_list()
+        lookup = {}
+        for proposal in self.proposal_list:
+            ap_id = proposal['ap_id']
+            ap_name = proposal['ap_name']
+            lookup[ap_name] = ap_id
+            logger.info(f'Retrieved ap_id: {ap_id}, ap_name: {ap_name}')
+            #self.ap_ids.append(ap_id)
+        with open('ap_names.csv', 'w') as f:
+            #Write dictionary to file with one row per key-value pair
+            f.write(f'AP Name, AP ID\n')
+            for key, value in lookup.items():
+                f.write(f'{key},{value}\n')
+
+        #return self.ap_ids
+    
     def get_user_list(self):
         """Wrapper function for handling API call to'/api/v1/report/user'"""
         self.user_list = self.run_report(api_endpoint='/api/v1/report/user/', report_type='USER LIST')
@@ -60,15 +78,18 @@ class ReportGenerator:
         """Wrapper function for handling API call to '/api/v1/attachments'. Returns a list of all attachments for the report."""
         if report_id is None:
             attachments_list = self.run_report(api_endpoint='/api/v1/attachments/3', report_type='ATTACHMENTS')
-            print(attachments_list)
+            #print(attachments_list)
             return attachments_list
         else:
             attachments = self.run_report(api_endpoint=f'/api/v1/attachments/{report_id}')
-    def get_all_proposal_field_reports(self, api_filters):
+    def get_all_proposal_field_reports(self, api_filters = {}, ap_id=None):
         """Wrapper function for handling API call to '/api/v1/report/proposal_field'. Loops over self.ap_ids to gather proposal fields for all proposals. Stores API responses in all_proposal_data. """
         report_ids = []
         all_proposals_w_data = []
-        self.get_ap_ids()
+        if ap_id is None:
+            self.get_ap_ids()
+        else:
+            self.ap_ids = [ap_id]
         for ap_id in self.ap_ids:
             logger.info(f'Submitting Proposal Field Report request for ap_id {ap_id}')
             
@@ -96,7 +117,7 @@ class ReportGenerator:
             response = requests.post(url=url, headers=self.headers, data=request_params, allow_redirects=True)
         else:
             response = requests.post(url=url, headers=self.headers, allow_redirects=True)
-        pprint(vars(response))
+        #pprint(vars(response))
         report_id = response.json()['report_id']
         logger.info(f'{report_type} IS UNDER REPORT ID: {report_id}')
         if wait_for_results:
@@ -116,23 +137,27 @@ class ReportGenerator:
         response = requests.get(url=url, headers=self.headers, allow_redirects=True)
         meta = response.json()['meta']
 
-        #print(f'META:{meta}')
+        print(f'META:{meta}')
         #print(response.json())
         no_results = 'error' in meta and 'message' in meta['error'] and 'No results' in meta['error']['message']
         if no_results:
-            remaining_num_attempts = 30
+            remaining_num_attempts = 2
             remaining_num_attempts -= 1
             while no_results and remaining_num_attempts:
                 now = datetime.datetime.now()
                 sixty_secs_from_now = now + datetime.timedelta(0, 60)
-                print(meta['error'])
+                #print(meta['error'])
                 logger.info(f"No results for report id {report_id}. Waiting 60 seconds and trying again at {sixty_secs_from_now.strftime('%I:%M:%S')}. {remaining_num_attempts} attempts remaining.")
-                time.sleep(60)
+                #time.sleep(1)
                 response = requests.get(url=url, headers=self.headers, allow_redirects=True)
                 meta = response.json()['meta']
                 no_results = 'error' in meta and 'message' in meta['error'] and 'No results' in meta['error']['message']
                 remaining_num_attempts -= 1
         
+        #print(meta)
+        if no_results:
+            print(f'NO RESULTS FOR REPORT ID  {report_id}. SKIPPING')
+            return
         if meta['total_results'] != meta['results_current_page']:
             err = f'There are {meta["total_results"]} total results and only {meta["results_current_page"]} results are on the current page. Please contact jspenc35@utk.edu with this error and provide the report_id {report_id}.'
             logger.error(err)
@@ -171,7 +196,8 @@ class ReportGenerator:
         all_results = []
         for report_id in range(int(report_id_range[0].strip()), int(report_id_range[1].strip())+1):
             results = self.get_report_results(report_id)
-            all_results = [*all_results, *results]
+            if results is not None:
+                all_results = [*all_results, *results]
         self.all_proposal_data = all_results
 
     

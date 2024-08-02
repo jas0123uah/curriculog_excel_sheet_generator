@@ -1,7 +1,7 @@
 #import classes.proposal_crawler as proposal_crawler
 
-from classes import report_generator, excel_writer, excel_input_parser, pandas_helper, showcase_downloader
-import argparse, shutil, os
+from classes import report_generator, excel_writer, excel_input_parser, pandas_helper, showcase_downloader 
+import argparse, shutil, os, sys
 
 parser = argparse.ArgumentParser()
 parser.add_argument('-a', '--api_token', help="The token associated with your API key. Used to pull data from Curriculog. Tokens expire every 25 hours so make sure you have a recent token.")
@@ -16,20 +16,31 @@ parser.add_argument('-d', '--debug_mode', action=argparse.BooleanOptionalAction,
 parser.add_argument('-gsc', '--get_showcases', action=argparse.BooleanOptionalAction, help="Flag to indicate if program showcase docs should be created for each college.")
 parser.add_argument('-n', '--netid', help= 'The NetID to log into Curriculog to retrieve program showcases.', required=False)
 parser.add_argument('-p', '--password', help= 'The password to log into Curriculog to retrieve program showcases.', required=False)
+parser.add_argument('-ap', '--get_ap_names', action='store_true', help= 'Pull the different  apIds & ap names for the available Curriculog proposals.', required=False)
+parser.add_argument('-f', '--field_report',  help= 'Pull the proposals for a specific ap_id.', required=False)
+
 args = parser.parse_args()
+
 os.makedirs('reports', exist_ok=True)
+report_runner = report_generator.ReportGenerator(args.api_token)
+if args.get_ap_names is not False:
+    report_runner.get_ap_names()
+    sys.exit()
+
+if args.field_report:
+    report_runner.get_all_proposal_field_reports(ap_id=args.field_report)
+    sys.exit()
 excel_parser = excel_input_parser.ExcelInputParser(args.input_excel)
 excel_parser.parse_workbook()
 excel_parser.get_api_filters()
 
-report_runner = report_generator.ReportGenerator(args.api_token)
 #report_runner.refresh_api_token()
 
 attachments = report_runner.get_attachments()
 
-with open('reports/attachments.pdf', 'wb') as f:
-    f.write(attachments)
-sys.exit()
+# with open('reports/attachments.pdf', 'wb') as f:
+#     f.write(attachments)
+# sys.exit()
 if args.proposal_list_report_id and  args.proposal_field_report_range:
     report_runner.pull_previous_results(args)
 else:

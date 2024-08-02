@@ -13,4 +13,4 @@ class Filter:
             raise ValueError(f"Invalid operator: {operator} operator must be >, >=, <, <=, =, !=, IN, NOT IN, or BETWEEN")
         self.field_name = field_name
         self.operator = operator
-        self.values = values
+        self.values = [value.strip() for value in values]
