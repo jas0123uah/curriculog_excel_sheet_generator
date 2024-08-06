@@ -128,7 +128,8 @@ class ExcelInputParser:
             if api_filter_field and field.filters and field.filters.operator == '=':
                 api_filters[api_filter_field] = field.filters.values
         self.api_filters = api_filters
-        logging.info(msg=f'THE API FILTERS {self.api_filters}')
+        print(f'THE API FILTERS {self.api_filters}')
+        #logging.info(msg=f'THE API FILTERS {self.api_filters}')
         
 
     def get_grouping_rule(self): 

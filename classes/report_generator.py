@@ -3,6 +3,11 @@ import datetime
 from pprint import pprint
 from .field import Field
 import logging, sys
+from decouple import config
+import configparser
+config = configparser.ConfigParser()
+config.read(r'C:\Users\jspenc35\projects\curriculog_excel_sheet_generator\config.ini')
+
 
 # Configure root logger  
 logging.basicConfig(format='%(asctime)s | %(name)s | %(levelname)s |', 
@@ -32,6 +37,9 @@ class ReportGenerator:
             'Authorization': f'Bearer {self.api_token}'
         }
         self.all_proposal_data = []
+        self.proposal_list_report_id = None
+        self.user_report_id = None
+        self.report_ids = []
         #Default empty list for api/v1/reports/user/ report
         self.user_list = []
         
@@ -84,7 +92,6 @@ class ReportGenerator:
             attachments = self.run_report(api_endpoint=f'/api/v1/attachments/{report_id}')
     def get_all_proposal_field_reports(self, api_filters = {}, ap_id=None):
         """Wrapper function for handling API call to '/api/v1/report/proposal_field'. Loops over self.ap_ids to gather proposal fields for all proposals. Stores API responses in all_proposal_data. """
-        report_ids = []
         all_proposals_w_data = []
         if ap_id is None:
             self.get_ap_ids()
@@ -98,9 +105,11 @@ class ReportGenerator:
             request_params = json.dumps(request_params)
             
             report_id = self.run_report(api_endpoint='/api/v1/report/proposal_field/', request_params=request_params, report_type='PROPOSAL FIELD', wait_for_results=False )
-            report_ids.append(report_id)
+            self.report_ids.append(report_id)
+        # Write report ids to file so we can easily pull the API responses if the script crashes
+        self.write_report_ids()
 
-        for report_id in report_ids:
+        for report_id in self.report_ids:
             proposals_w_data = self.get_report_results(report_id)
             all_proposals_w_data = [*all_proposals_w_data, *proposals_w_data]
         
@@ -119,7 +128,8 @@ class ReportGenerator:
             response = requests.post(url=url, headers=self.headers, allow_redirects=True)
         #pprint(vars(response))
         report_id = response.json()['report_id']
-        logger.info(f'{report_type} IS UNDER REPORT ID: {report_id}')
+        print(f'{report_type} IS UNDER REPORT ID: {report_id}')
+        #logger.info(f'{report_type} IS UNDER REPORT ID: {report_id}')
         if wait_for_results:
             results = self.get_report_results(report_id)
             return results
@@ -127,7 +137,8 @@ class ReportGenerator:
     
     def get_report_results(self, report_id): 
         """Given a report_id call /api/v1/report/result/{report_id} to get the results for a Curriculog report."""
-        logger.info(f'Pulling results for report id {report_id}.')
+        print(f'Pulling results for report id {report_id}.')
+        #logger.info(f'Pulling results for report id {report_id}.')
         if os.path.exists(f'./reports/{report_id}.json'):
             with open(f'./reports/{report_id}.json', 'r', encoding='utf-8', errors="ignore") as f:
                 data = f.read()
@@ -137,7 +148,7 @@ class ReportGenerator:
         response = requests.get(url=url, headers=self.headers, allow_redirects=True)
         meta = response.json()['meta']
 
-        print(f'META:{meta}')
+        #print(f'META:{meta}')
         #print(response.json())
         no_results = 'error' in meta and 'message' in meta['error'] and 'No results' in meta['error']['message']
         if no_results:
@@ -147,7 +158,8 @@ class ReportGenerator:
                 now = datetime.datetime.now()
                 sixty_secs_from_now = now + datetime.timedelta(0, 60)
                 #print(meta['error'])
-                logger.info(f"No results for report id {report_id}. Waiting 60 seconds and trying again at {sixty_secs_from_now.strftime('%I:%M:%S')}. {remaining_num_attempts} attempts remaining.")
+                print(f'No results for report id {report_id}. Waiting 60 seconds and trying again at {sixty_secs_from_now.strftime("%I:%M:%S")}. {remaining_num_attempts} attempts remaining.')
+                #logger.info(f"No results for report id {report_id}. Waiting 60 seconds and trying again at {sixty_secs_from_now.strftime('%I:%M:%S')}. {remaining_num_attempts} attempts remaining.")
                 #time.sleep(1)
                 response = requests.get(url=url, headers=self.headers, allow_redirects=True)
                 meta = response.json()['meta']
@@ -157,12 +169,14 @@ class ReportGenerator:
         #print(meta)
         if no_results:
             print(f'NO RESULTS FOR REPORT ID  {report_id}. SKIPPING')
-            return
+            return []
         if meta['total_results'] != meta['results_current_page']:
             err = f'There are {meta["total_results"]} total results and only {meta["results_current_page"]} results are on the current page. Please contact jspenc35@utk.edu with this error and provide the report_id {report_id}.'
             logger.error(err)
             raise Exception(err)
-        self.write_json(response.json()['results'], f'./reports/{report_id}')
+        # FIX HERE
+        directory = r'C:\Users\jspenc35\projects\curriculog_excel_sheet_generator\reports'
+        self.write_json(response.json()['results'], directory + "\\" +report_id)
         return response.json()['results']
     def refresh_api_token(self):
         """Refreshes the Curriculog API token to prevent token expiration errors."""
@@ -203,5 +217,10 @@ class ReportGenerator:
     
     def write_json(self, data, file_name):
         """Write out an API response"""
-        with open(f'{file_name}.json', 'w', encoding='utf-8') as f:
+        with open(r"{}".format(f"{file_name}.json"), 'w', encoding='utf-8') as f:
             json.dump(data, f, ensure_ascii=False, indent=4)
+    
+    def write_report_ids(self):
+        """Write out report ids for self.report_ids, self.proposal_list_report_id, and self.user_report_id. to allow recreation of previous runs of the script."""
+        data = {'proposal_field_report_range': f"{self.report_ids[0]},{self.report_ids[-1]}", 'proposal_list': self.proposal_list_report_id, 'user_list': self.user_report_id}
+        self.write_json(data,f'{config("PREVIOUS_REPORT_IDS")+"previous_report_ids"}')
