@@ -2,6 +2,7 @@
 
 from classes import report_generator, excel_writer, excel_input_parser, pandas_helper, showcase_downloader 
 import argparse, shutil, os, sys
+from pathlib import Path
 
 parser = argparse.ArgumentParser()
 parser.add_argument('-a', '--api_token', help="The token associated with your API key. Used to pull data from Curriculog. Tokens expire every 25 hours so make sure you have a recent token.")
@@ -74,7 +75,7 @@ data_manipulator.get_additional_dataframes()
 
 data_manipulator.concatenated_dataframe.to_excel('test.xlsx')
 
-writer = excel_writer.ExcelWriter(data_manipulator.concatenated_dataframe, data_manipulator.additional_dataframes, excel_parser.fields, data_manipulator.grouping_rule)
+writer = excel_writer.ExcelWriter(data_manipulator.concatenated_dataframe, data_manipulator.additional_dataframes, excel_parser.fields, data_manipulator.grouping_rule, report_name=Path(args.input_excel).stem)
 writer.create_workbook()
 if args.debug_mode == False:
     shutil.rmtree('./reports')

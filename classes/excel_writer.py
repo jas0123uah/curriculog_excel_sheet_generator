@@ -2,10 +2,11 @@ import openpyxl, re, os
 from openpyxl.comments import Comment
 from openpyxl.styles import Color, PatternFill, Font
 from openpyxl.workbook.child import INVALID_TITLE_REGEX
+from datetime import datetime
 class ExcelWriter:
     import pandas as pd
     from .field import Field
-    def __init__(self, concatenated_dataframe:pd.DataFrame, additional_dataframes:list[pd.DataFrame], fields:list[Field], grouping_rule:str ): 
+    def __init__(self, concatenated_dataframe:pd.DataFrame, additional_dataframes:list[pd.DataFrame], fields:list[Field], grouping_rule:str, report_name:str ): 
         """Constructor for ExcelWriter instance. Converts dataframes to rows with openpyxl's dataframe_to_rows. concatenated_dataframe is stored as concatenated_rows. additional_dataframes are stored as additional_rows"""
         self.col_lookup = {}
         self.target_comment_column_map = {}
@@ -13,6 +14,7 @@ class ExcelWriter:
         self.concatenated_dataframe = concatenated_dataframe
         self.additional_dataframes = additional_dataframes
         self.additional_workbook_paths = {}
+        self.report_name = report_name
         #Write the additional dataframes we have to Excel workbooks. OpenPyxl doesn't play nice w/ pandas dfs, but does load xlsx files fine.
         for df_data in self.additional_dataframes:
             for df_name, df in df_data.items():
@@ -50,9 +52,18 @@ class ExcelWriter:
         self.delete_comment_columns(self.workbook.active)
         self.delete_group_by_col_name(self.workbook.active)
         self.add_additional_sheets()
-        output_dir = f'./output/'
+        #Current timestamp in YYYY-MM-DD-HH-MM-SS format using 12 hour clock
+        now = datetime.now().strftime('%Y_%m_%d_%I_%M_%p')
+        output_dir = f'./output/{self.report_name}/current_report/'
+        prev_output_dir = f'./output/{self.report_name}/previous_report/'
+        os.makedirs(prev_output_dir, exist_ok=True)
         os.makedirs(output_dir, exist_ok=True)
-        self.workbook.save(f'{output_dir}output.xlsx')
+        # Move files in output directory to previous output directory
+        for file in os.listdir(output_dir):
+            os.rename(f'{output_dir}{file}', f'{prev_output_dir}{file}')
+        
+        #Write output workbook
+        self.workbook.save(f'{output_dir}{now}.xlsx')
         self.delete_temp_workbooks()
         
     def add_additional_sheets(self):

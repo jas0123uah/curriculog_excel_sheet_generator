@@ -52,7 +52,7 @@ def generate_report(api_token, input_excel, window):
     data_manipulator.sort_concatenated_proposals(sorting_rules=excel_parser.sorting_rules)
     data_manipulator.get_programs()
 
-    writer = ExcelWriter(data_manipulator.concatenated_dataframe, data_manipulator.additional_dataframes, excel_parser.fields, data_manipulator.grouping_rule)
+    writer = ExcelWriter(data_manipulator.concatenated_dataframe, data_manipulator.additional_dataframes, excel_parser.fields, data_manipulator.grouping_rule, report_name=input_excel)
     writer.create_workbook()
 
     # Manually write any remaining print messages to the messagebox

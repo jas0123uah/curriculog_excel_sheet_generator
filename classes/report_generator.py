@@ -5,8 +5,6 @@ from .field import Field
 import logging, sys
 from decouple import config
 import configparser
-config = configparser.ConfigParser()
-config.read(r'C:\Users\jspenc35\projects\curriculog_excel_sheet_generator\config.ini')
 
 
 # Configure root logger  
@@ -128,6 +126,10 @@ class ReportGenerator:
             response = requests.post(url=url, headers=self.headers, allow_redirects=True)
         #pprint(vars(response))
         report_id = response.json()['report_id']
+        if report_type == 'USER LIST':
+            self.user_report_id = report_id
+        elif report_type == 'PROPOSAL LIST':
+            self.proposal_list_report_id = report_id
         print(f'{report_type} IS UNDER REPORT ID: {report_id}')
         #logger.info(f'{report_type} IS UNDER REPORT ID: {report_id}')
         if wait_for_results:

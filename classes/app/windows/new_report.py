@@ -16,14 +16,11 @@ def build_new_report_window():
         with open(prev_report_id_file) as f:
             data = json.load(prev_report_id_file)
         report_generator.pull_previous_results(data)
-    def on_listbox_click(listbox, xlsx_files):
-        # Adjust the size of the listbox based on the number of xlsx files found in the directory
-        listbox.configure(width=200, height=5*int((len(xlsx_files) * 20) + 20)) # Adjust the size of the listbox based on the number of xlsx files found in the directory
-        listbox.configure(font=("Arial", 12, "bold"))
-        listbox.configure(bg="#E6E6E6E6" if len(xlsx_files) > 0 else ("Arial", 12, "bold"))
+
+
     
     def on_selection_change(listbox, submit_button, api_key_entry):
-        if listbox.curselection() and api_key_entry.get().strip() == '':
+        if listbox.curselection() and api_key_entry.get().strip() != '':
             submit_button.config(state=tk.NORMAL)
         else:
             submit_button.config(state=tk.DISABLED)
@@ -33,15 +30,12 @@ def build_new_report_window():
         selected_index = listbox.curselection()
         if selected_index:
             selected_file = listbox.get(selected_index)
-            print(xlsx_files_dict[selected_file])
             return xlsx_files_dict[selected_file]
         else:
             return None
     
 
     def validate_api_key():
-        print(type(listbox.curselection()))
-        print(f'Listbox selection: {listbox.curselection()}')
         if api_key_entry.get().strip() == '' or len(listbox.curselection()) == 0:
             submit_button.config(state=tk.DISABLED)
         else:
@@ -91,14 +85,13 @@ def build_new_report_window():
     listbox = tk.Listbox(new_window)
     listbox.pack(pady=10)
     listbox.bind("<<ListboxSelect>>", lambda event: on_selection_change(listbox, submit_button, api_key_entry))
-    #listbox.bind("<<ListboxSelect>>", on_selection_change(listbox, submit_button ))  # Bind the selection change function to the ListboxSelect event
 
 
-     # Create a frame to hold the API key label and entry field
+    # Create a frame to hold the API key label and entry field
     api_key_frame = tk.Frame(new_window)
     api_key_frame.pack(pady=10, padx=(0, 10))
 
-     # Create a label and entry field for the API key
+    # Create a label and entry field for the API key
     api_key_label = tk.Label(api_key_frame, text="API Key:")
     api_key_label.grid(row=0, column=0)
     api_key_entry = tk.Entry(api_key_frame)
@@ -110,18 +103,6 @@ def build_new_report_window():
     use_last_api_calls_var = tk.BooleanVar()
     use_last_api_calls_checkbox = tk.Checkbutton(new_window, text="Use Last API Calls", variable=use_last_api_calls_var)
     use_last_api_calls_checkbox.pack(anchor="w", side="left", padx=10, pady=10)
-    # def use_last_api_calls_callback():
-    #     prev_report_id_file = config('PREVIOUS_REPORT_IDS')+'data.json'
-    #     if os.path.exists(prev_report_id_file) == False:
-    #         messagebox.showerror(title="Error", message=f"{prev_report_id_file} does not exist. This file contains the previous report IDs. Please generate a new report.")
-    #         #messagebox(new_window, text=f"{prev_report_id_file} does not exist. This file contains the previous report IDs. Please generate a new report.").pack()
-    #     report_generator = ReportGenerator(api_token=api_key_entry)
-    #     # Read in prev_report_id_file
-    #     with open(prev_report_id_file) as f:
-    #         data = json.load(prev_report_id_file)
-    #     report_generator.pull_previous_results(data)
-
-        
 
     # Create a submit button
     submit_button = tk.Button(new_window, text="Submit", state=tk.DISABLED, command=lambda: use_last_api_calls_callback() if use_last_api_calls_var.get() == True else  generate_report(api_key_entry.get(), input_excel= get_selected_file(listbox, xlsx_files_dict), window=new_window))
@@ -135,8 +116,7 @@ def build_new_report_window():
     listbox.configure(width=30, height=1.2*int((len(xlsx_files)) + 10)) # Adjust the size of the listbox based on the number of xlsx files found in the directory
     listbox.configure(font=("Arial", 12, "bold"))
     listbox.configure(bg="#E6E6E6E6" if len(xlsx_files) > 0 else ("Arial", 12, "bold"))
-    listbox.bind("<Button-1>", lambda: on_listbox_click(listbox, xlsx_files))
+    #listbox.bind("<Button-1>", lambda: on_listbox_click(listbox, xlsx_files, api_key_entry))
 
     # Start the main loop of the new window
     new_window.mainloop()
-
