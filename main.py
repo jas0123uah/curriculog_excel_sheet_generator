@@ -72,10 +72,10 @@ if args.get_showcases:
 
 data_manipulator.get_relevant_columns(excel_parser.fields)
 data_manipulator.get_additional_dataframes()
+output_file = os.path.join(os.getcwd(), 'output', args.input_excel, 'current', 'test.xlsx')
+data_manipulator.concatenated_dataframe.to_excel(output_file, index=False)
 
-data_manipulator.concatenated_dataframe.to_excel('test.xlsx')
-
-writer = excel_writer.ExcelWriter(data_manipulator.concatenated_dataframe, data_manipulator.additional_dataframes, excel_parser.fields, data_manipulator.grouping_rule, report_name=Path(args.input_excel).stem)
+writer = excel_writer.ExcelWriter(data_manipulator.concatenated_dataframe, data_manipulator.additional_dataframes, excel_parser.fields, data_manipulator.grouping_rule, report_name=Path(args.input_excel).stem, init_data=output_file)
 writer.create_workbook()
 if args.debug_mode == False:
     shutil.rmtree('./reports')

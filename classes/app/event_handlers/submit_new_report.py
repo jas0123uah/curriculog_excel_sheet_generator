@@ -1,34 +1,15 @@
 #from ..curriculog_report_generator import generate_report
 import tkinter as tk
 from tkinter import messagebox
-from tkinter.scrolledtext import ScrolledText
-from tkinter import Text
-import sys
+from decouple import config
+from curriculog_excel_sheet_generator.classes.app.utils.loading_window import LoadingWindow
 from curriculog_excel_sheet_generator.classes.report_generator import ReportGenerator
-from  curriculog_excel_sheet_generator.classes.app.utils.print_to_message_box import PrintToMessageBox
 from curriculog_excel_sheet_generator.classes.excel_input_parser import ExcelInputParser
 from curriculog_excel_sheet_generator.classes.pandas_helper import PandasHelper
 from curriculog_excel_sheet_generator.classes.excel_writer import ExcelWriter
 def generate_report(api_token, input_excel, window):
+    loading_window = LoadingWindow()
     print(f'API TOKEN: {api_token}')
-
-    
-
-     # Create a new window to display the loading bar and messages
-    loading_window = tk.Toplevel()
-    loading_window.title("Loading...")
-    loading_window.geometry("300x200")
-    
-
-    textbox=Text(loading_window)
-    textbox.pack()
-
-    def redirector(inputStr):
-        textbox.insert(tk.INSERT, inputStr)
-        textbox.see(tk.END)
-        textbox.update()
-    sys.stdout.write = redirector
-
     excel_parser = ExcelInputParser(input_excel)
     excel_parser.parse_workbook()
     excel_parser.get_api_filters()
@@ -36,7 +17,22 @@ def generate_report(api_token, input_excel, window):
     report_runner.get_proposal_list()
     report_runner.get_user_list()
     report_runner.get_all_proposal_field_reports(excel_parser.api_filters)
+    process_api_responses(report_runner, input_excel, excel_parser)
+    
 
+    # Display a message to the user when the API calls are finished
+    loading_window.destroy()
+    messagebox.showinfo("Report Generated", "The report has been generated.")
+    
+    #generator = report_generator.ReportGenerator(api_token=api_token)
+
+
+def process_api_responses(report_runner, input_excel, excel_parser=None):
+  
+    if excel_parser is None:
+        excel_parser = ExcelInputParser(input_excel)
+        excel_parser.parse_workbook()
+        excel_parser.get_api_filters()
     data_manipulator = PandasHelper(
     proposal_fields_res= report_runner.all_proposal_data,
     proposal_list_res= report_runner.proposal_list,
@@ -51,21 +47,12 @@ def generate_report(api_token, input_excel, window):
     data_manipulator.filter_concatenated_proposals(excel_parser.filters)
     data_manipulator.sort_concatenated_proposals(sorting_rules=excel_parser.sorting_rules)
     data_manipulator.get_programs()
+    data_manipulator.get_relevant_columns(excel_parser.fields)
+    data_manipulator.get_additional_dataframes()
+
 
     writer = ExcelWriter(data_manipulator.concatenated_dataframe, data_manipulator.additional_dataframes, excel_parser.fields, data_manipulator.grouping_rule, report_name=input_excel)
     writer.create_workbook()
-
-    # Manually write any remaining print messages to the messagebox
-    # Reset the standard output
-    sys.stdout = sys.__stdout__
-
-    # Close the loading window
-    loading_window.destroy()
-
-    # Display a message to the user when the API calls are finished
-    messagebox.showinfo("Report Generated", "The report has been generated.")
-    
-    #generator = report_generator.ReportGenerator(api_token=api_token)
 
 def on_listbox_click(listbox, xlsx_files):
         # Adjust the size of the listbox based on the number of xlsx files found in the directory

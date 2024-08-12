@@ -2,7 +2,10 @@ import openpyxl, re, os
 from openpyxl.comments import Comment
 from openpyxl.styles import Color, PatternFill, Font
 from openpyxl.workbook.child import INVALID_TITLE_REGEX
+from openpyxl.utils.dataframe import dataframe_to_rows
 from datetime import datetime
+from pathlib import Path
+from decouple import config
 class ExcelWriter:
     import pandas as pd
     from .field import Field
@@ -15,6 +18,7 @@ class ExcelWriter:
         self.additional_dataframes = additional_dataframes
         self.additional_workbook_paths = {}
         self.report_name = report_name
+        self._create_output_dir()
         #Write the additional dataframes we have to Excel workbooks. OpenPyxl doesn't play nice w/ pandas dfs, but does load xlsx files fine.
         for df_data in self.additional_dataframes:
             for df_name, df in df_data.items():
@@ -30,7 +34,11 @@ class ExcelWriter:
         self.additional_workbooks = [{sheet_name: openpyxl.load_workbook(additional_workbook_path)} for sheet_name, additional_workbook_path in self.additional_workbook_paths.items()]
         self.fields = fields
         self.grouping_rule = grouping_rule
-        self.workbook = openpyxl.load_workbook('./test.xlsx')
+        self.workbook = openpyxl.Workbook()
+        ws = self.workbook.active
+        for r in dataframe_to_rows(self.concatenated_dataframe, index=False, header=True):
+            ws.append(r)
+        #self.workbook = openpyxl.load_workbook(init_data)
         self.workbook.active.title = 'Main'
         self.current_sheet = self.workbook.active
         for field in self.fields:
@@ -41,6 +49,13 @@ class ExcelWriter:
         
         self.get_column_indices_by_name()
 
+    def _create_output_dir(self):
+        report_dir = os.path.join(config('TOP_OUTPUT_DIR'), Path(self.report_name).stem)
+        os.makedirs(report_dir, exist_ok=True)
+        self.current_output_dir = os.path.join(report_dir, 'current')
+        self.previous_output_dir = os.path.join(report_dir, 'previous')
+        os.makedirs(self.current_output_dir, exist_ok=True)
+        os.makedirs(self.previous_output_dir, exist_ok=True)
     def create_workbook(self): 
         """Creates an output Excel workbook titled 'output_TIMESTAMP'.xlsx TIMESTAMP is the current timestamp when the output Excel workbook is being generated. The first sheet titled "Main" is the concatenated_rows. Additional sheets correspond to additional_rows , with the sheets having names corresponding to additional_dataframe_names."""
         
@@ -54,16 +69,18 @@ class ExcelWriter:
         self.add_additional_sheets()
         #Current timestamp in YYYY-MM-DD-HH-MM-SS format using 12 hour clock
         now = datetime.now().strftime('%Y_%m_%d_%I_%M_%p')
-        output_dir = f'./output/{self.report_name}/current_report/'
-        prev_output_dir = f'./output/{self.report_name}/previous_report/'
-        os.makedirs(prev_output_dir, exist_ok=True)
-        os.makedirs(output_dir, exist_ok=True)
+        # output_dir = f'./output/{self.report_name}/current_report/'
+        # prev_output_dir = f'./output/{self.report_name}/previous_report/'
+        # os.makedirs(prev_output_dir, exist_ok=True)
+        # os.makedirs(output_dir, exist_ok=True)
+        print(f'CURRENT Output dir: {self.current_output_dir}')
+        print(f'PREVIOUS Output dir: {self.previous_output_dir}')
         # Move files in output directory to previous output directory
-        for file in os.listdir(output_dir):
-            os.rename(f'{output_dir}{file}', f'{prev_output_dir}{file}')
+        for file in os.listdir(self.current_output_dir):
+            os.rename(os.path.join(f'{self.current_output_dir}', f'{file}'), os.path.join(f'{self.previous_output_dir}', f'{file}'))
         
         #Write output workbook
-        self.workbook.save(f'{output_dir}{now}.xlsx')
+        self.workbook.save(os.path.join(f'{self.current_output_dir}', f'{now}.xlsx'))
         self.delete_temp_workbooks()
         
     def add_additional_sheets(self):

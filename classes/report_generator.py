@@ -150,11 +150,12 @@ class ReportGenerator:
         response = requests.get(url=url, headers=self.headers, allow_redirects=True)
         meta = response.json()['meta']
 
-        #print(f'META:{meta}')
+        # print(f'META:{meta}')
+        # print(self.api_token)
         #print(response.json())
         no_results = 'error' in meta and 'message' in meta['error'] and 'No results' in meta['error']['message']
         if no_results:
-            remaining_num_attempts = 2
+            remaining_num_attempts = 1
             remaining_num_attempts -= 1
             while no_results and remaining_num_attempts:
                 now = datetime.datetime.now()
@@ -172,6 +173,7 @@ class ReportGenerator:
         if no_results:
             print(f'NO RESULTS FOR REPORT ID  {report_id}. SKIPPING')
             return []
+        #print(meta)
         if meta['total_results'] != meta['results_current_page']:
             err = f'There are {meta["total_results"]} total results and only {meta["results_current_page"]} results are on the current page. Please contact jspenc35@utk.edu with this error and provide the report_id {report_id}.'
             logger.error(err)
@@ -199,19 +201,20 @@ class ReportGenerator:
         return ap_ids
 
     def pull_previous_results(self, args):
+        print(args)
         """Wrapper function that makes it possible to recreate previous runs of the script."""
         ### Pulling for /api/report/proposal here
-        self.proposal_list = self.get_report_results(args.proposal_list_report_id) 
+        self.proposal_list = self.get_report_results(args['proposal_list_report_id']) 
         
         ### Pulling for /api/report/user here
-        self.user_list = self.get_report_results(args.user_report_id) 
+        self.user_list = self.get_report_results(args['user_list_report_id'])
         
         ### Pulling for /api/report/proposal_field here
-        report_id_range = args.proposal_field_report_range.split(',')
+        report_id_range = args['proposal_field_report_range'].split(',')
         
         all_results = []
         for report_id in range(int(report_id_range[0].strip()), int(report_id_range[1].strip())+1):
-            results = self.get_report_results(report_id)
+            results = self.get_report_results(str(report_id))
             if results is not None:
                 all_results = [*all_results, *results]
         self.all_proposal_data = all_results
@@ -219,10 +222,10 @@ class ReportGenerator:
     
     def write_json(self, data, file_name):
         """Write out an API response"""
-        with open(r"{}".format(f"{file_name}.json"), 'w', encoding='utf-8') as f:
+        with open(r"{}".format(f"{file_name}.json"), 'w', encoding='utf-8')as f:
             json.dump(data, f, ensure_ascii=False, indent=4)
     
     def write_report_ids(self):
         """Write out report ids for self.report_ids, self.proposal_list_report_id, and self.user_report_id. to allow recreation of previous runs of the script."""
-        data = {'proposal_field_report_range': f"{self.report_ids[0]},{self.report_ids[-1]}", 'proposal_list': self.proposal_list_report_id, 'user_list': self.user_report_id}
+        data = {'proposal_field_report_range': f"{self.report_ids[0]},{self.report_ids[-1]}", 'proposal_list_report_id': self.proposal_list_report_id, 'user_list_report_id': self.user_report_id}
         self.write_json(data,f'{config("PREVIOUS_REPORT_IDS")+"previous_report_ids"}')

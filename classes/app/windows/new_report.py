@@ -1,22 +1,31 @@
 import tkinter as tk
 from tkinter import messagebox
-import configparser, os
-from curriculog_excel_sheet_generator.classes.app.event_handlers import generate_report
+import os, json
+from curriculog_excel_sheet_generator.classes.app.event_handlers import generate_report, process_api_responses
 from curriculog_excel_sheet_generator.classes.report_generator import ReportGenerator
+from curriculog_excel_sheet_generator.classes.app.utils.loading_window import LoadingWindow
+from pathlib import Path
 from decouple import config
-import json
 def build_new_report_window():
     def use_last_api_calls_callback():
-        prev_report_id_file = config('PREVIOUS_REPORT_IDS')+'data.json'
+        loading_window = LoadingWindow()
+        print(config('TOP_OUTPUT_DIR'))
+        print(get_selected_file(listbox, xlsx_files_dict))
+        #os.makedirs( os.path.join(config('TOP_OUTPUT_DIR'), get_selected_file(listbox, xlsx_files_dict).split(".")[0], 'current'), exist_ok=True)
+        output_file = os.path.join(config('TOP_OUTPUT_DIR'), Path(get_selected_file(listbox, xlsx_files_dict)).stem, 'current', 'test.xlsx')
+        print(f'THIS IS THE OUTPUT FILE: {output_file}')
+        prev_report_id_file = config('PREVIOUS_REPORT_IDS')+'previous_report_ids.json'
         if os.path.exists(prev_report_id_file) == False:
             messagebox.showerror(title="Error", message=f"{prev_report_id_file} does not exist. This file contains the previous report IDs. Please generate a new report.")
             #messagebox(new_window, text=f"{prev_report_id_file} does not exist. This file contains the previous report IDs. Please generate a new report.").pack()
-        report_generator = ReportGenerator(api_token=api_key_entry)
+        report_generator = ReportGenerator(api_token=api_key_entry.get())
         # Read in prev_report_id_file
         with open(prev_report_id_file) as f:
-            data = json.load(prev_report_id_file)
+            print(f)
+            data = json.load(f)
         report_generator.pull_previous_results(data)
-
+        process_api_responses(report_generator, input_excel= get_selected_file(listbox, xlsx_files_dict))
+        loading_window.destroy()
 
     
     def on_selection_change(listbox, submit_button, api_key_entry):
@@ -28,6 +37,8 @@ def build_new_report_window():
     # Define a function to get the selected file from the listbox
     def get_selected_file(listbox, xlsx_files_dict):
         selected_index = listbox.curselection()
+        print(f'selected_index: {selected_index}')
+        print(f'xlsx_files_dict: {xlsx_files_dict}')
         if selected_index:
             selected_file = listbox.get(selected_index)
             return xlsx_files_dict[selected_file]
