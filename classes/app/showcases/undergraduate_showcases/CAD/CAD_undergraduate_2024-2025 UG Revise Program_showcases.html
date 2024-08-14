@@ -1,0 +1,4440 @@
+<html lang="en" class=" js flexbox canvas canvastext webgl no-touch geolocation postmessage no-websqldatabase indexeddb hashchange history draganddrop websockets rgba hsla multiplebgs backgroundsize borderimage borderradius boxshadow textshadow opacity cssanimations csscolumns cssgradients cssreflections csstransforms csstransforms3d csstransitions fontface generatedcontent video audio localstorage sessionstorage webworkers no-applicationcache svg inlinesvg smil svgclippaths"><head>
+	<meta charset="utf-8">
+	<title>Curriculum Schema Preview</title>
+	<link rel="icon" type="image/x-icon" href="/favicon.ico">
+	<link rel="shortcut icon" type="image/x-icon" href="/favicon.ico">
+	<link rel="stylesheet" href="css/print-popup.css">
+	<link rel="stylesheet" href="css/ckeditor.richtext.css">
+	<link rel="stylesheet" href="css/curriculum.css">
+<style type="text/css">@media all
+{
+	.page-break  {
+		display:none;
+	}
+
+	html {
+		background: #eee;
+	}
+
+	body.curriculog-agenda-print,
+	body.curriculog-report-print,
+	body.curriculog-preview {
+		background: #FFF;
+		font-family: Verdana, Arial, sans-serif;
+	}
+
+	body.curriculog-ap-preview {
+		margin-top: 20px;
+		padding: 0 15px;
+	}
+
+	body.curriculog-report-print,
+	body.curriculog-preview {
+		padding: 10px;
+	}
+
+  body.curriculog-preview.masked {
+    max-height: 470px;
+  }
+
+	body.curriculog-report-print .report-content {
+		min-height: 400px;
+	}
+
+	.curriculog-agenda-print {
+		display: block;
+		width: 720px;
+		margin: 20px auto;
+		background-color: #FFFFFF;
+		font-family: Verdana, sans-serif;
+		font-size: 14px;
+	}
+
+	/* This is used for both proposal steps in the print popup and for agenda print. */
+	.curriculog-agenda-print #curriculog-fields-column-process-name,
+	.curriculog-agenda-print h2 {
+		padding: 6px;
+		color: #444444;
+		font-family: Palatino,Georgia,Times,"Times New Roman",serif;
+		font-size: 15pt;
+		font-weight: bold;
+		text-align: center;
+	}
+
+	.curriculog-agenda-print #curriculog-main,
+	.curriculog-preview #curriculog-main {
+		width: 720px;
+		min-width: 720px;
+		max-width: 720px;
+		margin-top: 0px;
+		overflow: inherit;
+	}
+
+	.curriculog-ap-preview #curriculog-main {
+		margin-top: 0;
+		min-width: 500px;
+		max-width: 700px;
+	}
+
+	.curriculog-ap-preview #curriculog-fields-column {
+		width: 100%;
+	}
+
+	.curriculog-agenda-print #curriculog-fields-column {
+		width: 100%;
+		border: none;
+		background: transparent;
+		margin-top: 0px;
+		float: none;
+	-webkit-border-radius: 0px;
+	   -moz-border-radius: 0px;
+			border-radius: 0px;
+	background-color: transparent;
+	-webkit-box-shadow: 0px 0px 0px transparent;
+	   -moz-box-shadow: 0px 0px 0px transparent;
+			box-shadow: 0px 0px 0px transparent;
+	}
+
+	.curriculog-agenda-print #curriculog-header,
+	.curriculog-agenda-print #curriculog-footer {
+		display: none;
+	}
+
+	.curriculog-agenda-print #curriculog-agenda-fields-column-titles,
+	.curriculog-agenda-print #curriculog-fields-column-titles,
+	.curriculog-preview h1,
+	.curriculog-preview h2,
+	.curriculog-agenda-print .agendas-page h2,
+	.curriculog-agenda-print .agendas-page h3 {
+		height: auto;
+		margin: auto;
+		text-align: center;
+	}
+
+
+	.curriculog-agenda-print #curriculog-fields-column #curriculog-fields-column-content {
+		border-left: none;
+		padding: 20px;
+	}
+
+	.curriculog-agenda-print #curriculog-fields-column-process-name,
+	.curriculog-agenda-print .agendas-page h2 {
+		padding: 6px;
+		color: #444444;
+		font-family: Palatino,Georgia,Times,"Times New Roman",serif;
+		font-size: 15pt;
+		font-weight: bold;
+	}
+
+	.curriculog-agenda-print #curriculog-fields-column-process-type,
+	.curriculog-agenda-print .agendas-page h3 {
+		color: #444444;
+		font-family: Palatino,Georgia,Times,"Times New Roman",serif;
+		font-size: 11pt;
+		font-weight: bold;
+	}
+
+	.curriculog-agenda-print .section-heading,
+	.curriculog-agenda-print legend,
+	.curriculog-agenda-print label,
+	.curriculog-agenda-print div {
+		font-weight: bold;
+	}
+	.curriculog-agenda-print div.qtip,
+	.curriculog-agenda-print div.qtip div {
+		color: #CCCCCC !important;
+		font-weight: normal;
+	}
+
+	.curriculog-agenda-print .section-heading {
+		padding: 2px 20px 2px 5px;
+		border: 1px solid #CCCCCC;
+		background-color: #EEEEEE;
+		position: relative;
+		cursor: pointer;
+		color: #999999;
+		font: bold 16px Verdana, Arial, sans-serif;
+		margin: 10px 20px;
+	}
+
+	.curriculog-agenda-print #curriculog-fields-column-content .section-heading .scroller,
+	.curriculog-agenda-print #curriculog-fields-column-content .smartfield-edit-actions {
+		display: none;
+	}
+
+	.curriculog-agenda-print .section-fieldset.type-subheading {
+		padding-left: 0px !important;
+	}
+
+	.curriculog-agenda-print .section-fieldset.type-description,
+	.curriculog-agenda-print .section-fieldset.type-subheading {
+		border: none !important;
+	}
+
+	.curriculog-agenda-print #curriculog-fields-column-content .section-fields .crosslisting-disabled {
+		border: 1px dotted #CCCCCC;
+	}
+
+	.curriculog-agenda-print .section-fieldset.type-text .field-placeholder,
+	.curriculog-agenda-print .section-fieldset.type-textarea .field-placeholder {
+	    border: 1px solid #DDDDDD;
+	    font: 12px Verdana,sans-serif;
+	    padding: 3px;
+	}
+
+	.curriculog-agenda-print .section-fieldset.type-text .field-placeholder,
+	.curriculog-agenda-print .section-fieldset.type-textarea .field-placeholder,
+	.curriculog-agenda-print .section-fieldset.type-smartfield .curriculog-smartfield-dropzone {
+	    background: #F2F2F2;
+	    min-height: 18px;
+	    border: none;
+	}
+
+	.curriculog-agenda-print .section-fieldset.type-textarea .field-placeholder ol>li  {
+		list-style-type: decimal;
+	}
+
+	.curriculog-agenda-print .section-fieldset.type-textarea .field-placeholder ul>li  {
+		list-style-type: disc;
+	}
+
+	.curriculog-agenda-print .section-fieldset.type-smartfield .smartfield-actions {
+		display: none;
+	}
+
+	.curriculog-agenda-print #curriculog-agenda-fields-column .section-fieldset.type-smartfield .curriculog-smartfield-dropzone {
+		width: 80%;
+		float: right;
+	}
+
+	.curriculog-agenda-print #curriculog-fields-column-content .section-fieldset.type-textarea .field-placeholder,
+	.section-fieldset .ckeditor {
+		max-height: none;
+		height: none;
+		overflow: auto;
+	}
+
+	.curriculog-agenda-print .curriculog-smartfield-dropzone .smartfield-item,
+	.curriculog-agenda-print .curriculog-smartfield-dropzone .no-item {
+	    cursor: pointer;
+	    font: bold 12px Verdana,sans-serif;
+	    padding: 3px;
+	    position: relative;
+	}
+
+	.curriculog-agenda-print #curriculog-fields-column-content .section-fieldset.type-smartfield .curriculog-smartfield-dropzone.system-required-prospectiveCurriculum {
+		background: none;
+	}
+
+	.curriculog-report-print h1,
+	.curriculog-preview h1 {
+		font-size: 2em;
+		font-weight: bold;
+		padding: 12px 0 24px;
+	}
+
+	.curriculog-report-print h2,
+	.curriculog-preview h2 {
+		font-family: Arial, Helvetica, sans-serif;
+		font-size: 1.5em;
+		font-weight: bold;
+		padding: 6px 0 12px;
+	}
+
+	.curriculog-report-print .no-results {
+		padding: 20px 0;
+		margin-bottom: 40px;
+		font-size: 12px;
+	}
+
+	.curriculog-preview #preview-tools {
+		display: block;
+		text-align: right;
+		background: #DDDDDD;
+		border: 1px solid #BBBBBB;
+		margin-bottom: 10px;
+	}
+
+	/* Proposal Print extra print options */
+	.curriculog-agenda-print #preview-tools {
+		display: block;
+		width: 100%;
+		text-align: right;
+		background: #DDDDDD;
+		border: 1px solid #BBBBBB;
+		min-height: 25px;
+		padding: 2px 0px;
+	}
+
+	.curriculog-agenda-print #print-options-table {
+		display: none;
+	}
+
+	.curriculog-agenda-print .print-options .buttons {
+		text-align: center;
+	}
+
+	.print-steps,
+	.print-files,
+	.print-signatures,
+	.print-crosslistings,
+	.print-comments,
+	.print-decisions {
+		display: none;
+	}
+
+	.curriculog-agenda-print .print-container {
+		padding: 20px;
+		max-width: 600px;
+		margin: auto;
+	}
+
+	.curriculog-agenda-print .step .step-fields {
+		display: block;
+	}
+
+	.curriculog-agenda-print .step .step-titlebar {
+		-webkit-border-bottom-right-radius: 0px;
+		-webkit-border-bottom-left-radius: 0px;
+		-moz-border-radius-bottomright: 0px;
+		-moz-border-radius-bottomleft: 0px;
+		border-bottom-right-radius: 0px;
+		border-bottom-left-radius: 0px;
+	}
+
+	.curriculog-agenda-print .tracking-details {
+		border: 1px solid gray;
+	}
+
+	#curriculog-fields-column-content .tracking-details,
+	#curriculog-steps-column-content .files .tracking-details {
+		max-height: none;
+		overflow: auto;
+	}
+
+	.curriculog-agenda-print.diff .core-block.status-deleted .core h3,
+	.curriculog-agenda-print.diff .core-block.status-deleted .core .description {
+		color: #C40000 !important;
+		text-decoration: line-through;
+	}
+
+
+	.curriculog-agenda-print .print-list {
+		list-style: disc;
+	}
+
+	.curriculog-agenda-print .print-list li {
+		margin-left: 25px;
+		padding: 6px;
+		font-size: 13px;
+	}
+
+	.curriculog-agenda-print .print-list .small {
+		font-weight: normal;
+	}
+
+	/* Curriculum preview */
+	.course-list .permalink {
+		color: green !important;
+		text-decoration: underline !important;
+	}
+
+
+
+	.curriculog-report-print ul.steps {
+		margin-bottom: 80px;
+	}
+
+
+	table, tr, th, td {
+		font-family: Verdana, sans-serif;
+		border: 1px solid #dddddd;
+	}
+
+	.curriculog-agenda-print table,
+	.curriculog-agenda-print tr,
+	.curriculog-agenda-print th,
+	.curriculog-agenda-print td {
+		text-align: left;
+	}
+
+	.curriculog-agenda-print table.print-options {
+		margin: auto;
+		padding: 15px;
+	}
+
+	tr.even {
+		background-color: #EFEFEF;
+	}
+
+	th {
+		background: #dddddd;
+		font-weight: bold;
+	}
+
+	th, td {
+		font-size: 11px;
+		padding: 2px 4px;
+	}
+
+	.arrow {
+		width: 0;
+		height: 0;
+		border-left: 20px solid transparent;
+		border-right: 20px solid transparent;
+
+		border-top: 20px solid #000;
+		margin: auto;
+	}
+
+	table.impact,
+	table.impact tr,
+	table.impact td {
+		border: none;
+		font-size: 12px;
+	}
+
+	table.impact .field-name {
+		font-weight: bold;
+		text-align: left;
+	}
+
+	table.impact td strong {
+		font-weight: bold;
+	}
+
+	table.impact .subfield-name {
+		font-weight: bold;
+		color: #888888;
+		text-align: right;
+	}
+
+	table.impact ul {
+		margin-bottom: 5px;
+	}
+
+	table.impact ul li {
+		margin-bottom: 3px;
+	}
+
+	table.details {
+		width: 90%;
+	}
+
+	table.details,
+	table.details tr,
+	table.details td {
+		font-size: 11px;
+	}
+
+	table.details .proposal-name {
+		font-size: 12px;
+		font-weight: bold;
+		padding: 4px;
+	}
+
+	table.details .instance-date {
+		font-weight: bold;
+		color: #555;
+		font-size: 12px;
+	}
+
+	table.details .heading {
+		background: #EFEFEF;
+	}
+
+	table.details .field-name {
+		font-weight: bold;
+		text-align: right;
+		width: 20%;
+	}
+
+	table.details .section-name {
+		font-weight: bold;
+		color: #444444;
+		text-align: right;
+		width: 20%;
+	}
+
+	table.details .subfield-name {
+		font-weight: bold;
+		color: #888888;
+		text-align: right;
+		width: 20%;
+	}
+
+	table.details .subcolumn-small {
+		width: 15%;
+	}
+
+	table.details .subcolumn-large {
+		width: 55%;
+	}
+
+	table.details td strong {
+		font-weight: bold;
+	}
+
+	.curriculog-report-print h6 {
+		font-size: 11px;
+		font-weight: bold;
+		margin: 10px 0 2px;
+	}
+
+	table.filters {
+		background: #CCDCE8;
+		color: #111111;
+		font-size: 10px;
+		width: 90%;
+	}
+
+	table.filters strong {
+		font-weight: bold;
+	}
+
+	table.filters, table.filters tr, table.filters td {
+		border: 1px solid #9BB3C4;
+	}
+
+	table.filters tr td {
+		vertical-align: top;
+	}
+
+	/* Curriculog Preview */
+	.curriculog-preview ol {
+		list-style: none;
+	}
+
+	/* When viewing print preview, make breaks look like pages */
+	.page-separator {
+		height: 20px;
+		margin-top:5px;
+		background-color: #EEEEEE;
+	}
+
+	/* Proposal Print Overrides */
+	#curriculog-proposal {
+		background: #EEEEEE;
+	}
+
+	#curriculog-proposal #preview-tools {
+		margin-bottom: 20px;
+	}
+
+	#curriculog-proposal #curriculog-fields-column {
+		background: #FFFFFF;
+		padding: 0px;
+	}
+
+	#curriculog-proposal #curriculog-fields-column-titles {
+		background: #FFFFFF;
+		padding-top: 15px;
+	}
+
+	.map-page #curriculog-proposal #curriculog-fields-column-titles {
+		background: #617298;
+		padding-top: 15px;
+	}
+
+
+
+}
+
+@media screen {
+	/*.curriculog-agenda-print #curriculog-main {
+		-webkit-box-shadow: 3px 3px 2px #555555;
+	   -moz-box-shadow: 3px 3px 2px #555555;
+			box-shadow: 3px 3px 2px #555555;
+	}*/
+
+	.curriculog-agenda-print #curriculog-content {
+		-webkit-box-shadow: 4px 5px 4px #555555;
+		   -moz-box-shadow: 4px 5px 4px #555555;
+				box-shadow: 4px 5px 4px #555555;
+	}
+
+	.curriculog-agenda-print .print-steps,
+	.curriculog-agenda-print .print-files,
+	.curriculog-agenda-print .print-comments,
+	.curriculog-agenda-print .print-signatures,
+	.curriculog-agenda-print .print-crosslistings,
+	.curriculog-agenda-print .print-decisions {
+		background: #FFFFFF;
+		margin-top: 20px;
+		padding-top: 20px;
+		-webkit-box-shadow: 4px 5px 4px #555555;
+		   -moz-box-shadow: 4px 5px 4px #555555;
+				box-shadow: 4px 5px 4px #555555;
+	}
+
+  /***************************************************************************/
+  /**********                                                       **********/
+  /*****                          Loading Mask                           *****/
+  /**********                                                       **********/
+  /***************************************************************************/
+
+  .loadmask {
+  	width: 100%;
+  	height: 100%;
+  	background-color: #CCCCCC;
+  	position: absolute;
+  	top: 0;
+  	left: 0;
+  	z-index: 100;
+  	opacity: .50;
+  	filter: alpha(opacity=50);
+  	zoom: 1;
+  }
+
+  .loadmask-msg {
+  	padding: 2px;
+  	border: 1px solid #6593CF;
+  	background: #C3DAF9;
+  	z-index: 20001;
+  	position: absolute;
+  	top: 0;
+  	left: 0;
+  }
+
+  .loadmask-msg div {
+  	border: 1px solid #A3BAD9;
+  	padding: 5px 10px 5px 25px;
+  	background: #FBFBFB url('../images/loading.gif') no-repeat 5px 5px;
+  	cursor: wait;
+
+  	line-height: 16px;
+  	color: #222222;
+  	font: normal 11px tahoma, arial, helvetica, sans-serif;
+  }
+
+  .masked {
+  	overflow: hidden !important;
+  }
+
+  .masked-relative {
+  	position: relative !important;
+  }
+
+  .masked-hidden {
+  	visibility: hidden !important;
+  }
+
+  .loading {
+  	height: 20px;
+  	background: transparent url(/images/ajax-loader.gif) top center no-repeat;
+
+  }
+
+
+}
+
+@media print
+{
+	.page-break  {
+		display:block;
+		page-break-before:always !important;
+	}
+
+	.curriculog-preview #preview-tools,
+	.curriculog-agenda-print #preview-tools {
+		display: none;
+	}
+
+	.curriculog-agenda-print #curriculog-content {
+		display: inline;
+	}
+
+	.curriculog-agenda-print #curriculog-fields-column-titles,
+	.curriculog-agenda-print #curriculog-fields-column-content fieldset,
+	.curriculog-agenda-print .section-fields {
+		overflow: visible;
+	}
+
+	.step .step-fields {
+		-webkit-print-color-adjust: exact;
+	}
+
+	.step .step-titlebar,
+	.comment .comment-titlebar {
+		border: 1px solid gray;
+	}
+
+	.step .step-fields,
+	.comment .comment-content {
+		border: 1px solid gray;
+	}
+	.curriculog-agenda-print {
+		width: 100% !important;
+	}
+	.curriculog-agenda-print #curriculog-main,
+	.curriculog-preview #curriculog-main {
+		width: 100%;
+		min-width: 100%;
+		max-width: 100%;
+	}
+
+
+}
+
+/**
+ * Using a firefox browser hack to fix some printing issues
+ */
+@media print and (min--moz-device-pixel-ratio:0) {
+	.page-break-avoid {
+		display: block;
+		page-break-after: auto;
+	}
+
+	.page-break-avoid div {
+		page-break-inside: avoid;
+	}
+}
+
+/*
+This stylesheet is a duplicate of js/ckeditor/contents.css
+Its styles are duplicated here for rich text fields rendered during view mode.
+If ckeditor is updated, this file should be modified to match the style elements 
+DO NOT copy/paste over the whole thing - the selectors are specific for rich text fields only
+*/
+
+.ckeditor address,
+.ckeditor blockquote,
+.ckeditor div,
+.ckeditor dl, 
+.ckeditor dt, 
+.ckeditor fieldset, 
+.ckeditor form,
+.ckeditor h1, 
+.ckeditor h2, 
+.ckeditor h3, 
+.ckeditor h4,
+.ckeditor h5, 
+.ckeditor h6, 
+.ckeditor ol, 
+.ckeditor p, 
+.ckeditor ul, 
+.ckeditor center,
+.ckeditor dir, 
+.ckeditor hr, 
+.ckeditor menu, 
+.ckeditor pre   { 
+	display: block !important; 
+	unicode-bidi: embed !important; 
+}
+
+.section-fieldset .ckeditor,
+.summary .ckeditor {
+	/* Font */
+	font-family: sans-serif, Arial, Verdana, "Trebuchet MS" !important;
+	font-size: 13px !important;
+
+	/* Text color */
+	color: #333 !important;
+
+	padding: 8px !important;
+	
+	min-width: 250px;
+	max-height: 200px;
+	overflow-y: auto;
+}
+
+
+.approval-process-page .section-fieldset .ckeditor {
+	min-width: 250px;
+	max-width: 575px;
+	max-height: none;
+}
+
+/* this resets ckeditor's hardcoded width/height of 
+referenced images so they don't blow out the page 
+
+- TODO: This should be changed, but will need a complete
+stylesheet redesign. Too many styles are affected across
+the site by this change. Right now, this means images smaller than full size will scale up.
+*/
+.section-fieldset.subheading-description .ckeditor img,
+.section-fieldset.type-description.ckeditor img {
+	/*width: 100% !important;
+	height: 100% !important;*/
+	/*min-width: 50%;
+	max-width: 100%;*/
+}
+
+
+.half-field .section-fieldset .ckeditor, 
+.half-field .section-fieldset.ckeditor {
+	min-width: 100px;
+	max-width: 200px;
+}
+
+.summary .ckeditor {
+	background: #EEEEEE;
+	border: 1px solid #81899B;
+}
+
+.ckeditor .cke_editable
+{
+	font-size: 13px !important;
+	line-height: 1.6em !important;
+}
+
+.ckeditor blockquote
+{
+	font-style: italic !important;
+	font-family: Georgia, Times, "Times New Roman", serif !important;
+	padding: 2px 0 !important;
+	border-style: solid !important;
+	border-color: #ccc !important;
+	border-width: 0 !important;
+}
+
+.ckeditor .cke_contents_ltr blockquote
+{
+	padding-left: 20px !important;
+	padding-right: 8px !important;
+	border-left-width: 5px !important;
+}
+
+.ckeditor .cke_contents_rtl blockquote
+{
+	padding-left: 8px !important;
+	padding-right: 20px !important;
+	border-right-width: 5px !important;
+}
+
+.ckeditor p,
+.ckeditor blockquote, 
+.ckeditor ul,
+.ckeditor fieldset, 
+.ckeditor form,
+.ckeditor ol, 
+.ckeditor dl, 
+.ckeditor dir,
+.ckeditor menu { 
+	margin-top: 1.12em !important; 
+	margin-bottom: 1.12em !important; 
+}
+
+.ckeditor a
+{
+	color: #0782C1 !important;
+}
+
+.ckeditor permalink {
+	color: green;
+	text-decoration: underline;
+}
+
+.ckeditor ol,
+.ckeditor ul,
+.ckeditor dl
+{
+	/* IE7: reset rtl list margin. (#7334) */
+	margin-right: 0px !important;
+	/* preserved spaces for list items with text direction other than the list. (#6249,#8049)*/
+	padding: 0 40px !important;
+	line-height: 1.6em;
+}
+
+.ckeditor ol {
+	list-style: decimal;
+}
+
+.ckeditor ul {
+	list-style: disc;
+}
+
+.ckeditor li { 
+	display: list-item !important; 
+}
+
+.ckeditor h1,
+.ckeditor h2,
+.ckeditor h3,
+.ckeditor h4,
+.ckeditor h5,
+.ckeditor h6
+{
+	font-weight: normal !important;
+	line-height: 1.2em !important;
+}
+
+.ckeditor h1 { 
+	font-size: 26px !important; 
+	margin: .67em 0 !important; 
+}
+
+.ckeditor h2 { 
+	font-size: 20px !important; 
+	margin: .75em 0 !important; 
+}
+
+.ckeditor h3 { 
+	font-size: 18px !important; 
+	margin: .83em 0 !important; 
+}
+
+.ckeditor h4 { 
+	font-size: 13px !important;
+	margin: 1.12em 0 !important;
+}
+
+.ckeditor h5 { 
+	font-size: 11px !important; 
+	margin: 1.5em 0 !important; 
+}
+
+.ckeditor h6 { 
+	font-size: 9px !important; 
+	margin: 1.67em 0 !important; 
+}
+
+.ckeditor hr
+{
+	border: 0px !important;
+	background: transparent;
+	color: transparent;
+	border-top: 1px solid #ccc !important;
+	height: 1px;
+}
+
+.ckeditor img.right {
+    border: 1px solid #ccc !important;
+    float: right !important;
+    margin-left: 15px !important;
+    padding: 5px !important;
+}
+
+.ckeditor img.left {
+    border: 1px solid #ccc !important;
+    float: left !important;
+    margin-right: 15px !important;
+    padding: 5px !important;
+}
+
+.ckeditor img:hover {
+	opacity: .9 !important;
+	filter: alpha(opacity = 90) !important;
+}
+
+.ckeditor pre
+{
+	white-space: pre-wrap !important; /* CSS 2.1 */
+	word-wrap: break-word !important; /* IE7 */
+	font-family: monospace !important;
+}
+
+.ckeditor strong { 
+	font-weight: bolder !important; 
+}
+
+.ckeditor blockquote { 
+	margin-left: 40px !important; 
+	margin-right: 40px !important; 
+}
+
+.ckeditor p {
+	line-height: 1.5em !important;
+}
+
+.ckeditor i, 
+.ckeditor cite, 
+.ckeditor em,
+.ckeditor var, 
+.ckeditor address { 
+	font-style: italic !important; 
+}
+
+.ckeditor sub { 
+	font-size: .83em !important; 
+	vertical-align: sub !important; 
+}
+
+.ckeditor sup { 
+	font-size: .83em !important; 
+	vertical-align: super !important; 
+}
+
+.ckeditor table { 
+	display: table !important;
+	border-collapse: separate !important;
+	border: 1px solid !important;
+	border-spacing: 2px !important;
+}
+
+.ckeditor tr { 
+	display: table-row !important;
+	vertical-align: inherit !important;
+}
+
+.ckeditor thead { 
+	display: table-header-group !important;
+	vertical-align: middle  !important;
+}
+
+.ckeditor tbody { 
+	display: table-row-group  !important;
+	vertical-align: middle  !important;
+}
+
+.ckeditor tfoot { 
+	display: table-footer-group !important;
+	vertical-align: middle  !important;
+}
+
+.ckeditor col { 
+	display: table-column !important; 
+}
+
+.ckeditor colgroup { 
+	display: table-column-group !important; 
+}
+
+.ckeditor td, 
+.ckeditor th { 
+	display: table-cell !important;
+	vertical-align: inherit !important;
+	border: 1px solid black !important;
+	line-height: 1.6em;
+	padding: 1px;
+}
+
+.ckeditor caption { 
+	display: table-caption !important; 
+}
+.ckeditor th { 
+	font-weight: bolder !important; 
+	text-align: center !important; 
+}
+.ckeditor caption { 
+	text-align: center !important; 
+}
+
+.cke_editable .permalink,
+.ckeditor .permalink {
+	color: green !important;
+	text-decoration: underline !important;
+}
+
+/**
+ * This fixes tables loosing their center alignment when in read-only mode.
+ */
+table[align="center"] {
+    margin: 0 auto;
+}
+
+/*
+ * Curriculum Field
+ */
+
+ .curriculum {
+	width: 100%;
+	background: #EEEEEE;
+	font: 12px Arial;
+}
+
+.curriculum .legend,
+.curriculum legend {
+	float: left;
+	-webkit-box-sizing: border-box;
+	-moz-box-sizing: border-box;
+	box-sizing: border-box;
+	padding: 4px 5px 3px 0;
+	width: 20%;
+	color: #888888;
+	text-align: right;
+	font-weight: bold;
+}
+
+.curriculum.ckeditor p {
+	line-height: 0em !important;
+}
+
+.schema,
+.courses {
+	float: right;
+	-webkit-box-sizing: border-box;
+	-moz-box-sizing: border-box;
+	box-sizing: border-box;
+	padding-left: 0;
+	width: 80%;
+}
+
+
+/*
+ * Course List Items
+ */
+
+ .course-list-container {
+ 	margin-bottom: 10px;
+ }
+
+ .course-list {
+ 	margin-bottom: 5px;
+ 	min-height: 27px;
+ 	border: 1px solid #E6E6E6;
+ 	background: #FFFFFF;
+ }
+
+ .core-list > li.no-data,
+ .course-list > li.no-data {
+ 	display: block;
+ 	padding: 20px 5px;
+ }
+
+ .course-list-label {
+ 	display: block !important; /* FIXME */
+ 	padding: 4px 5px 3px 0;
+ 	color: #888888;
+ 	letter-spacing: 0.4px;
+ 	font-weight: bold;
+ }
+
+
+ .schema .course-list {
+ 	padding: 3px;
+ }
+
+ .schema .course,
+ .schema .custom-text {
+ 	border: 1px dotted #BBB;
+ 	border-radius: 6px;
+ 	margin: 3px auto;
+ }
+ .schema .custom-text {
+ 	display: -webkit-box;
+   display: -moz-box;
+   display: -ms-flexbox;
+   display: -webkit-flex;
+   display: flex;
+	 min-height: 25px;
+ }
+
+ .empty-list {
+ 	color: #CCCCCC;
+ }
+
+ .course {
+ 	font-weight: bold;
+ }
+
+ .course:hover,
+ .custom-text:hover {
+ 	background: #EEEEEE;
+ }
+
+.custom-text,
+.course,
+.empty-list {
+	position: relative;
+	padding: 5px;
+	overflow: hidden;
+}
+
+.course .course-name {
+	float: left;
+	max-width: calc(85% - 30px);
+}
+.schema .course .course-name {
+	margin-left: 52px;
+	max-width: calc(90% - 107px);
+}
+.schema .course.with-status .course-name {
+	max-width: none;
+}
+
+.adhoc-position-preview {
+	float: left;
+	margin-right: 5px;
+	text-transform: capitalize;
+	width: 50px;
+}
+
+.adhoc-position-preview span {
+	text-transform: capitalize;
+	display: inline-block;
+}
+
+.course .course-credits {
+	float: right;
+	margin-right: 30px;
+	max-width: calc(15% - 30px);
+}
+.schema .course .course-credits {
+	margin-right: 55px;
+}
+.course .course-credits.static {
+	margin-right: 0;
+}
+
+.section-fieldset .ckeditor.custom-text {
+	padding: 0 !important;
+}
+
+.adhoc-position {
+	background-color: #DDD;
+	border-radius: 6px;
+	margin-right: 2px;
+	min-width: 50px;
+	padding-left: 3px;
+	padding-top: 2px;
+	text-transform: capitalize;
+}
+
+
+.adhoc-credits,
+.adhoc-text.flex-fill {
+	margin-right: 60px;
+}
+
+.adhoc-credits.static {
+	margin-right: 0;
+}
+
+.adhoc-text.flex-fill,
+.adhoc-flex-fill {
+	-webkit-box-flex:1;
+  -ms-flex-positive:1;
+  flex-grow:1
+}
+
+.adhoc-text {
+	max-width: calc(90% - 105px);
+	overflow-y: auto;
+	max-height: 200px;
+	box-sizing: border-box;
+	padding-right: 5px;
+}
+
+.adhoc-credits {
+	font-weight: bold;
+
+}
+.course-list-button-container {
+	position: absolute;
+	top: 2px;
+	right: 2px;
+}
+
+.adhoc-position,
+.adhoc-credits {
+	font-family: Arial, Helvetica, sans-serif;
+	font-size: 12px;
+}
+
+.course .btn-edit,
+.course .btn-delete,
+.custom-text .btn-edit,
+.custom-text .btn-delete {
+	position: relative;
+	top: -3px;
+	visibility: hidden;
+	float: right;
+}
+
+.course:hover .btn-edit,
+.course:hover .btn-delete,
+.custom-text:hover .btn-edit,
+.custom-text:hover .btn-delete {
+	visibility: visible;
+}
+
+.course.with-status,
+.with-status {
+	display: -webkit-box;
+	display: -ms-flexbox;
+	display: flex;
+}
+
+.with-status .course-name {
+	-webkit-box-flex: 3 3 125px;
+	    -ms-flex: 3 125px;
+	        flex: 3 125px;
+	float: none;
+	max-width: none;
+}
+
+.with-status .course-status,
+.course-credits {
+	text-align: right;
+}
+
+.with-status .course-credits {
+	-webkit-box-flex: 2 2 45px;
+	    -ms-flex: 2 45px;
+	        flex: 2 45px;
+	float: none;
+	margin-left: 5px;
+	max-width: none;
+}
+
+.course-status {
+	color: #888;
+	-webkit-box-flex: 1 1 35px;
+	    -ms-flex: 1 0 35px;
+	        flex: 1 0 35px;
+	margin-left: 5px;
+}
+
+.add-core-course-dialog .course-status {
+	text-align: right;
+	-webkit-box-flex: 1 1 111px;
+	    -ms-flex: 1 0 111px;
+	        flex: 1 0 111px;
+}
+
+
+.course-status em {
+	font-style: italic;
+}
+
+
+
+
+
+
+/*
+ * Course Form
+ */
+
+.add-course-form {
+	margin: 5px;
+	padding: 5px 0;
+	border-top: 1px solid black;
+}
+
+.add-course-form input {
+	width: 15% !important;
+}
+
+
+/*
+ * CKEditor special style rules for curriculum
+ * Note: first-of-type selector doesn't work with ie8;
+ * unlaunched mode templates have classes .custom-text.ckeditor
+ * active mode templates have classes .custom-text .ckeditor
+ */
+
+.course-list .custom-text .ckeditor p:first-of-type,
+.course-list .custom-text.ckeditor p:first-of-type {
+	margin: 0 !important;
+}
+
+/* remove when our stylesheet doesn't stink */
+.section-fieldset .custom-text .ckeditor {
+	padding: 5px !important;
+}
+
+
+
+/*
+ * Icon Buttons
+ */
+
+ /* hide the core course-list buttons on the bucket view. */
+ .courses > .course-list-container > .btn-add {
+ 	display: none;
+ }
+
+.btn-add {
+	padding-left: 20px;
+	border: 0;
+	background: url(/images/icons/flat/add.png) no-repeat;
+}
+
+.btn-import {
+	padding-left: 20px;
+	border: 0;
+	background: url(/images/icons/flat/import.png) no-repeat;
+}
+
+.btn-add:hover,
+.btn-import:hover {
+	text-decoration: underline;
+	cursor: pointer;
+}
+
+.btn-delete {
+	padding-left: 20px;
+	width: 20px;
+	height: 20px;
+	border: 0;
+	background: url(/images/icons/flat/delete.png) no-repeat;
+}
+
+.btn-edit {
+	padding-left: 20px;
+	width: 20px;
+	height: 20px;
+	border: 0;
+	background: url(/images/icons/flat/edit.png) no-repeat;
+}
+
+.btn-delete:hover,
+.btn-edit:hover {
+	cursor: pointer;
+}
+
+.btn-add:active,
+.btn-delete:active,
+.btn-edit:active,
+.btn-import:active {
+	position: relative;
+	top: 1px;
+}
+
+.btn {
+	margin: 0px 2px;
+	padding: 4px 6px;
+	border: 1px solid #BBBBBB;
+	-webkit-border-radius: 3px;
+	   -moz-border-radius: 3px;
+			border-radius: 3px;
+	background-color: #EEEEEE;
+	background-image: -webkit-gradient(linear, left top, left bottom, from(#EEEEEE), to(#D5D5D5));
+	background-image: -webkit-linear-gradient(top, #EEEEEE, #D5D5D5);
+	background-image:    -moz-linear-gradient(top, #EEEEEE, #D5D5D5);
+	background-image:     -ms-linear-gradient(top, #EEEEEE, #D5D5D5);
+	background-image:      -o-linear-gradient(top, #EEEEEE, #D5D5D5);
+	background-image:         linear-gradient(top, #EEEEEE, #D5D5D5);
+	-webkit-box-shadow: 0px 1px 2px #CCCCCC;
+	   -moz-box-shadow: 0px 1px 2px #CCCCCC;
+			box-shadow: 0px 1px 2px #CCCCCC;
+	color: #232D3D;
+	text-shadow: 0px 1px 0px #FFFFFF;
+	font: bold 11px/15px Verdana, sans-serif;
+	cursor: pointer;
+}
+
+.btn-preview-tools {
+	width: 25px;
+	height: 25px;
+	border: none;
+	-webkit-box-shadow: none;
+	   -moz-box-shadow: none;
+			box-shadow: none;
+
+	background: transparent;
+	padding: 0;
+}
+
+.btn:hover {
+	color: #D85054;
+}
+
+.btn:active {
+	position: relative;
+	top: 1px;
+}
+
+/*
+ * Curriculum switch buttons
+ */
+
+.switch-curriculum {
+	float: left;
+	text-align: right;
+	width: 19%;
+	margin-right: 1%;
+}
+
+.btn-schema,
+.btn-courses,
+.btn-preview-curriculum {
+	overflow: hidden;
+	width: 26px;
+	height: 26px;
+	border: 1px solid transparent;
+	border-radius: 3px;
+	background-color: transparent;
+	background-position: 2px 2px;
+	background-repeat: no-repeat;
+	font-size: 0;
+}
+
+.btn-schema.active,
+.btn-courses.active,
+.btn-preview-curriculum.active {
+	border: 1px solid #BBBBBB;
+	background-color: white;
+}
+
+.btn-schema {
+	background-image: url(/images/icons/flat/schema.png);
+}
+
+.btn-courses {
+	background-image: url(/images/icons/flat/courselist.png);
+}
+
+.btn-preview-curriculum {
+	background-image: url(/images/icons/flat/schema-preview.png);
+}
+
+
+
+
+/*
+ * Curriculum Core
+ */
+
+.core fieldset {
+	position: relative;
+	display: block;
+	margin: 0 0 3px 0;
+	background: #F6F6F6;
+	color: #333333;
+	/*border: 1px solid #E6E6E6;*/
+	border-radius: 3px;
+}
+
+/* TODO: merge these two rules */
+.core-drag-handle {
+	display: block;
+	width: 20px;
+	height: 20px;
+	background: url("../images/icons/flat/drag.png") no-repeat scroll 0 0;
+	cursor: move;
+}
+
+.core > fieldset > .core-drag-handle {
+	position: absolute;
+	top: 3px;
+	left: -20px;
+	visibility: hidden;
+}
+
+.core > fieldset:hover .core-drag-handle {
+	visibility: visible;
+}
+
+.core-header {
+	padding: 5px 0 5px 5px;
+	border-radius: 3px 3px 0 0;
+	background-color: #BBBBBB;
+}
+
+/* Add the locked icon to the core-header if this is a locked core. */
+.core-locked .icon-locked {
+	background: #BBBBBB url(/images/icons/flat/lock.png) no-repeat 0px 0px;
+	position: absolute;
+	right: 30px;
+	top: 2px;
+	width: 20px;
+	height: 20px;
+	border: 0;
+}
+
+.core-header > .core-title {
+	color: #FFFFFF;
+	font-weight: bold;
+	max-width: calc(100% - 55px);
+	display: inline-block;
+}
+
+.core-header > .core-title.with-status {
+	max-width: calc(100% - 155px);
+}
+
+.core-header > .core-status {
+    font-style: italic;
+    color: #FFFFFF;
+    font-weight: bold;
+    display: inline-block;
+    position: absolute;
+    right: 50px;
+}
+
+.core-header > .btn-delete {
+	visibility: hidden;
+	float: right;
+	margin-top: -3px;
+	width: 20px;
+	height: 20px;
+	color: transparent;
+}
+
+.core-header:hover > .btn-delete {
+	visibility: visible;
+}
+
+/* Modify the styles when the core is in a collapsed state. */
+.core.collapsed > fieldset > .core-header {
+	border: 0 none;
+	border-radius: 3px;
+}
+
+.core.collapsed > fieldset > .core-content {
+	display: none;
+}
+
+.core-title-field-label,
+.core-description-field-label {
+	display: block !important; /* FIXME */
+	padding: 4px 5px 3px 0;
+	color: #888888;
+	letter-spacing: 0.4px;
+	font-weight: bold;
+}
+
+.core-title-field,
+.core-description-field {
+	-moz-box-sizing: border-box;
+	box-sizing: border-box;
+	width: 100%;
+}
+
+.core-title-field,
+.core-description-field {
+	padding: 5px;
+	border: 1px solid #E6E6E6;
+	background-color: #FFFFFF;
+	/* FIXME We are overwriting styles here. Refactor styles.css */
+	margin-bottom: 10px !important;
+}
+
+.core-content {
+	padding: 5px;
+}
+
+.core-content > .course-list {
+	margin: 10px 5px;
+}
+
+/* This is the placeholder element used by jQueryUI sortable. */
+.core-sortable-highlight {
+	margin-bottom: 3px;
+	height: 24px;
+	border-radius: 3px;
+	background: #CCCCCC;
+}
+
+
+/* This shows the object status for Curriculum Preview with markup */
+.curriculog-preview .core-block .core,
+.curriculog-agenda-print .core-block .core {
+	margin-bottom: 10px;
+	padding: 15px;
+	border: 1px solid #DDDDDD;
+	background: #EEEEEE;
+	-webkit-border-radius: 6px;
+	-moz-border-radius: 6px;
+	border-radius: 6px;
+}
+
+.curriculog-preview .core-block.shared-core,
+.curriculog-preview .core-block.locked .core,
+.curriculog-agenda-print .core-block.shared-core,
+.curriculog-agenda-print .core-block.locked .core {
+	background: #E6EFF2;
+	border-color: #AFD1DB;
+}
+
+.curriculog-preview .core-block.locked .core.core-courses,
+.curriculog-agenda-print .core-block.locked .core.core-courses {
+	background: #EFEFEF;
+	border-color: #DEDEDE;
+}
+
+.curriculog-preview .core-block.locked .core.core-courses .course-list,
+.curriculog-agenda-print .core-block.locked .core.core-courses .course-list {
+	padding-left: 0px;
+}
+
+.curriculog-preview .core-block h3,
+.curriculog-agenda-print .core-block h3 {
+	font: 18px Verdana, sans-serif;
+	/*text-decoration: underline;*/
+	margin: 0 0 5px 0;
+}
+
+.curriculog-preview .core-block h3 p,
+.curriculog-agenda-print .core-block h3 p {
+	margin: 0;
+}
+
+.curriculog-preview .ckeditor p:first-of-type,
+.curriculog-preview .course-list li p:first-of-type,
+.curriculog-agenda-print .ckeditor p:first-of-type,
+.curriculog-agenda-print .course-list li p:first-of-type {
+	margin: 0 !important;
+}
+
+.curriculog-preview .core-block.locked h3,
+.curriculog-agenda-print .core-block.locked h3 {
+	padding: 0px;
+	display: block;
+	background: url("../images/icons/flat/lock.png") no-repeat scroll 0px 1px transparent;
+	text-indent: 20px;
+}
+
+.curriculog-preview .core-block h3>i,
+.curriculog-agenda-print .core-block h3>i,
+.curriculog-preview .core-block.locked h3>i,
+.curriculog-agenda-print .core-block.locked h3>i {
+	font-style: italic;
+	color: #8a8888;
+}
+
+.curriculog-preview .core-block h3 img,
+.curriculog-agenda-print .core-block h3 img {
+	vertical-align: text-bottom;
+}
+
+.curriculog-preview .core-block .description,
+.curriculog-agenda-print .core-block .description {
+	font: 12px Verdana, sans-serif;
+	margin: 10px 0;
+	line-height: 1.5em;
+}
+
+.curriculog-preview .core-block ol.course-list,
+.curriculog-agenda-print .core-block ol.course-list {
+	margin-left: 10px;
+	list-style: none !important;
+	background: transparent;
+	border: 1px solid transparent;
+}
+
+.curriculog-preview .core-block ol.course-list li,
+.curriculog-agenda-print .core-block ol.course-list li {
+	padding: 2px 0px;
+	font: 12px Verdana, sans-serif;
+	overflow: hidden !important;
+}
+
+.curriculog-preview .core-block ol.course-list li .course-name,
+.curriculog-agenda-print .core-block ol.course-list li .course-name {
+	float: left;
+	max-width: calc(70% - 50px);
+}
+
+.curriculog-preview .core-block ol.course-list li .course-credits,
+.curriculog-agenda-print .core-block ol.course-list li .course-credits {
+	float: right;
+	max-width: calc(30% - 50px);
+}
+
+.curriculog-preview .core-block ol.course-list li.with-status .course-credits,
+.curriculog-agenda-print .core-block ol.course-list li.with-status .course-credits {
+	max-width: none;
+}
+
+.curriculog-preview .core-block ol.course-list li.type-customText,
+.curriculog-agenda-print .core-block ol.course-list li.type-customText {
+	font-style: italic;
+	color: #999999;
+}
+
+.curriculog-preview .core-block.ckeditor ol.course-list li.type-customText p,
+.curriculog-agenda-print .core-block.ckeditor ol.course-list li.type-customText p {
+	margin: 0px !important;
+}
+
+/* Curriculum Preview with diff  */
+.curriculog-preview.diff .ckeditor a,
+.curriculog-preview.diff .ckeditor a,
+.curriculog-agenda-print.diff .ckeditor a {
+	color: black !important;
+}
+
+.curriculog-preview.diff .core-block.status-deleted > .core,
+.curriculog-agenda-print.diff .core-block.status-deleted > .core {
+	border-color: red;
+	background: #E8C5C5;
+	color: red;
+	text-decoration: line-through;
+}
+
+.curriculog-preview.diff .core-block.status-inserted > .core,
+.curriculog-agenda-print.diff .core-block.status-inserted  > .core {
+	border-color: green;
+	background: #BDF2BD;
+}
+
+.curriculog-preview.diff .course-list .status-deleted div,
+.curriculog-agenda-print.diff .course-list .status-deleted div{
+	color: #C40000 !important;
+	font-weight: bold;
+	text-decoration: line-through;
+}
+
+.curriculog-preview.diff .course-list .status-inserted,
+.curriculog-agenda-print.diff .course-list .status-inserted,
+.curriculog-preview.diff .course-list .status-inserted div,
+.curriculog-agenda-print.diff .course-list .status-inserted div {
+	color: #008000 !important;
+	font-weight: bold;
+}
+
+
+
+
+/*
+ * Subcore list
+ *
+ * The nestedSortable plugin removes the .sub-core class from the ol, so we
+ * need to use both selectors here.
+ */
+.core > .sub-cores,
+.core > ol {
+	margin: 5px 0 0 20px;
+}
+
+
+
+
+/*
+ * Reset the reset for CKE fields
+ */
+
+div[contenteditable="true"] strong {
+	font-weight: bold;
+}
+
+div[contenteditable="true"] em {
+	font-style: italic;
+}
+
+
+
+
+/* TODO: group these rules */
+
+
+.add-course-form input {
+	width: 5em !important;
+}
+
+.select-field {
+	padding: 5px;
+	border-radius: 3px;
+}
+.add-core-text-label {
+	color: #777777;
+	display: block;
+	font-weight: bold;
+	margin-top: 5px;
+	text-align: left;
+}
+.input-text {
+	box-sizing: border-box;
+	display: block;
+	margin-bottom: 5px;
+	padding: 1px;
+	width: 100%;
+}
+.input-text.plain-text,
+.add-core-text-label.plain-text {
+	box-sizing: content-box;
+	width: 90%;
+	margin-left: auto;
+	margin-right: auto;
+}
+
+.input-text.plain-text {
+	padding: 2px;
+}
+
+textarea.input-custom-text {
+	width: 90%;
+	height: 100px;
+}
+
+.course-delete-dialog .ui-dialog-content {
+	text-align: left;
+	font: 12px/1.5 Verdana, Arial, sans-serif;
+	text-shadow: none;
+}
+
+.course-delete-dialog ul {
+	list-style: disc inside none;
+}
+
+#adhoc-name.error {
+	border: 2px solid #A85903;
+}
+#adhoc-name + span.error {
+	text-align: left;
+}
+</style></head>
+<body class="curriculog-preview diff"><h1>The proposal below may be viewed <a href="https://utk.curriculog.com/proposal:3079/form">here</a>.</h1>
+	<script src="/js/build/libs.js"></script>
+	<script type="text/javascript" src="/js/libs/tracking.js"></script>
+	<script src="/js/build/objects.js"></script>
+	<script src="/js/build/mvc.js"></script>
+	<script>
+		var parentProposal = {
+			id: window.opener.$('#proposalId').val(),
+			status: window.opener.$('#status').val(),
+			name: window.opener.$('#curriculog-fields-column-process-name').text()
+		}
+
+		function resetCurriculum(active) {
+			// var userPermissions = {
+			// 	canEdit: 0,
+			// 	canImport: 0,
+			// 	edits: false
+			// };
+
+			// var curricula = new Curriculog.ProposalForm.Curriculum.Curricula({}, {userPermissions: userPermissions, proposal: {id: parentProposal.id}});
+			// var preview = new Curriculog.ProposalForm.Curriculum.Preview({collection: curricula});
+			var options = {
+				proposalID: window.opener.$('#proposalId').val(),
+				richText: window.opener.app.cv.options.richText,
+				displayPreviewStatus: window.opener.$('#displayCurriculumStatus').val() == 1
+			}
+
+			if (active !== undefined) {
+				options.active = false;
+				options.edits = false;
+			}
+
+			cm = new Curriculog.Curricula(options);
+			cmView = new Curriculog.CurriculumPreview({collection: cm})
+			$('#curriculog-main').html(cmView.el);
+		}
+
+		function getPreviewMarkup() {
+			$.ajax({
+				type: 'POST',
+				url: '/gearman-job.json',
+				contentType: 'application/json',
+				mask: $('body'),
+				data: JSON.stringify({
+					functionName: 'get_curriculum_tracking_preview_task',
+					workload: {
+						'module_name': 'ProposalTracking',
+						'method_name': 'get_curriculum_tracking_preview_task',
+						'method_args': {
+							'proposal_id': window.opener.$('#proposalId').val(),
+							'active': 'false',
+							'edits': 'false',
+							'for_preview': 'true',
+						}
+					}
+				}),
+				beforeSend: function () {
+					objDom.addMask(this.mask, 'Loading preview with markup');
+				},
+
+				success: function (results) {
+					getBackgroundJobStatus(results.jobHandle, this.mask, 'Show preview with markup', function (jobResults) {
+						var options = {
+							proposalID: window.opener.$('#proposalId').val(),
+							richText: window.opener.app.cv.options.richText,
+							displayPreviewStatus: window.opener.$('#displayCurriculumStatus').val() == 1,
+							active: false,
+							edits: false
+						};
+
+						// ensure options are set in collection
+						var bgCollection = $.extend(jobResults.result, options);
+						try {
+							var backgroundCm = new Curriculog.Curricula(bgCollection, options);
+							var backgroundCmView = new Curriculog.BackgroundCurriculumPreview({
+								collection: backgroundCm
+							});
+							$('#curriculog-main').html(backgroundCmView.el);
+							$('.curriculog-preview').addClass('diff');
+						} catch (e) {
+							console.error(e);
+							objDom.removeMask(this.mask);
+							return;
+						}
+
+					},
+					function(jobResults){
+						var taskName = 'show preview with markup';
+						$('#growls').notify("create","warning-template", {
+							title: 'Warning',
+							text: 'An error occurred while attempting to ' + taskName + '. Please try again or contact a system administrator.',
+						}, {
+							expires: false,
+						});
+					});
+				},
+
+				error: function () {
+					objDom.removeMask(this.mask);
+				},
+			});
+		}
+
+		$(document).ready(function() {
+
+			$('#program-name').text(parentProposal.name);
+
+			resetCurriculum();
+
+			$('.print-preview').on('click', function() {
+				window.print();
+			});
+
+			$('.show-schema').on('click', function() {
+				resetCurriculum();
+				$('.curriculog-preview').removeClass('diff');
+			});
+
+			$('.show-markup').on('click', function() {
+				//$('body').mask('Loading preview with markup');
+				//resetCurriculum(false);
+				getPreviewMarkup();
+			});
+
+			if (parentProposal.status == 'unlaunched' || window.opener.$('#curriculumUserTracking').val() == 0) {
+				document.getElementById('markup').style.display = "none";
+				document.getElementById('preview').style.display = "none";
+			}
+
+		});
+
+	</script>
+
+	<div id="preview-tools">
+		
+		
+		
+	</div>
+	<h2 id="program-name">
+                                                College of Architecture and Design - School of Design - Graphic Design Studies Minor
+                    </h2>
+	<div id="curriculog-main"><div class="curriculog-preview field-placeholder diff">
+    <div id="schema">
+    	<ol>
+    	<li class="core-block  status-imported page-break-avoid">
+    		<div class="core">
+    			<h3>Minor Requirements:
+    			</h3>
+    			<div class="description ckeditor">
+    				
+    			</div>
+    			<ol class="course-list">
+    	
+    						<li class="status-original">
+    							<div class="course-name">GRDS 150 The Idea of Design</div>
+    							<div class="course-credits"></div>
+    						</li>
+					<li class="status-imported">
+    							<div class="adhoc-position-preview">[right]</div>
+    							<div class="course-name"><p>*</p></div>
+    							<div class="course-credits"></div>
+    						</li>
+
+    	
+    						<li class="status-original">
+    							<div class="course-name">GRDS 330 The Art of Presentation Design</div>
+    							<div class="course-credits"></div>
+    						</li>
+
+    						<li class="status-original">
+    							<div class="course-name">GRDS 331 The Art of Identity Design</div>
+    							<div class="course-credits"></div>
+    						</li>
+		</ol>
+	</div>
+    		<ol class="sub-cores">
+    				</ol>
+    	</li>
+<li class="core-block  status-imported page-break-avoid">
+    		<div class="core">
+    			<h3>Select Two Courses:
+    			</h3>
+    			<div class="description ckeditor">
+    				
+    			</div>
+    			<ol class="course-list">
+    	
+    						<li class="status-original">
+    							<div class="course-name">ADVT 250 Advertising Principles</div>
+    							<div class="course-credits"></div>
+    						</li>
+					<li class="status-imported">
+    							<div class="adhoc-position-preview">[right]</div>
+    							<div class="course-name"><p>*</p></div>
+    							<div class="course-credits"></div>
+    						</li>
+
+    	
+    						<li class="status-original">
+    							<div class="course-name">ARTN 231 Non-Major Intro to Photography</div>
+    							<div class="course-credits"></div>
+    						</li>
+					<li class="status-imported">
+    							<div class="adhoc-position-preview">[right]</div>
+    							<div class="course-name"><p>*</p></div>
+    							<div class="course-credits"></div>
+    						</li>
+
+    	
+    						<li class="status-original">
+    							<div class="course-name">ARTN 264 Non-Major Intro to Screen Printing</div>
+    							<div class="course-credits"></div>
+    						</li>
+
+    						<li class="status-original">
+    							<div class="course-name">ARTN 291 Non-Major Intro to Book Arts and Papermaking</div>
+    							<div class="course-credits"></div>
+    						</li>
+					<li class="status-imported">
+    							<div class="adhoc-position-preview">[right]</div>
+    							<div class="course-name"><p>*</p></div>
+    							<div class="course-credits"></div>
+    						</li>
+
+    	
+    						<li class="status-original">
+    							<div class="course-name">CMST 201 Introduction to Communication Studies</div>
+    							<div class="course-credits"></div>
+    						</li>
+
+    						<li class="status-original">
+    							<div class="course-name">CMST 210 Public Speaking</div>
+    							<div class="course-credits"></div>
+    						</li>
+					<li class="status-imported">
+    							<div class="adhoc-position-preview">[right]</div>
+    							<div class="course-name"><p>*</p></div>
+    							<div class="course-credits"></div>
+    						</li>
+
+    	
+    						<li class="status-original">
+    							<div class="course-name">ENGL 455 Persuasive Writing</div>
+    							<div class="course-credits"></div>
+    						</li>
+					<li class="status-imported">
+    							<div class="adhoc-position-preview">[right]</div>
+    							<div class="course-name"><p>*</p></div>
+    							<div class="course-credits"></div>
+    						</li>
+
+    	
+    						<li class="status-original">
+    							<div class="course-name">ENGL 466 Writing, Layout, and Production of Technical Documents</div>
+    							<div class="course-credits"></div>
+    						</li>
+
+    						<li class="status-inserted">
+    							<div class="course-name">ENT 350 Introduction to Entrepreneurship</div>
+    							<div class="course-credits"></div>
+    						</li>
+
+    						<li class="status-inserted">
+    							<div class="course-name">ENT 375 Introduction to Name, Image, and Likeness</div>
+    							<div class="course-credits"></div>
+    						</li>
+
+    						<li class="status-inserted">
+    							<div class="course-name">ENT 415 Start-Overs as Start-Ups</div>
+    							<div class="course-credits"></div>
+    						</li>
+
+    						<li class="status-inserted">
+    							<div class="course-name">ENT  451 New Venture Planning</div>
+    							<div class="course-credits"></div>
+    						</li>
+
+    						<li class="status-original">
+    							<div class="course-name">INSC 311 User-Centered Design</div>
+    							<div class="course-credits"></div>
+    						</li>
+
+    						<li class="status-original">
+    							<div class="course-name">JREM 175 Introduction to Journalism and Creative Media</div>
+    							<div class="course-credits"></div>
+    						</li>
+
+    						<li class="status-original">
+    							<div class="course-name">JREM 330 Communication for Media</div>
+    							<div class="course-credits"></div>
+    						</li>
+
+    						<li class="status-original">
+    							<div class="course-name">LAR 423 Visual Communication for Non-Designers</div>
+    							<div class="course-credits"></div>
+    						</li>
+
+    						<li class="status-original">
+    							<div class="course-name">PBRL 270 Public Relations Principles</div>
+    							<div class="course-credits"></div>
+    						</li>
+					<li class="status-imported">
+    							<div class="adhoc-position-preview">[right]</div>
+    							<div class="course-name"><p>*</p></div>
+    							<div class="course-credits"></div>
+    						</li>
+
+    	
+    						<li class="status-original">
+    							<div class="course-name">PSYC 314 Cognitive Basis of Behavior</div>
+    							<div class="course-credits"></div>
+    						</li>
+
+    						<li class="status-original">
+    							<div class="course-name">PSYC 360 Social Psychology</div>
+    							<div class="course-credits"></div>
+    						</li>
+
+    						<li class="status-original">
+    							<div class="course-name">PSYC 410 Sensory Processes and Perception</div>
+    							<div class="course-credits"></div>
+    						</li>
+					<li class="status-imported">
+    							<div class="adhoc-position-preview">[after]</div>
+    							<div class="course-name"></div>
+    							<div class="course-credits"></div>
+    						</li>
+
+    						<li class="status-imported">
+    							<div class="adhoc-position-preview">[after]</div>
+    							<div class="course-name"><p>*Meets <permalink course-data-placeholder="Volunteer Core Requirements" display-text="Volunteer Core Requirements" display-title="yes" link-id="acalog-permalink-8576" to="acalog-program-32003" type="new"><a:title>Volunteer Core Requirements</a:title></permalink>.&nbsp;</p></div>
+    							<div class="course-credits"></div>
+    						</li>
+
+    			</ol>
+	</div>
+    		<ol class="sub-cores">
+    				</ol>
+    	</li>
+    	</ol>
+    </div>
+</div></div>
+
+
+<div id="qtip-rcontainer"></div></body></html><html lang="en" class=" js flexbox canvas canvastext webgl no-touch geolocation postmessage no-websqldatabase indexeddb hashchange history draganddrop websockets rgba hsla multiplebgs backgroundsize borderimage borderradius boxshadow textshadow opacity cssanimations csscolumns cssgradients cssreflections csstransforms csstransforms3d csstransitions fontface generatedcontent video audio localstorage sessionstorage webworkers no-applicationcache svg inlinesvg smil svgclippaths"><head>
+	<meta charset="utf-8">
+	<title>Curriculum Schema Preview</title>
+	<link rel="icon" type="image/x-icon" href="/favicon.ico">
+	<link rel="shortcut icon" type="image/x-icon" href="/favicon.ico">
+	<link rel="stylesheet" href="css/print-popup.css">
+	<link rel="stylesheet" href="css/ckeditor.richtext.css">
+	<link rel="stylesheet" href="css/curriculum.css">
+<style type="text/css">@media all
+{
+	.page-break  {
+		display:none;
+	}
+
+	html {
+		background: #eee;
+	}
+
+	body.curriculog-agenda-print,
+	body.curriculog-report-print,
+	body.curriculog-preview {
+		background: #FFF;
+		font-family: Verdana, Arial, sans-serif;
+	}
+
+	body.curriculog-ap-preview {
+		margin-top: 20px;
+		padding: 0 15px;
+	}
+
+	body.curriculog-report-print,
+	body.curriculog-preview {
+		padding: 10px;
+	}
+
+  body.curriculog-preview.masked {
+    max-height: 470px;
+  }
+
+	body.curriculog-report-print .report-content {
+		min-height: 400px;
+	}
+
+	.curriculog-agenda-print {
+		display: block;
+		width: 720px;
+		margin: 20px auto;
+		background-color: #FFFFFF;
+		font-family: Verdana, sans-serif;
+		font-size: 14px;
+	}
+
+	/* This is used for both proposal steps in the print popup and for agenda print. */
+	.curriculog-agenda-print #curriculog-fields-column-process-name,
+	.curriculog-agenda-print h2 {
+		padding: 6px;
+		color: #444444;
+		font-family: Palatino,Georgia,Times,"Times New Roman",serif;
+		font-size: 15pt;
+		font-weight: bold;
+		text-align: center;
+	}
+
+	.curriculog-agenda-print #curriculog-main,
+	.curriculog-preview #curriculog-main {
+		width: 720px;
+		min-width: 720px;
+		max-width: 720px;
+		margin-top: 0px;
+		overflow: inherit;
+	}
+
+	.curriculog-ap-preview #curriculog-main {
+		margin-top: 0;
+		min-width: 500px;
+		max-width: 700px;
+	}
+
+	.curriculog-ap-preview #curriculog-fields-column {
+		width: 100%;
+	}
+
+	.curriculog-agenda-print #curriculog-fields-column {
+		width: 100%;
+		border: none;
+		background: transparent;
+		margin-top: 0px;
+		float: none;
+	-webkit-border-radius: 0px;
+	   -moz-border-radius: 0px;
+			border-radius: 0px;
+	background-color: transparent;
+	-webkit-box-shadow: 0px 0px 0px transparent;
+	   -moz-box-shadow: 0px 0px 0px transparent;
+			box-shadow: 0px 0px 0px transparent;
+	}
+
+	.curriculog-agenda-print #curriculog-header,
+	.curriculog-agenda-print #curriculog-footer {
+		display: none;
+	}
+
+	.curriculog-agenda-print #curriculog-agenda-fields-column-titles,
+	.curriculog-agenda-print #curriculog-fields-column-titles,
+	.curriculog-preview h1,
+	.curriculog-preview h2,
+	.curriculog-agenda-print .agendas-page h2,
+	.curriculog-agenda-print .agendas-page h3 {
+		height: auto;
+		margin: auto;
+		text-align: center;
+	}
+
+
+	.curriculog-agenda-print #curriculog-fields-column #curriculog-fields-column-content {
+		border-left: none;
+		padding: 20px;
+	}
+
+	.curriculog-agenda-print #curriculog-fields-column-process-name,
+	.curriculog-agenda-print .agendas-page h2 {
+		padding: 6px;
+		color: #444444;
+		font-family: Palatino,Georgia,Times,"Times New Roman",serif;
+		font-size: 15pt;
+		font-weight: bold;
+	}
+
+	.curriculog-agenda-print #curriculog-fields-column-process-type,
+	.curriculog-agenda-print .agendas-page h3 {
+		color: #444444;
+		font-family: Palatino,Georgia,Times,"Times New Roman",serif;
+		font-size: 11pt;
+		font-weight: bold;
+	}
+
+	.curriculog-agenda-print .section-heading,
+	.curriculog-agenda-print legend,
+	.curriculog-agenda-print label,
+	.curriculog-agenda-print div {
+		font-weight: bold;
+	}
+	.curriculog-agenda-print div.qtip,
+	.curriculog-agenda-print div.qtip div {
+		color: #CCCCCC !important;
+		font-weight: normal;
+	}
+
+	.curriculog-agenda-print .section-heading {
+		padding: 2px 20px 2px 5px;
+		border: 1px solid #CCCCCC;
+		background-color: #EEEEEE;
+		position: relative;
+		cursor: pointer;
+		color: #999999;
+		font: bold 16px Verdana, Arial, sans-serif;
+		margin: 10px 20px;
+	}
+
+	.curriculog-agenda-print #curriculog-fields-column-content .section-heading .scroller,
+	.curriculog-agenda-print #curriculog-fields-column-content .smartfield-edit-actions {
+		display: none;
+	}
+
+	.curriculog-agenda-print .section-fieldset.type-subheading {
+		padding-left: 0px !important;
+	}
+
+	.curriculog-agenda-print .section-fieldset.type-description,
+	.curriculog-agenda-print .section-fieldset.type-subheading {
+		border: none !important;
+	}
+
+	.curriculog-agenda-print #curriculog-fields-column-content .section-fields .crosslisting-disabled {
+		border: 1px dotted #CCCCCC;
+	}
+
+	.curriculog-agenda-print .section-fieldset.type-text .field-placeholder,
+	.curriculog-agenda-print .section-fieldset.type-textarea .field-placeholder {
+	    border: 1px solid #DDDDDD;
+	    font: 12px Verdana,sans-serif;
+	    padding: 3px;
+	}
+
+	.curriculog-agenda-print .section-fieldset.type-text .field-placeholder,
+	.curriculog-agenda-print .section-fieldset.type-textarea .field-placeholder,
+	.curriculog-agenda-print .section-fieldset.type-smartfield .curriculog-smartfield-dropzone {
+	    background: #F2F2F2;
+	    min-height: 18px;
+	    border: none;
+	}
+
+	.curriculog-agenda-print .section-fieldset.type-textarea .field-placeholder ol>li  {
+		list-style-type: decimal;
+	}
+
+	.curriculog-agenda-print .section-fieldset.type-textarea .field-placeholder ul>li  {
+		list-style-type: disc;
+	}
+
+	.curriculog-agenda-print .section-fieldset.type-smartfield .smartfield-actions {
+		display: none;
+	}
+
+	.curriculog-agenda-print #curriculog-agenda-fields-column .section-fieldset.type-smartfield .curriculog-smartfield-dropzone {
+		width: 80%;
+		float: right;
+	}
+
+	.curriculog-agenda-print #curriculog-fields-column-content .section-fieldset.type-textarea .field-placeholder,
+	.section-fieldset .ckeditor {
+		max-height: none;
+		height: none;
+		overflow: auto;
+	}
+
+	.curriculog-agenda-print .curriculog-smartfield-dropzone .smartfield-item,
+	.curriculog-agenda-print .curriculog-smartfield-dropzone .no-item {
+	    cursor: pointer;
+	    font: bold 12px Verdana,sans-serif;
+	    padding: 3px;
+	    position: relative;
+	}
+
+	.curriculog-agenda-print #curriculog-fields-column-content .section-fieldset.type-smartfield .curriculog-smartfield-dropzone.system-required-prospectiveCurriculum {
+		background: none;
+	}
+
+	.curriculog-report-print h1,
+	.curriculog-preview h1 {
+		font-size: 2em;
+		font-weight: bold;
+		padding: 12px 0 24px;
+	}
+
+	.curriculog-report-print h2,
+	.curriculog-preview h2 {
+		font-family: Arial, Helvetica, sans-serif;
+		font-size: 1.5em;
+		font-weight: bold;
+		padding: 6px 0 12px;
+	}
+
+	.curriculog-report-print .no-results {
+		padding: 20px 0;
+		margin-bottom: 40px;
+		font-size: 12px;
+	}
+
+	.curriculog-preview #preview-tools {
+		display: block;
+		text-align: right;
+		background: #DDDDDD;
+		border: 1px solid #BBBBBB;
+		margin-bottom: 10px;
+	}
+
+	/* Proposal Print extra print options */
+	.curriculog-agenda-print #preview-tools {
+		display: block;
+		width: 100%;
+		text-align: right;
+		background: #DDDDDD;
+		border: 1px solid #BBBBBB;
+		min-height: 25px;
+		padding: 2px 0px;
+	}
+
+	.curriculog-agenda-print #print-options-table {
+		display: none;
+	}
+
+	.curriculog-agenda-print .print-options .buttons {
+		text-align: center;
+	}
+
+	.print-steps,
+	.print-files,
+	.print-signatures,
+	.print-crosslistings,
+	.print-comments,
+	.print-decisions {
+		display: none;
+	}
+
+	.curriculog-agenda-print .print-container {
+		padding: 20px;
+		max-width: 600px;
+		margin: auto;
+	}
+
+	.curriculog-agenda-print .step .step-fields {
+		display: block;
+	}
+
+	.curriculog-agenda-print .step .step-titlebar {
+		-webkit-border-bottom-right-radius: 0px;
+		-webkit-border-bottom-left-radius: 0px;
+		-moz-border-radius-bottomright: 0px;
+		-moz-border-radius-bottomleft: 0px;
+		border-bottom-right-radius: 0px;
+		border-bottom-left-radius: 0px;
+	}
+
+	.curriculog-agenda-print .tracking-details {
+		border: 1px solid gray;
+	}
+
+	#curriculog-fields-column-content .tracking-details,
+	#curriculog-steps-column-content .files .tracking-details {
+		max-height: none;
+		overflow: auto;
+	}
+
+	.curriculog-agenda-print.diff .core-block.status-deleted .core h3,
+	.curriculog-agenda-print.diff .core-block.status-deleted .core .description {
+		color: #C40000 !important;
+		text-decoration: line-through;
+	}
+
+
+	.curriculog-agenda-print .print-list {
+		list-style: disc;
+	}
+
+	.curriculog-agenda-print .print-list li {
+		margin-left: 25px;
+		padding: 6px;
+		font-size: 13px;
+	}
+
+	.curriculog-agenda-print .print-list .small {
+		font-weight: normal;
+	}
+
+	/* Curriculum preview */
+	.course-list .permalink {
+		color: green !important;
+		text-decoration: underline !important;
+	}
+
+
+
+	.curriculog-report-print ul.steps {
+		margin-bottom: 80px;
+	}
+
+
+	table, tr, th, td {
+		font-family: Verdana, sans-serif;
+		border: 1px solid #dddddd;
+	}
+
+	.curriculog-agenda-print table,
+	.curriculog-agenda-print tr,
+	.curriculog-agenda-print th,
+	.curriculog-agenda-print td {
+		text-align: left;
+	}
+
+	.curriculog-agenda-print table.print-options {
+		margin: auto;
+		padding: 15px;
+	}
+
+	tr.even {
+		background-color: #EFEFEF;
+	}
+
+	th {
+		background: #dddddd;
+		font-weight: bold;
+	}
+
+	th, td {
+		font-size: 11px;
+		padding: 2px 4px;
+	}
+
+	.arrow {
+		width: 0;
+		height: 0;
+		border-left: 20px solid transparent;
+		border-right: 20px solid transparent;
+
+		border-top: 20px solid #000;
+		margin: auto;
+	}
+
+	table.impact,
+	table.impact tr,
+	table.impact td {
+		border: none;
+		font-size: 12px;
+	}
+
+	table.impact .field-name {
+		font-weight: bold;
+		text-align: left;
+	}
+
+	table.impact td strong {
+		font-weight: bold;
+	}
+
+	table.impact .subfield-name {
+		font-weight: bold;
+		color: #888888;
+		text-align: right;
+	}
+
+	table.impact ul {
+		margin-bottom: 5px;
+	}
+
+	table.impact ul li {
+		margin-bottom: 3px;
+	}
+
+	table.details {
+		width: 90%;
+	}
+
+	table.details,
+	table.details tr,
+	table.details td {
+		font-size: 11px;
+	}
+
+	table.details .proposal-name {
+		font-size: 12px;
+		font-weight: bold;
+		padding: 4px;
+	}
+
+	table.details .instance-date {
+		font-weight: bold;
+		color: #555;
+		font-size: 12px;
+	}
+
+	table.details .heading {
+		background: #EFEFEF;
+	}
+
+	table.details .field-name {
+		font-weight: bold;
+		text-align: right;
+		width: 20%;
+	}
+
+	table.details .section-name {
+		font-weight: bold;
+		color: #444444;
+		text-align: right;
+		width: 20%;
+	}
+
+	table.details .subfield-name {
+		font-weight: bold;
+		color: #888888;
+		text-align: right;
+		width: 20%;
+	}
+
+	table.details .subcolumn-small {
+		width: 15%;
+	}
+
+	table.details .subcolumn-large {
+		width: 55%;
+	}
+
+	table.details td strong {
+		font-weight: bold;
+	}
+
+	.curriculog-report-print h6 {
+		font-size: 11px;
+		font-weight: bold;
+		margin: 10px 0 2px;
+	}
+
+	table.filters {
+		background: #CCDCE8;
+		color: #111111;
+		font-size: 10px;
+		width: 90%;
+	}
+
+	table.filters strong {
+		font-weight: bold;
+	}
+
+	table.filters, table.filters tr, table.filters td {
+		border: 1px solid #9BB3C4;
+	}
+
+	table.filters tr td {
+		vertical-align: top;
+	}
+
+	/* Curriculog Preview */
+	.curriculog-preview ol {
+		list-style: none;
+	}
+
+	/* When viewing print preview, make breaks look like pages */
+	.page-separator {
+		height: 20px;
+		margin-top:5px;
+		background-color: #EEEEEE;
+	}
+
+	/* Proposal Print Overrides */
+	#curriculog-proposal {
+		background: #EEEEEE;
+	}
+
+	#curriculog-proposal #preview-tools {
+		margin-bottom: 20px;
+	}
+
+	#curriculog-proposal #curriculog-fields-column {
+		background: #FFFFFF;
+		padding: 0px;
+	}
+
+	#curriculog-proposal #curriculog-fields-column-titles {
+		background: #FFFFFF;
+		padding-top: 15px;
+	}
+
+	.map-page #curriculog-proposal #curriculog-fields-column-titles {
+		background: #617298;
+		padding-top: 15px;
+	}
+
+
+
+}
+
+@media screen {
+	/*.curriculog-agenda-print #curriculog-main {
+		-webkit-box-shadow: 3px 3px 2px #555555;
+	   -moz-box-shadow: 3px 3px 2px #555555;
+			box-shadow: 3px 3px 2px #555555;
+	}*/
+
+	.curriculog-agenda-print #curriculog-content {
+		-webkit-box-shadow: 4px 5px 4px #555555;
+		   -moz-box-shadow: 4px 5px 4px #555555;
+				box-shadow: 4px 5px 4px #555555;
+	}
+
+	.curriculog-agenda-print .print-steps,
+	.curriculog-agenda-print .print-files,
+	.curriculog-agenda-print .print-comments,
+	.curriculog-agenda-print .print-signatures,
+	.curriculog-agenda-print .print-crosslistings,
+	.curriculog-agenda-print .print-decisions {
+		background: #FFFFFF;
+		margin-top: 20px;
+		padding-top: 20px;
+		-webkit-box-shadow: 4px 5px 4px #555555;
+		   -moz-box-shadow: 4px 5px 4px #555555;
+				box-shadow: 4px 5px 4px #555555;
+	}
+
+  /***************************************************************************/
+  /**********                                                       **********/
+  /*****                          Loading Mask                           *****/
+  /**********                                                       **********/
+  /***************************************************************************/
+
+  .loadmask {
+  	width: 100%;
+  	height: 100%;
+  	background-color: #CCCCCC;
+  	position: absolute;
+  	top: 0;
+  	left: 0;
+  	z-index: 100;
+  	opacity: .50;
+  	filter: alpha(opacity=50);
+  	zoom: 1;
+  }
+
+  .loadmask-msg {
+  	padding: 2px;
+  	border: 1px solid #6593CF;
+  	background: #C3DAF9;
+  	z-index: 20001;
+  	position: absolute;
+  	top: 0;
+  	left: 0;
+  }
+
+  .loadmask-msg div {
+  	border: 1px solid #A3BAD9;
+  	padding: 5px 10px 5px 25px;
+  	background: #FBFBFB url('../images/loading.gif') no-repeat 5px 5px;
+  	cursor: wait;
+
+  	line-height: 16px;
+  	color: #222222;
+  	font: normal 11px tahoma, arial, helvetica, sans-serif;
+  }
+
+  .masked {
+  	overflow: hidden !important;
+  }
+
+  .masked-relative {
+  	position: relative !important;
+  }
+
+  .masked-hidden {
+  	visibility: hidden !important;
+  }
+
+  .loading {
+  	height: 20px;
+  	background: transparent url(/images/ajax-loader.gif) top center no-repeat;
+
+  }
+
+
+}
+
+@media print
+{
+	.page-break  {
+		display:block;
+		page-break-before:always !important;
+	}
+
+	.curriculog-preview #preview-tools,
+	.curriculog-agenda-print #preview-tools {
+		display: none;
+	}
+
+	.curriculog-agenda-print #curriculog-content {
+		display: inline;
+	}
+
+	.curriculog-agenda-print #curriculog-fields-column-titles,
+	.curriculog-agenda-print #curriculog-fields-column-content fieldset,
+	.curriculog-agenda-print .section-fields {
+		overflow: visible;
+	}
+
+	.step .step-fields {
+		-webkit-print-color-adjust: exact;
+	}
+
+	.step .step-titlebar,
+	.comment .comment-titlebar {
+		border: 1px solid gray;
+	}
+
+	.step .step-fields,
+	.comment .comment-content {
+		border: 1px solid gray;
+	}
+	.curriculog-agenda-print {
+		width: 100% !important;
+	}
+	.curriculog-agenda-print #curriculog-main,
+	.curriculog-preview #curriculog-main {
+		width: 100%;
+		min-width: 100%;
+		max-width: 100%;
+	}
+
+
+}
+
+/**
+ * Using a firefox browser hack to fix some printing issues
+ */
+@media print and (min--moz-device-pixel-ratio:0) {
+	.page-break-avoid {
+		display: block;
+		page-break-after: auto;
+	}
+
+	.page-break-avoid div {
+		page-break-inside: avoid;
+	}
+}
+
+/*
+This stylesheet is a duplicate of js/ckeditor/contents.css
+Its styles are duplicated here for rich text fields rendered during view mode.
+If ckeditor is updated, this file should be modified to match the style elements 
+DO NOT copy/paste over the whole thing - the selectors are specific for rich text fields only
+*/
+
+.ckeditor address,
+.ckeditor blockquote,
+.ckeditor div,
+.ckeditor dl, 
+.ckeditor dt, 
+.ckeditor fieldset, 
+.ckeditor form,
+.ckeditor h1, 
+.ckeditor h2, 
+.ckeditor h3, 
+.ckeditor h4,
+.ckeditor h5, 
+.ckeditor h6, 
+.ckeditor ol, 
+.ckeditor p, 
+.ckeditor ul, 
+.ckeditor center,
+.ckeditor dir, 
+.ckeditor hr, 
+.ckeditor menu, 
+.ckeditor pre   { 
+	display: block !important; 
+	unicode-bidi: embed !important; 
+}
+
+.section-fieldset .ckeditor,
+.summary .ckeditor {
+	/* Font */
+	font-family: sans-serif, Arial, Verdana, "Trebuchet MS" !important;
+	font-size: 13px !important;
+
+	/* Text color */
+	color: #333 !important;
+
+	padding: 8px !important;
+	
+	min-width: 250px;
+	max-height: 200px;
+	overflow-y: auto;
+}
+
+
+.approval-process-page .section-fieldset .ckeditor {
+	min-width: 250px;
+	max-width: 575px;
+	max-height: none;
+}
+
+/* this resets ckeditor's hardcoded width/height of 
+referenced images so they don't blow out the page 
+
+- TODO: This should be changed, but will need a complete
+stylesheet redesign. Too many styles are affected across
+the site by this change. Right now, this means images smaller than full size will scale up.
+*/
+.section-fieldset.subheading-description .ckeditor img,
+.section-fieldset.type-description.ckeditor img {
+	/*width: 100% !important;
+	height: 100% !important;*/
+	/*min-width: 50%;
+	max-width: 100%;*/
+}
+
+
+.half-field .section-fieldset .ckeditor, 
+.half-field .section-fieldset.ckeditor {
+	min-width: 100px;
+	max-width: 200px;
+}
+
+.summary .ckeditor {
+	background: #EEEEEE;
+	border: 1px solid #81899B;
+}
+
+.ckeditor .cke_editable
+{
+	font-size: 13px !important;
+	line-height: 1.6em !important;
+}
+
+.ckeditor blockquote
+{
+	font-style: italic !important;
+	font-family: Georgia, Times, "Times New Roman", serif !important;
+	padding: 2px 0 !important;
+	border-style: solid !important;
+	border-color: #ccc !important;
+	border-width: 0 !important;
+}
+
+.ckeditor .cke_contents_ltr blockquote
+{
+	padding-left: 20px !important;
+	padding-right: 8px !important;
+	border-left-width: 5px !important;
+}
+
+.ckeditor .cke_contents_rtl blockquote
+{
+	padding-left: 8px !important;
+	padding-right: 20px !important;
+	border-right-width: 5px !important;
+}
+
+.ckeditor p,
+.ckeditor blockquote, 
+.ckeditor ul,
+.ckeditor fieldset, 
+.ckeditor form,
+.ckeditor ol, 
+.ckeditor dl, 
+.ckeditor dir,
+.ckeditor menu { 
+	margin-top: 1.12em !important; 
+	margin-bottom: 1.12em !important; 
+}
+
+.ckeditor a
+{
+	color: #0782C1 !important;
+}
+
+.ckeditor permalink {
+	color: green;
+	text-decoration: underline;
+}
+
+.ckeditor ol,
+.ckeditor ul,
+.ckeditor dl
+{
+	/* IE7: reset rtl list margin. (#7334) */
+	margin-right: 0px !important;
+	/* preserved spaces for list items with text direction other than the list. (#6249,#8049)*/
+	padding: 0 40px !important;
+	line-height: 1.6em;
+}
+
+.ckeditor ol {
+	list-style: decimal;
+}
+
+.ckeditor ul {
+	list-style: disc;
+}
+
+.ckeditor li { 
+	display: list-item !important; 
+}
+
+.ckeditor h1,
+.ckeditor h2,
+.ckeditor h3,
+.ckeditor h4,
+.ckeditor h5,
+.ckeditor h6
+{
+	font-weight: normal !important;
+	line-height: 1.2em !important;
+}
+
+.ckeditor h1 { 
+	font-size: 26px !important; 
+	margin: .67em 0 !important; 
+}
+
+.ckeditor h2 { 
+	font-size: 20px !important; 
+	margin: .75em 0 !important; 
+}
+
+.ckeditor h3 { 
+	font-size: 18px !important; 
+	margin: .83em 0 !important; 
+}
+
+.ckeditor h4 { 
+	font-size: 13px !important;
+	margin: 1.12em 0 !important;
+}
+
+.ckeditor h5 { 
+	font-size: 11px !important; 
+	margin: 1.5em 0 !important; 
+}
+
+.ckeditor h6 { 
+	font-size: 9px !important; 
+	margin: 1.67em 0 !important; 
+}
+
+.ckeditor hr
+{
+	border: 0px !important;
+	background: transparent;
+	color: transparent;
+	border-top: 1px solid #ccc !important;
+	height: 1px;
+}
+
+.ckeditor img.right {
+    border: 1px solid #ccc !important;
+    float: right !important;
+    margin-left: 15px !important;
+    padding: 5px !important;
+}
+
+.ckeditor img.left {
+    border: 1px solid #ccc !important;
+    float: left !important;
+    margin-right: 15px !important;
+    padding: 5px !important;
+}
+
+.ckeditor img:hover {
+	opacity: .9 !important;
+	filter: alpha(opacity = 90) !important;
+}
+
+.ckeditor pre
+{
+	white-space: pre-wrap !important; /* CSS 2.1 */
+	word-wrap: break-word !important; /* IE7 */
+	font-family: monospace !important;
+}
+
+.ckeditor strong { 
+	font-weight: bolder !important; 
+}
+
+.ckeditor blockquote { 
+	margin-left: 40px !important; 
+	margin-right: 40px !important; 
+}
+
+.ckeditor p {
+	line-height: 1.5em !important;
+}
+
+.ckeditor i, 
+.ckeditor cite, 
+.ckeditor em,
+.ckeditor var, 
+.ckeditor address { 
+	font-style: italic !important; 
+}
+
+.ckeditor sub { 
+	font-size: .83em !important; 
+	vertical-align: sub !important; 
+}
+
+.ckeditor sup { 
+	font-size: .83em !important; 
+	vertical-align: super !important; 
+}
+
+.ckeditor table { 
+	display: table !important;
+	border-collapse: separate !important;
+	border: 1px solid !important;
+	border-spacing: 2px !important;
+}
+
+.ckeditor tr { 
+	display: table-row !important;
+	vertical-align: inherit !important;
+}
+
+.ckeditor thead { 
+	display: table-header-group !important;
+	vertical-align: middle  !important;
+}
+
+.ckeditor tbody { 
+	display: table-row-group  !important;
+	vertical-align: middle  !important;
+}
+
+.ckeditor tfoot { 
+	display: table-footer-group !important;
+	vertical-align: middle  !important;
+}
+
+.ckeditor col { 
+	display: table-column !important; 
+}
+
+.ckeditor colgroup { 
+	display: table-column-group !important; 
+}
+
+.ckeditor td, 
+.ckeditor th { 
+	display: table-cell !important;
+	vertical-align: inherit !important;
+	border: 1px solid black !important;
+	line-height: 1.6em;
+	padding: 1px;
+}
+
+.ckeditor caption { 
+	display: table-caption !important; 
+}
+.ckeditor th { 
+	font-weight: bolder !important; 
+	text-align: center !important; 
+}
+.ckeditor caption { 
+	text-align: center !important; 
+}
+
+.cke_editable .permalink,
+.ckeditor .permalink {
+	color: green !important;
+	text-decoration: underline !important;
+}
+
+/**
+ * This fixes tables loosing their center alignment when in read-only mode.
+ */
+table[align="center"] {
+    margin: 0 auto;
+}
+
+/*
+ * Curriculum Field
+ */
+
+ .curriculum {
+	width: 100%;
+	background: #EEEEEE;
+	font: 12px Arial;
+}
+
+.curriculum .legend,
+.curriculum legend {
+	float: left;
+	-webkit-box-sizing: border-box;
+	-moz-box-sizing: border-box;
+	box-sizing: border-box;
+	padding: 4px 5px 3px 0;
+	width: 20%;
+	color: #888888;
+	text-align: right;
+	font-weight: bold;
+}
+
+.curriculum.ckeditor p {
+	line-height: 0em !important;
+}
+
+.schema,
+.courses {
+	float: right;
+	-webkit-box-sizing: border-box;
+	-moz-box-sizing: border-box;
+	box-sizing: border-box;
+	padding-left: 0;
+	width: 80%;
+}
+
+
+/*
+ * Course List Items
+ */
+
+ .course-list-container {
+ 	margin-bottom: 10px;
+ }
+
+ .course-list {
+ 	margin-bottom: 5px;
+ 	min-height: 27px;
+ 	border: 1px solid #E6E6E6;
+ 	background: #FFFFFF;
+ }
+
+ .core-list > li.no-data,
+ .course-list > li.no-data {
+ 	display: block;
+ 	padding: 20px 5px;
+ }
+
+ .course-list-label {
+ 	display: block !important; /* FIXME */
+ 	padding: 4px 5px 3px 0;
+ 	color: #888888;
+ 	letter-spacing: 0.4px;
+ 	font-weight: bold;
+ }
+
+
+ .schema .course-list {
+ 	padding: 3px;
+ }
+
+ .schema .course,
+ .schema .custom-text {
+ 	border: 1px dotted #BBB;
+ 	border-radius: 6px;
+ 	margin: 3px auto;
+ }
+ .schema .custom-text {
+ 	display: -webkit-box;
+   display: -moz-box;
+   display: -ms-flexbox;
+   display: -webkit-flex;
+   display: flex;
+	 min-height: 25px;
+ }
+
+ .empty-list {
+ 	color: #CCCCCC;
+ }
+
+ .course {
+ 	font-weight: bold;
+ }
+
+ .course:hover,
+ .custom-text:hover {
+ 	background: #EEEEEE;
+ }
+
+.custom-text,
+.course,
+.empty-list {
+	position: relative;
+	padding: 5px;
+	overflow: hidden;
+}
+
+.course .course-name {
+	float: left;
+	max-width: calc(85% - 30px);
+}
+.schema .course .course-name {
+	margin-left: 52px;
+	max-width: calc(90% - 107px);
+}
+.schema .course.with-status .course-name {
+	max-width: none;
+}
+
+.adhoc-position-preview {
+	float: left;
+	margin-right: 5px;
+	text-transform: capitalize;
+	width: 50px;
+}
+
+.adhoc-position-preview span {
+	text-transform: capitalize;
+	display: inline-block;
+}
+
+.course .course-credits {
+	float: right;
+	margin-right: 30px;
+	max-width: calc(15% - 30px);
+}
+.schema .course .course-credits {
+	margin-right: 55px;
+}
+.course .course-credits.static {
+	margin-right: 0;
+}
+
+.section-fieldset .ckeditor.custom-text {
+	padding: 0 !important;
+}
+
+.adhoc-position {
+	background-color: #DDD;
+	border-radius: 6px;
+	margin-right: 2px;
+	min-width: 50px;
+	padding-left: 3px;
+	padding-top: 2px;
+	text-transform: capitalize;
+}
+
+
+.adhoc-credits,
+.adhoc-text.flex-fill {
+	margin-right: 60px;
+}
+
+.adhoc-credits.static {
+	margin-right: 0;
+}
+
+.adhoc-text.flex-fill,
+.adhoc-flex-fill {
+	-webkit-box-flex:1;
+  -ms-flex-positive:1;
+  flex-grow:1
+}
+
+.adhoc-text {
+	max-width: calc(90% - 105px);
+	overflow-y: auto;
+	max-height: 200px;
+	box-sizing: border-box;
+	padding-right: 5px;
+}
+
+.adhoc-credits {
+	font-weight: bold;
+
+}
+.course-list-button-container {
+	position: absolute;
+	top: 2px;
+	right: 2px;
+}
+
+.adhoc-position,
+.adhoc-credits {
+	font-family: Arial, Helvetica, sans-serif;
+	font-size: 12px;
+}
+
+.course .btn-edit,
+.course .btn-delete,
+.custom-text .btn-edit,
+.custom-text .btn-delete {
+	position: relative;
+	top: -3px;
+	visibility: hidden;
+	float: right;
+}
+
+.course:hover .btn-edit,
+.course:hover .btn-delete,
+.custom-text:hover .btn-edit,
+.custom-text:hover .btn-delete {
+	visibility: visible;
+}
+
+.course.with-status,
+.with-status {
+	display: -webkit-box;
+	display: -ms-flexbox;
+	display: flex;
+}
+
+.with-status .course-name {
+	-webkit-box-flex: 3 3 125px;
+	    -ms-flex: 3 125px;
+	        flex: 3 125px;
+	float: none;
+	max-width: none;
+}
+
+.with-status .course-status,
+.course-credits {
+	text-align: right;
+}
+
+.with-status .course-credits {
+	-webkit-box-flex: 2 2 45px;
+	    -ms-flex: 2 45px;
+	        flex: 2 45px;
+	float: none;
+	margin-left: 5px;
+	max-width: none;
+}
+
+.course-status {
+	color: #888;
+	-webkit-box-flex: 1 1 35px;
+	    -ms-flex: 1 0 35px;
+	        flex: 1 0 35px;
+	margin-left: 5px;
+}
+
+.add-core-course-dialog .course-status {
+	text-align: right;
+	-webkit-box-flex: 1 1 111px;
+	    -ms-flex: 1 0 111px;
+	        flex: 1 0 111px;
+}
+
+
+.course-status em {
+	font-style: italic;
+}
+
+
+
+
+
+
+/*
+ * Course Form
+ */
+
+.add-course-form {
+	margin: 5px;
+	padding: 5px 0;
+	border-top: 1px solid black;
+}
+
+.add-course-form input {
+	width: 15% !important;
+}
+
+
+/*
+ * CKEditor special style rules for curriculum
+ * Note: first-of-type selector doesn't work with ie8;
+ * unlaunched mode templates have classes .custom-text.ckeditor
+ * active mode templates have classes .custom-text .ckeditor
+ */
+
+.course-list .custom-text .ckeditor p:first-of-type,
+.course-list .custom-text.ckeditor p:first-of-type {
+	margin: 0 !important;
+}
+
+/* remove when our stylesheet doesn't stink */
+.section-fieldset .custom-text .ckeditor {
+	padding: 5px !important;
+}
+
+
+
+/*
+ * Icon Buttons
+ */
+
+ /* hide the core course-list buttons on the bucket view. */
+ .courses > .course-list-container > .btn-add {
+ 	display: none;
+ }
+
+.btn-add {
+	padding-left: 20px;
+	border: 0;
+	background: url(/images/icons/flat/add.png) no-repeat;
+}
+
+.btn-import {
+	padding-left: 20px;
+	border: 0;
+	background: url(/images/icons/flat/import.png) no-repeat;
+}
+
+.btn-add:hover,
+.btn-import:hover {
+	text-decoration: underline;
+	cursor: pointer;
+}
+
+.btn-delete {
+	padding-left: 20px;
+	width: 20px;
+	height: 20px;
+	border: 0;
+	background: url(/images/icons/flat/delete.png) no-repeat;
+}
+
+.btn-edit {
+	padding-left: 20px;
+	width: 20px;
+	height: 20px;
+	border: 0;
+	background: url(/images/icons/flat/edit.png) no-repeat;
+}
+
+.btn-delete:hover,
+.btn-edit:hover {
+	cursor: pointer;
+}
+
+.btn-add:active,
+.btn-delete:active,
+.btn-edit:active,
+.btn-import:active {
+	position: relative;
+	top: 1px;
+}
+
+.btn {
+	margin: 0px 2px;
+	padding: 4px 6px;
+	border: 1px solid #BBBBBB;
+	-webkit-border-radius: 3px;
+	   -moz-border-radius: 3px;
+			border-radius: 3px;
+	background-color: #EEEEEE;
+	background-image: -webkit-gradient(linear, left top, left bottom, from(#EEEEEE), to(#D5D5D5));
+	background-image: -webkit-linear-gradient(top, #EEEEEE, #D5D5D5);
+	background-image:    -moz-linear-gradient(top, #EEEEEE, #D5D5D5);
+	background-image:     -ms-linear-gradient(top, #EEEEEE, #D5D5D5);
+	background-image:      -o-linear-gradient(top, #EEEEEE, #D5D5D5);
+	background-image:         linear-gradient(top, #EEEEEE, #D5D5D5);
+	-webkit-box-shadow: 0px 1px 2px #CCCCCC;
+	   -moz-box-shadow: 0px 1px 2px #CCCCCC;
+			box-shadow: 0px 1px 2px #CCCCCC;
+	color: #232D3D;
+	text-shadow: 0px 1px 0px #FFFFFF;
+	font: bold 11px/15px Verdana, sans-serif;
+	cursor: pointer;
+}
+
+.btn-preview-tools {
+	width: 25px;
+	height: 25px;
+	border: none;
+	-webkit-box-shadow: none;
+	   -moz-box-shadow: none;
+			box-shadow: none;
+
+	background: transparent;
+	padding: 0;
+}
+
+.btn:hover {
+	color: #D85054;
+}
+
+.btn:active {
+	position: relative;
+	top: 1px;
+}
+
+/*
+ * Curriculum switch buttons
+ */
+
+.switch-curriculum {
+	float: left;
+	text-align: right;
+	width: 19%;
+	margin-right: 1%;
+}
+
+.btn-schema,
+.btn-courses,
+.btn-preview-curriculum {
+	overflow: hidden;
+	width: 26px;
+	height: 26px;
+	border: 1px solid transparent;
+	border-radius: 3px;
+	background-color: transparent;
+	background-position: 2px 2px;
+	background-repeat: no-repeat;
+	font-size: 0;
+}
+
+.btn-schema.active,
+.btn-courses.active,
+.btn-preview-curriculum.active {
+	border: 1px solid #BBBBBB;
+	background-color: white;
+}
+
+.btn-schema {
+	background-image: url(/images/icons/flat/schema.png);
+}
+
+.btn-courses {
+	background-image: url(/images/icons/flat/courselist.png);
+}
+
+.btn-preview-curriculum {
+	background-image: url(/images/icons/flat/schema-preview.png);
+}
+
+
+
+
+/*
+ * Curriculum Core
+ */
+
+.core fieldset {
+	position: relative;
+	display: block;
+	margin: 0 0 3px 0;
+	background: #F6F6F6;
+	color: #333333;
+	/*border: 1px solid #E6E6E6;*/
+	border-radius: 3px;
+}
+
+/* TODO: merge these two rules */
+.core-drag-handle {
+	display: block;
+	width: 20px;
+	height: 20px;
+	background: url("../images/icons/flat/drag.png") no-repeat scroll 0 0;
+	cursor: move;
+}
+
+.core > fieldset > .core-drag-handle {
+	position: absolute;
+	top: 3px;
+	left: -20px;
+	visibility: hidden;
+}
+
+.core > fieldset:hover .core-drag-handle {
+	visibility: visible;
+}
+
+.core-header {
+	padding: 5px 0 5px 5px;
+	border-radius: 3px 3px 0 0;
+	background-color: #BBBBBB;
+}
+
+/* Add the locked icon to the core-header if this is a locked core. */
+.core-locked .icon-locked {
+	background: #BBBBBB url(/images/icons/flat/lock.png) no-repeat 0px 0px;
+	position: absolute;
+	right: 30px;
+	top: 2px;
+	width: 20px;
+	height: 20px;
+	border: 0;
+}
+
+.core-header > .core-title {
+	color: #FFFFFF;
+	font-weight: bold;
+	max-width: calc(100% - 55px);
+	display: inline-block;
+}
+
+.core-header > .core-title.with-status {
+	max-width: calc(100% - 155px);
+}
+
+.core-header > .core-status {
+    font-style: italic;
+    color: #FFFFFF;
+    font-weight: bold;
+    display: inline-block;
+    position: absolute;
+    right: 50px;
+}
+
+.core-header > .btn-delete {
+	visibility: hidden;
+	float: right;
+	margin-top: -3px;
+	width: 20px;
+	height: 20px;
+	color: transparent;
+}
+
+.core-header:hover > .btn-delete {
+	visibility: visible;
+}
+
+/* Modify the styles when the core is in a collapsed state. */
+.core.collapsed > fieldset > .core-header {
+	border: 0 none;
+	border-radius: 3px;
+}
+
+.core.collapsed > fieldset > .core-content {
+	display: none;
+}
+
+.core-title-field-label,
+.core-description-field-label {
+	display: block !important; /* FIXME */
+	padding: 4px 5px 3px 0;
+	color: #888888;
+	letter-spacing: 0.4px;
+	font-weight: bold;
+}
+
+.core-title-field,
+.core-description-field {
+	-moz-box-sizing: border-box;
+	box-sizing: border-box;
+	width: 100%;
+}
+
+.core-title-field,
+.core-description-field {
+	padding: 5px;
+	border: 1px solid #E6E6E6;
+	background-color: #FFFFFF;
+	/* FIXME We are overwriting styles here. Refactor styles.css */
+	margin-bottom: 10px !important;
+}
+
+.core-content {
+	padding: 5px;
+}
+
+.core-content > .course-list {
+	margin: 10px 5px;
+}
+
+/* This is the placeholder element used by jQueryUI sortable. */
+.core-sortable-highlight {
+	margin-bottom: 3px;
+	height: 24px;
+	border-radius: 3px;
+	background: #CCCCCC;
+}
+
+
+/* This shows the object status for Curriculum Preview with markup */
+.curriculog-preview .core-block .core,
+.curriculog-agenda-print .core-block .core {
+	margin-bottom: 10px;
+	padding: 15px;
+	border: 1px solid #DDDDDD;
+	background: #EEEEEE;
+	-webkit-border-radius: 6px;
+	-moz-border-radius: 6px;
+	border-radius: 6px;
+}
+
+.curriculog-preview .core-block.shared-core,
+.curriculog-preview .core-block.locked .core,
+.curriculog-agenda-print .core-block.shared-core,
+.curriculog-agenda-print .core-block.locked .core {
+	background: #E6EFF2;
+	border-color: #AFD1DB;
+}
+
+.curriculog-preview .core-block.locked .core.core-courses,
+.curriculog-agenda-print .core-block.locked .core.core-courses {
+	background: #EFEFEF;
+	border-color: #DEDEDE;
+}
+
+.curriculog-preview .core-block.locked .core.core-courses .course-list,
+.curriculog-agenda-print .core-block.locked .core.core-courses .course-list {
+	padding-left: 0px;
+}
+
+.curriculog-preview .core-block h3,
+.curriculog-agenda-print .core-block h3 {
+	font: 18px Verdana, sans-serif;
+	/*text-decoration: underline;*/
+	margin: 0 0 5px 0;
+}
+
+.curriculog-preview .core-block h3 p,
+.curriculog-agenda-print .core-block h3 p {
+	margin: 0;
+}
+
+.curriculog-preview .ckeditor p:first-of-type,
+.curriculog-preview .course-list li p:first-of-type,
+.curriculog-agenda-print .ckeditor p:first-of-type,
+.curriculog-agenda-print .course-list li p:first-of-type {
+	margin: 0 !important;
+}
+
+.curriculog-preview .core-block.locked h3,
+.curriculog-agenda-print .core-block.locked h3 {
+	padding: 0px;
+	display: block;
+	background: url("../images/icons/flat/lock.png") no-repeat scroll 0px 1px transparent;
+	text-indent: 20px;
+}
+
+.curriculog-preview .core-block h3>i,
+.curriculog-agenda-print .core-block h3>i,
+.curriculog-preview .core-block.locked h3>i,
+.curriculog-agenda-print .core-block.locked h3>i {
+	font-style: italic;
+	color: #8a8888;
+}
+
+.curriculog-preview .core-block h3 img,
+.curriculog-agenda-print .core-block h3 img {
+	vertical-align: text-bottom;
+}
+
+.curriculog-preview .core-block .description,
+.curriculog-agenda-print .core-block .description {
+	font: 12px Verdana, sans-serif;
+	margin: 10px 0;
+	line-height: 1.5em;
+}
+
+.curriculog-preview .core-block ol.course-list,
+.curriculog-agenda-print .core-block ol.course-list {
+	margin-left: 10px;
+	list-style: none !important;
+	background: transparent;
+	border: 1px solid transparent;
+}
+
+.curriculog-preview .core-block ol.course-list li,
+.curriculog-agenda-print .core-block ol.course-list li {
+	padding: 2px 0px;
+	font: 12px Verdana, sans-serif;
+	overflow: hidden !important;
+}
+
+.curriculog-preview .core-block ol.course-list li .course-name,
+.curriculog-agenda-print .core-block ol.course-list li .course-name {
+	float: left;
+	max-width: calc(70% - 50px);
+}
+
+.curriculog-preview .core-block ol.course-list li .course-credits,
+.curriculog-agenda-print .core-block ol.course-list li .course-credits {
+	float: right;
+	max-width: calc(30% - 50px);
+}
+
+.curriculog-preview .core-block ol.course-list li.with-status .course-credits,
+.curriculog-agenda-print .core-block ol.course-list li.with-status .course-credits {
+	max-width: none;
+}
+
+.curriculog-preview .core-block ol.course-list li.type-customText,
+.curriculog-agenda-print .core-block ol.course-list li.type-customText {
+	font-style: italic;
+	color: #999999;
+}
+
+.curriculog-preview .core-block.ckeditor ol.course-list li.type-customText p,
+.curriculog-agenda-print .core-block.ckeditor ol.course-list li.type-customText p {
+	margin: 0px !important;
+}
+
+/* Curriculum Preview with diff  */
+.curriculog-preview.diff .ckeditor a,
+.curriculog-preview.diff .ckeditor a,
+.curriculog-agenda-print.diff .ckeditor a {
+	color: black !important;
+}
+
+.curriculog-preview.diff .core-block.status-deleted > .core,
+.curriculog-agenda-print.diff .core-block.status-deleted > .core {
+	border-color: red;
+	background: #E8C5C5;
+	color: red;
+	text-decoration: line-through;
+}
+
+.curriculog-preview.diff .core-block.status-inserted > .core,
+.curriculog-agenda-print.diff .core-block.status-inserted  > .core {
+	border-color: green;
+	background: #BDF2BD;
+}
+
+.curriculog-preview.diff .course-list .status-deleted div,
+.curriculog-agenda-print.diff .course-list .status-deleted div{
+	color: #C40000 !important;
+	font-weight: bold;
+	text-decoration: line-through;
+}
+
+.curriculog-preview.diff .course-list .status-inserted,
+.curriculog-agenda-print.diff .course-list .status-inserted,
+.curriculog-preview.diff .course-list .status-inserted div,
+.curriculog-agenda-print.diff .course-list .status-inserted div {
+	color: #008000 !important;
+	font-weight: bold;
+}
+
+
+
+
+/*
+ * Subcore list
+ *
+ * The nestedSortable plugin removes the .sub-core class from the ol, so we
+ * need to use both selectors here.
+ */
+.core > .sub-cores,
+.core > ol {
+	margin: 5px 0 0 20px;
+}
+
+
+
+
+/*
+ * Reset the reset for CKE fields
+ */
+
+div[contenteditable="true"] strong {
+	font-weight: bold;
+}
+
+div[contenteditable="true"] em {
+	font-style: italic;
+}
+
+
+
+
+/* TODO: group these rules */
+
+
+.add-course-form input {
+	width: 5em !important;
+}
+
+.select-field {
+	padding: 5px;
+	border-radius: 3px;
+}
+.add-core-text-label {
+	color: #777777;
+	display: block;
+	font-weight: bold;
+	margin-top: 5px;
+	text-align: left;
+}
+.input-text {
+	box-sizing: border-box;
+	display: block;
+	margin-bottom: 5px;
+	padding: 1px;
+	width: 100%;
+}
+.input-text.plain-text,
+.add-core-text-label.plain-text {
+	box-sizing: content-box;
+	width: 90%;
+	margin-left: auto;
+	margin-right: auto;
+}
+
+.input-text.plain-text {
+	padding: 2px;
+}
+
+textarea.input-custom-text {
+	width: 90%;
+	height: 100px;
+}
+
+.course-delete-dialog .ui-dialog-content {
+	text-align: left;
+	font: 12px/1.5 Verdana, Arial, sans-serif;
+	text-shadow: none;
+}
+
+.course-delete-dialog ul {
+	list-style: disc inside none;
+}
+
+#adhoc-name.error {
+	border: 2px solid #A85903;
+}
+#adhoc-name + span.error {
+	text-align: left;
+}
+</style></head>
+<body class="curriculog-preview diff"><h1>The proposal below may be viewed <a href="https://utk.curriculog.com/proposal:3365/form">here</a>.</h1>
+	<script src="/js/build/libs.js"></script>
+	<script type="text/javascript" src="/js/libs/tracking.js"></script>
+	<script src="/js/build/objects.js"></script>
+	<script src="/js/build/mvc.js"></script>
+	<script>
+		var parentProposal = {
+			id: window.opener.$('#proposalId').val(),
+			status: window.opener.$('#status').val(),
+			name: window.opener.$('#curriculog-fields-column-process-name').text()
+		}
+
+		function resetCurriculum(active) {
+			// var userPermissions = {
+			// 	canEdit: 0,
+			// 	canImport: 0,
+			// 	edits: false
+			// };
+
+			// var curricula = new Curriculog.ProposalForm.Curriculum.Curricula({}, {userPermissions: userPermissions, proposal: {id: parentProposal.id}});
+			// var preview = new Curriculog.ProposalForm.Curriculum.Preview({collection: curricula});
+			var options = {
+				proposalID: window.opener.$('#proposalId').val(),
+				richText: window.opener.app.cv.options.richText,
+				displayPreviewStatus: window.opener.$('#displayCurriculumStatus').val() == 1
+			}
+
+			if (active !== undefined) {
+				options.active = false;
+				options.edits = false;
+			}
+
+			cm = new Curriculog.Curricula(options);
+			cmView = new Curriculog.CurriculumPreview({collection: cm})
+			$('#curriculog-main').html(cmView.el);
+		}
+
+		function getPreviewMarkup() {
+			$.ajax({
+				type: 'POST',
+				url: '/gearman-job.json',
+				contentType: 'application/json',
+				mask: $('body'),
+				data: JSON.stringify({
+					functionName: 'get_curriculum_tracking_preview_task',
+					workload: {
+						'module_name': 'ProposalTracking',
+						'method_name': 'get_curriculum_tracking_preview_task',
+						'method_args': {
+							'proposal_id': window.opener.$('#proposalId').val(),
+							'active': 'false',
+							'edits': 'false',
+							'for_preview': 'true',
+						}
+					}
+				}),
+				beforeSend: function () {
+					objDom.addMask(this.mask, 'Loading preview with markup');
+				},
+
+				success: function (results) {
+					getBackgroundJobStatus(results.jobHandle, this.mask, 'Show preview with markup', function (jobResults) {
+						var options = {
+							proposalID: window.opener.$('#proposalId').val(),
+							richText: window.opener.app.cv.options.richText,
+							displayPreviewStatus: window.opener.$('#displayCurriculumStatus').val() == 1,
+							active: false,
+							edits: false
+						};
+
+						// ensure options are set in collection
+						var bgCollection = $.extend(jobResults.result, options);
+						try {
+							var backgroundCm = new Curriculog.Curricula(bgCollection, options);
+							var backgroundCmView = new Curriculog.BackgroundCurriculumPreview({
+								collection: backgroundCm
+							});
+							$('#curriculog-main').html(backgroundCmView.el);
+							$('.curriculog-preview').addClass('diff');
+						} catch (e) {
+							console.error(e);
+							objDom.removeMask(this.mask);
+							return;
+						}
+
+					},
+					function(jobResults){
+						var taskName = 'show preview with markup';
+						$('#growls').notify("create","warning-template", {
+							title: 'Warning',
+							text: 'An error occurred while attempting to ' + taskName + '. Please try again or contact a system administrator.',
+						}, {
+							expires: false,
+						});
+					});
+				},
+
+				error: function () {
+					objDom.removeMask(this.mask);
+				},
+			});
+		}
+
+		$(document).ready(function() {
+
+			$('#program-name').text(parentProposal.name);
+
+			resetCurriculum();
+
+			$('.print-preview').on('click', function() {
+				window.print();
+			});
+
+			$('.show-schema').on('click', function() {
+				resetCurriculum();
+				$('.curriculog-preview').removeClass('diff');
+			});
+
+			$('.show-markup').on('click', function() {
+				//$('body').mask('Loading preview with markup');
+				//resetCurriculum(false);
+				getPreviewMarkup();
+			});
+
+			if (parentProposal.status == 'unlaunched' || window.opener.$('#curriculumUserTracking').val() == 0) {
+				document.getElementById('markup').style.display = "none";
+				document.getElementById('preview').style.display = "none";
+			}
+
+		});
+
+	</script>
+
+	<div id="preview-tools">
+		
+		
+		
+	</div>
+	<h2 id="program-name">
+                                                College of Architecture and Design - School of Design - Industrial Design Studies Minor
+                    </h2>
+	<div id="curriculog-main"><div class="curriculog-preview field-placeholder diff">
+    <div id="schema">
+    	<ol>
+    	<li class="core-block  status-imported page-break-avoid">
+    		<div class="core">
+    			<h3>Minor Requirements:
+    			</h3>
+    			<div class="description ckeditor">
+    				
+    			</div>
+    			<ol class="course-list">
+    	
+    						<li class="status-deleted">
+    							<div class="course-name">DSGN 130 Basic Design Thinking and Innovation</div>
+    							<div class="course-credits"></div>
+    						</li>
+					<li class="status-deleted">
+    							<div class="adhoc-position-preview">[after]</div>
+    							<div class="course-name"><p>or</p></div>
+    							<div class="course-credits"></div>
+    						</li>
+
+    	
+    						<li class="status-deleted">
+    							<div class="course-name">DSGN 430 Design Thinking and Innovation</div>
+    							<div class="course-credits"></div>
+    						</li>
+					<li class="status-deleted">
+    							<div class="adhoc-position-preview">[after]</div>
+    							<div class="course-name"></div>
+    							<div class="course-credits"></div>
+    						</li>
+
+    	
+    						<li class="status-deleted">
+    							<div class="course-name">IARC 480 Furniture Design</div>
+    							<div class="course-credits"></div>
+    						</li>
+
+    						<li class="status-original">
+    							<div class="course-name">INDS 211 History of Industrial Design</div>
+    							<div class="course-credits"></div>
+    						</li>
+
+    						<li class="status-deleted">
+    							<div class="course-name">INDS 371 Ideation Graphics Studio</div>
+    							<div class="course-credits"></div>
+    						</li>
+
+    						<li class="status-deleted">
+    							<div class="course-name">INDS 372 Industrial Design Studio</div>
+    							<div class="course-credits"></div>
+    						</li>
+
+    						<li class="status-inserted">
+    							<div class="course-name">INDS 330 The Art of Form and Function</div>
+    							<div class="course-credits"></div>
+    						</li>
+
+    						<li class="status-inserted">
+    							<div class="course-name">INDS 331 From Process to Product</div>
+    							<div class="course-credits"></div>
+    						</li>
+		</ol>
+	</div>
+    		<ol class="sub-cores">
+    			<li class="core-block  status-imported page-break-avoid">
+			<div class="core">
+				<h3><p> Select<span style="color:#C40000 !important;text-decoration: line-through; font-weight: bold; "> One Course</span><span style="color:#008000 !important; font-weight: bold;"> Two Courses</span>:</p>
+				</h3>
+				<div class="description ckeditor">
+					<p><br></p>
+				</div>
+				<ol class="course-list">
+		
+							<li class="status-deleted">
+								<div class="course-name">ARCH 221 Representation III: Digital Workflow</div>
+								<div class="course-credits"></div>
+							</li>
+
+							<li class="status-deleted">
+								<div class="course-name">INDS 321 Digital Representation and Fabrication for Industrial Design</div>
+								<div class="course-credits"></div>
+							</li>
+
+							<li class="status-inserted">
+								<div class="course-name">ARTB 241 Beginning Sculpture</div>
+								<div class="course-credits"></div>
+							</li>
+
+							<li class="status-inserted">
+								<div class="course-name">ARTB 245 Metal Fabrication</div>
+								<div class="course-credits"></div>
+							</li>
+
+							<li class="status-inserted">
+								<div class="course-name">IARC 480 Furniture Design</div>
+								<div class="course-credits"></div>
+							</li>
+
+							<li class="status-inserted">
+								<div class="course-name">ARTB 243 Mold-Making and Casting</div>
+								<div class="course-credits"></div>
+							</li>
+
+							<li class="status-inserted">
+								<div class="course-name">ARTN 241 Non-Major Intro to Sculpture</div>
+								<div class="course-credits"></div>
+							</li>
+
+							<li class="status-inserted">
+								<div class="course-name">DSGN  130 Basic Design Thinking and Innovation</div>
+								<div class="course-credits"></div>
+							</li>
+
+							<li class="status-inserted">
+								<div class="course-name">DSGN 103 Graphic Design Foundation Studio III</div>
+								<div class="course-credits"></div>
+							</li>
+
+							<li class="status-inserted">
+								<div class="course-name">DSGN 430 Basic Design Thinking and Innovation</div>
+								<div class="course-credits"></div>
+							</li>
+
+							<li class="status-inserted">
+								<div class="course-name">GRDS 331 The Art of Identity Design</div>
+								<div class="course-credits"></div>
+							</li>
+
+							<li class="status-inserted">
+								<div class="course-name">IARC  361 Lighting for Interior Architecture</div>
+								<div class="course-credits"></div>
+							</li>
+
+							<li class="status-inserted">
+								<div class="course-name">IE 304 Introduction to Human Factors Engineering</div>
+								<div class="course-credits"></div>
+							</li>
+
+							<li class="status-inserted">
+								<div class="course-name">INDS 320 Ideation Graphics Studio</div>
+								<div class="course-credits"></div>
+							</li>
+
+							<li class="status-inserted">
+								<div class="course-name">INDS 321 Digital Representation and Fabrication for Industrial Design</div>
+								<div class="course-credits"></div>
+							</li>
+
+							<li class="status-inserted">
+								<div class="course-name">INSC 311 User-Centered Design</div>
+								<div class="course-credits"></div>
+							</li>
+
+							<li class="status-inserted">
+								<div class="course-name">MSE 110 Materials Chemistry</div>
+								<div class="course-credits"></div>
+							</li>
+
+							<li class="status-inserted">
+								<div class="course-name">MSE 120 Impact of Materials on Society</div>
+								<div class="course-credits"></div>
+							</li>
+
+							<li class="status-inserted">
+								<div class="course-name">RMM 341 Consumers in the Global Marketplace</div>
+								<div class="course-credits"></div>
+							</li>
+
+							<li class="status-inserted">
+								<div class="course-name">THEA 245 Introduction to Design and Production: Costumes and Scenery</div>
+								<div class="course-credits"></div>
+							</li>
+					<li class="status-inserted">
+								<div class="adhoc-position-preview">[after]</div>
+								<div class="course-name"><p>* Meets Volunteer Core Requirements</p>
+</div>
+								<div class="course-credits"></div>
+							</li>
+
+				</ol>
+	</div>
+			<ol class="sub-cores">
+					</ol>
+		</li>
+<li class="core-block  status-deleted page-break-avoid">
+			<div class="core">
+				<h3>Select One Course:
+				</h3>
+				<div class="description ckeditor">
+					
+				</div>
+				<ol class="course-list">
+		
+							<li class="status-deleted">
+								<div class="course-name">ECON 201 Introductory Economics: A Survey Course</div>
+								<div class="course-credits"></div>
+							</li>
+					<li class="status-deleted">
+								<div class="adhoc-position-preview">[right]</div>
+								<div class="course-name"><p>*</p></div>
+								<div class="course-credits"></div>
+							</li>
+
+		
+							<li class="status-deleted">
+								<div class="course-name">MARK 300 Marketing and Supply Chain Management</div>
+								<div class="course-credits"></div>
+							</li>
+					<li class="status-deleted">
+								<div class="adhoc-position-preview">[after]</div>
+								<div class="course-name"></div>
+								<div class="course-credits"></div>
+							</li>
+
+							<li class="status-deleted">
+								<div class="adhoc-position-preview">[after]</div>
+								<div class="course-name"><p>* Meets <permalink course-data-placeholder="Volunteer Core Requirements" display-text="Volunteer Core Requirements" display-title="yes" link-id="acalog-permalink-8576" to="acalog-program-32003" type="new"><a:title>Volunteer Core Requirements</a:title></permalink>.&nbsp;</p></div>
+								<div class="course-credits"></div>
+							</li>
+
+				</ol>
+	</div>
+			<ol class="sub-cores">
+					</ol>
+		</li>
+	</ol>
+    	</li>
+    	</ol>
+    </div>
+</div></div>
+
+
+<div id="qtip-rcontainer"></div></body></html>

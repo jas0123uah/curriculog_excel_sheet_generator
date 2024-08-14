@@ -1,13 +1,28 @@
 #from ..curriculog_report_generator import generate_report
 import tkinter as tk
 from tkinter import messagebox
+import os
 from decouple import config
+from curriculog_excel_sheet_generator.classes.app.event_handlers.showcase_downloader import download_showcases
 from curriculog_excel_sheet_generator.classes.app.utils.loading_window import LoadingWindow
 from curriculog_excel_sheet_generator.classes.report_generator import ReportGenerator
 from curriculog_excel_sheet_generator.classes.excel_input_parser import ExcelInputParser
 from curriculog_excel_sheet_generator.classes.pandas_helper import PandasHelper
 from curriculog_excel_sheet_generator.classes.excel_writer import ExcelWriter
 def generate_report(api_token, input_excel, window):
+    # If input_excel cotains "/output/proposal_overview/current" call download_showcases.download_showcases()
+    print(f'input_excel: {input_excel}')
+    path = os.path.normpath(input_excel)
+    dirs = path.split(os.sep)
+
+    # split the input_excel path into a list
+    #Check if proposal_overview and current are in dirs
+
+    if "proposal_overview" in dirs and "current" in dirs :
+        loading_window = LoadingWindow()
+        download_showcases()
+        loading_window.destroy()
+        return
     loading_window = LoadingWindow()
     print(f'API TOKEN: {api_token}')
     excel_parser = ExcelInputParser(input_excel)
@@ -46,7 +61,7 @@ def process_api_responses(report_runner, input_excel, excel_parser=None):
     data_manipulator.transform_column_names()
     data_manipulator.filter_concatenated_proposals(excel_parser.filters)
     data_manipulator.sort_concatenated_proposals(sorting_rules=excel_parser.sorting_rules)
-    data_manipulator.get_programs()
+    #data_manipulator.get_programs()
     data_manipulator.get_relevant_columns(excel_parser.fields)
     data_manipulator.get_additional_dataframes()
 

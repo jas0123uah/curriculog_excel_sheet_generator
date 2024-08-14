@@ -2,12 +2,18 @@ import tkinter as tk
 from tkinter import messagebox
 import os, json
 from curriculog_excel_sheet_generator.classes.app.event_handlers import generate_report, process_api_responses
+from curriculog_excel_sheet_generator.classes.app.event_handlers.showcase_downloader import download_showcases
 from curriculog_excel_sheet_generator.classes.report_generator import ReportGenerator
-from curriculog_excel_sheet_generator.classes.app.utils.loading_window import LoadingWindow
+from curriculog_excel_sheet_generator.classes.app.utils import LoadingWindow, get_current_proposal_overview_report
 from pathlib import Path
 from decouple import config
 def build_new_report_window():
-    def use_last_api_calls_callback():
+    def use_last_api_calls_callback(input_excel):
+        if "/output/proposal_overview/current" in input_excel:
+            loading_window = LoadingWindow()
+            download_showcases()
+            loading_window.destroy()
+            return
         loading_window = LoadingWindow()
         print(config('TOP_OUTPUT_DIR'))
         print(get_selected_file(listbox, xlsx_files_dict))
@@ -77,6 +83,12 @@ def build_new_report_window():
     xlsx_files_transformed = [f for f in os.listdir(directory) if f.endswith('.xlsx')]
 
 
+    # Add the current proposal overview report if it exists
+    current_proposal_overview_report = get_current_proposal_overview_report()
+
+    if current_proposal_overview_report is not None:
+        xlsx_files.append(current_proposal_overview_report)
+
     print('EXCEL FILES')
     print(xlsx_files)
 
@@ -88,6 +100,10 @@ def build_new_report_window():
 
     # #Remove UnderScores
     xlsx_files_transformed = [f.replace("_", " ") for f in xlsx_files_transformed]
+
+    # Add Download Showcases if there is a current proposal overview report
+    if current_proposal_overview_report is not None:
+        xlsx_files_transformed.append('Download Showcases')
 
     # Create a dict of the transformed filenames
     xlsx_files_dict = dict(zip(xlsx_files_transformed, xlsx_files))
@@ -116,7 +132,7 @@ def build_new_report_window():
     use_last_api_calls_checkbox.pack(anchor="w", side="left", padx=10, pady=10)
 
     # Create a submit button
-    submit_button = tk.Button(new_window, text="Submit", state=tk.DISABLED, command=lambda: use_last_api_calls_callback() if use_last_api_calls_var.get() == True else  generate_report(api_key_entry.get(), input_excel= get_selected_file(listbox, xlsx_files_dict), window=new_window))
+    submit_button = tk.Button(new_window, text="Submit", state=tk.DISABLED, command=lambda: use_last_api_calls_callback(input_excel= get_selected_file(listbox, xlsx_files_dict)) if use_last_api_calls_var.get() == True else  generate_report(api_key_entry.get(), input_excel= get_selected_file(listbox, xlsx_files_dict), window=new_window))
     submit_button.pack(pady=10)
 
     # Add the filenames to the listbox

@@ -24,6 +24,11 @@ args = parser.parse_args()
 
 os.makedirs('reports', exist_ok=True)
 report_runner = report_generator.ReportGenerator(args.api_token)
+
+if args.get_showcases is True:
+    downloader = showcase_downloader.ShowcaseDownloader()
+    downloader.download_showcases()
+
 if args.get_ap_names is not False:
     report_runner.get_ap_names()
     sys.exit()
@@ -62,13 +67,6 @@ data_manipulator.transform_column_names()
 data_manipulator.filter_concatenated_proposals(excel_parser.filters)
 data_manipulator.sort_concatenated_proposals(sorting_rules=excel_parser.sorting_rules)
 data_manipulator.get_programs()
-print(data_manipulator.undergraduate_programs['URL'])
-if args.get_showcases:
-    data_manipulator.get_programs()
-    downloader = showcase_downloader.ShowcaseDownloader(data_manipulator.undergraduate_programs, data_manipulator.graduate_programs, args)
-    downloader.download_showcases()
-#print(data_manipulator.undergraduate_programs['URL'])
-
 
 data_manipulator.get_relevant_columns(excel_parser.fields)
 data_manipulator.get_additional_dataframes()

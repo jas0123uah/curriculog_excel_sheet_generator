@@ -1,5 +1,7 @@
 from .doc import Doc
-import time
+import time, os
+import pandas as pd
+from decouple import config
 from selenium import webdriver
 from selenium.webdriver.edge.service import Service as EdgeService
 from webdriver_manager.microsoft import EdgeChromiumDriverManager
@@ -9,17 +11,38 @@ from selenium.common.exceptions import NoSuchElementException
 
 #driver = webdriver.Edge(service=EdgeService(EdgeChromiumDriverManager().install()))
 class ShowcaseDownloader:
-    def __init__(self, undergraduate_program_proposals, graduate_program_proposals, args):
+    def __init__(self):
         """Constructor for Showcase Downloader instance. The Showcase Downloader is meant to iterate over pandas dataframes of undergraduate and graduate program proposals and create concatenated HTML docs for each college."""
-        self.undergraduate_program_proposals = undergraduate_program_proposals
-        self.graduate_program_proposals = graduate_program_proposals
+        #Load excel file in pandas dataframe
+
+        self.proposal_list_report = self._get_proposal_list_report()
+        programs = self.get_programs()
+        self.undergraduate_program_proposals = programs["undergraduate_programs"]
+        self.graduate_program_proposals = programs["graduate_programs"]
         service = webdriver.ChromeService()
         self.driver =webdriver.Chrome(service=service)
-        self.args = args
-        with open(f'showcase_css.css', 'r', encoding='utf-8') as  css_file:
+        with open(os.path.join(config('MAIN_CURRICULOG_DIR'), f'showcase_css.css'), 'r', encoding='utf-8') as  css_file:
             css = css_file.read()
             self.css = css
-           
+    def _get_proposal_list_report(self):
+        """Returns a pandas dataframe of the proposal list report. If no such report exists an error is thrown."""
+        plr_dir = os.path.join(config('TOP_OUTPUT_DIR'), 'proposal_overview', 'current')
+        # Get the xlsx files in plr_dir
+        excel_files = [os.path.join(plr_dir, f) for f in os.listdir(plr_dir) if f.endswith('.xlsx')]
+
+        if len(excel_files) == 0:
+            raise Exception(f"{plr_dir} does not contain any xlsx files. Please generate a new report.")
+        else:
+            plr = excel_files[0]
+            return pd.read_excel(plr)
+
+    def get_programs(self):
+        """Filter concatenated_proposals to identify only those that are for a Graduate or Undergraduate program. Stores programs under graduate_programs and undergraduate_programs, respectively."""
+        # undergraduate_programs = self.proposal_list_report[(self.proposal_list_report['GR/UG'] == 'UG') &  (self.proposal_list_report['Proposal Type'] == 'program') &  (self.proposal_list_report['completed_date'].notnull())]
+        undergraduate_programs = self.proposal_list_report[(self.proposal_list_report['GR/UG'] == 'UG') &  (self.proposal_list_report['Proposal Type'] == 'program')]
+        graduate_programs = self.proposal_list_report[(self.proposal_list_report['GR/UG'] == 'GR') &  (self.proposal_list_report['Proposal Type'] == 'program')]
+        #print( self.concatenated_dataframe.columns)
+        return {'undergraduate_programs': undergraduate_programs, 'graduate_programs': graduate_programs}
     def _open_login(self):
         """Clicks the login button to navigate to the login page.
         """   
@@ -32,16 +55,19 @@ class ShowcaseDownloader:
         """Identifies the NetID and Password fields. Attempts to log the user in via passed in CLI args."""
         netid_field = self.driver.find_element(By.ID, 'username')
         password_field = self.driver.find_element(By.ID, 'password')
-        netid_field.send_keys(self.args.netid)
-        password_field.send_keys(self.args.password)
+        netid_field.send_keys(config('NET_ID'))
+        password_field.send_keys(config('PASSWORD'))
         password_field.send_keys(Keys.ENTER)
         self._send_duo_push()
     
     def _send_duo_push(self):
         """Clicks the button to send the logged in user a push notification to authorize login"""
-        time.sleep(5)
-        send_me_a_push_button = self.driver.find_element(By.CLASS_NAME, "auth-button")
-        send_me_a_push_button.click()
+        time.sleep(10)
+        trust_browser_button = self.driver.find_elements(By.ID, "trust-browser-button")
+        if len(trust_browser_button) > 0:
+            trust_browser_button[0].click()
+        # send_me_a_push_button = self.driver.find_element(By.CLASS_NAME, "auth-button")
+        # send_me_a_push_button.click()
         #Give plenty of time for the push notification to get to the user's phone.
         time.sleep(7)
     def download_showcases(self):
@@ -77,8 +103,9 @@ class ShowcaseDownloader:
                         time.sleep(4)
                         #time.sleep(10)
                         showcase_html = self.open_showcase_window()
+                        undergrad_showcases_in_college.save_currrent_showcase(current_showcase_html=showcase_html, corresponding_dprog=self.get_corresponding_dprog(proposal_url=url))
                         undergrad_showcases_in_college.raw_data += showcase_html
-                    undergrad_showcases_in_college.save_pdf()
+                    undergrad_showcases_in_college.save_concatenated_html()
     def open_showcase_window(self):
         """Opens the showcase window from the current page. Returns the html of the showcase window."""
         proposal_url = self.driver.current_url
@@ -129,4 +156,6 @@ class ShowcaseDownloader:
         return html
 
 
-    
+    def get_corresponding_dprog(self, proposal_url):
+        """Returns the corresponding dprog for the given proposal url."""
+        return "FIX_ME"
