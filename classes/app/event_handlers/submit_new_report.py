@@ -19,9 +19,9 @@ def generate_report(api_token, input_excel, window):
     #Check if proposal_overview and current are in dirs
 
     if "proposal_overview" in dirs and "current" in dirs :
-        loading_window = LoadingWindow()
+        #loading_window = LoadingWindow()
         download_showcases()
-        loading_window.destroy()
+        #loading_window.destroy()
         return
     loading_window = LoadingWindow()
     print(f'API TOKEN: {api_token}')
