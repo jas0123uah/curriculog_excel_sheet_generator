@@ -9,6 +9,24 @@ from selenium.common.exceptions import NoSuchElementException, TimeoutException
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 import concurrent.futures
+
+class element_does_not_have_css_class(object):
+  """An expectation for checking that an element has a particular css class.
+
+  locator - used to find the element
+  returns the WebElement once it has the particular css class
+  """
+  def __init__(self, locator, css_class):
+    self.locator = locator
+    self.css_class = css_class
+
+  def __call__(self, driver):
+    element = driver.find_element(*self.locator)   # Finding the referenced element
+    if self.css_class not in element.get_attribute("class"):
+        return element
+    else:
+        return False
+
 class ShowcaseDownloader:
     def __init__(self):
         """Constructor for Showcase Downloader instance. The Showcase Downloader is meant to iterate over pandas dataframes of undergraduate and graduate program proposals and create concatenated HTML docs for each college."""
@@ -64,18 +82,10 @@ class ShowcaseDownloader:
         print('OPENING LOGIN PAGE')
         driver.get('https://utk.curriculog.com')
         driver.maximize_window()
-        #time.sleep(10)
-        #for driver in self.webdrivers:
 
     def _login(self):
         """Logs in to each driver."""
         for i, driver in enumerate(self.webdrivers):
-        #     # Minimize all other drivers
-        #     for j, other_driver in enumerate(self.webdrivers):
-        #         if i != j:
-        #             other_driver.minimize_window()
-            
-
             self._open_login(driver)
             login_button = WebDriverWait(driver, 10).until(EC.visibility_of_element_located((By.ID, "login")))
             login_button.click()
@@ -89,51 +99,34 @@ class ShowcaseDownloader:
     def open_showcase_window(self, driver):
         """Opens the showcase window from the current page. Returns the html of the showcase window."""
         proposal_url = driver.current_url
-        #proposal_url = self.driver.current_url
         try:
-            
             preview_curriculum_button = WebDriverWait(driver, 10).until(EC.visibility_of_element_located((By.CLASS_NAME, 'preview-curriculum')))
-            #preview_curriculum_button = driver.find_element(By.CLASS_NAME, 'preview-curriculum')
-            #preview_curriculum_button = self.driver.find_element(By.CLASS_NAME, 'preview-curriculum')
         except NoSuchElementException:
             print(f'No preview found for proposal found at {proposal_url}')
             return f'No preview found for proposal found at {proposal_url}'
-        #driver.execute_script("arguments[0].click()",preview_curriculum_button, )
         preview_curriculum_button.click()
-        time.sleep(7)
-        #time.sleep(4)
+        #time.sleep(7)
         print(f'There are {len(driver.window_handles)} windows in the webdriver')
 
-        #print('WAITING FOR 2 WEBDRIVERS')
-        #WebDriverWait(driver, 10).until(EC.number_of_windows_to_be(3))
         driver.switch_to.window(driver.window_handles[-1])
         # Wait for the masked class to be removed from the body
         # print('ATTEMPTING TO WAIT FOR MASK TO GO AWAY ROUND 1')
+        wait = WebDriverWait(driver, 10)
+        wait.until(element_does_not_have_css_class((By.TAG_NAME, 'body'), "masked"))
         # body = driver.find_element(By.TAG_NAME, 'body')
-        time.sleep(10)
-        # WebDriverWait(driver, 10).until(EC.none_of( 'masked' in body.get_attribute('class').split()))
+        #time.sleep(10)
         print('CLICKING THE PREVIEW MARKUP BUTTON')
         driver.find_element(By.CSS_SELECTOR, 'button#markup').click()
+        wait.until(element_does_not_have_css_class((By.TAG_NAME, 'body'), "masked"))
         #print('WAITING FOR 10 SECONDS FOR PREVIEW MARKUP')
-        time.sleep(10)
+        #time.sleep(10)
         #print('ATTEMPTING TO WAIT FOR MASK TO GO AWAY ROUND 2')
         # body = driver.find_element(By.TAG_NAME, 'body')
         # WebDriverWait(driver, 10).until(EC.none_of( 'masked' in body.get_attribute('class').split()))
         #images = driver.find_elements(By.TAG_NAME, 'img')
         buttons = []
         print('FINDING BUTTONS')
-        # buttons = driver.find_elements(By.TAG_NAME, 'button')
-        # tables = driver.find_elements(By.TAG_NAME, 'table')
-        # print('FINDING TABLES')
-        # for table in tables:
-        #     driver.execute_script("arguments[0].setAttribute('width',arguments[1])",table, '100')
-        # els = [*buttons]
-        # for image in els:
-        #     driver.execute_script("""
-        #     var element = arguments[0];
-        #     element.parentNode.removeChild(element);
-        #     """, image)
-
+    
         buttons = driver.find_elements(By.TAG_NAME, 'button')
         print(f'FOUND BUTTONS: {buttons}')
         tables = driver.find_elements(By.TAG_NAME, 'table')
@@ -164,7 +157,6 @@ class ShowcaseDownloader:
             node.appendChild(document.createTextNode(arguments[0]))        
             arguments[1].appendChild(node);
             """
-        print('ADDING CSS')
         driver.execute_script(add_css_script, self.css, head)
         add_proposal_url_to_body_script = """
             var h1 = document.createElement("h1");
@@ -176,14 +168,12 @@ class ShowcaseDownloader:
 
         html = driver.page_source
         
-        print('CLOSING POPUP WINDOW')
         driver.close()
         driver.switch_to.window(driver.window_handles[0])
         return html
 
     def download_showcases(self):
         """Iterates over the undergraduate and graduate program proposals and creates concatenated PDF for each college."""
-        #self._open_login()
         self._login()
         college_types = ['undergraduate']
         for college_type in college_types:
@@ -203,14 +193,7 @@ class ShowcaseDownloader:
 
 
                     for idx, row in proposals_of_given_type_in_college.iterrows():
-                        # Get the next row if there is one
-                        #next_row = proposals_of_given_type_in_college.iloc[idx + 1]
-                            #  for idx, row in proposals_of_given_type_in_college.iterrows():
-                            #     url = row['URL']
-                            #     driver = self.webdrivers[idx % len(self.webdrivers)]
-                            #     self.download_showcase(url, undergrad_showcases_in_college, driver)
-
-
+                        
                         with concurrent.futures.ThreadPoolExecutor() as executor:
                             futures = []
                             for idx, row in proposals_of_given_type_in_college.iterrows():
@@ -226,7 +209,6 @@ class ShowcaseDownloader:
         """Returns the corresponding dprog for the given proposal url."""
         #return current millisecond
         return int(round(time.time() * 1000))
-        #return "FIX_ME"
     def download_showcase(self, url, undergrad_showcases_in_college, driver):
         """Take a driver thread and downloads the showcase."""
         try:
@@ -236,6 +218,5 @@ class ShowcaseDownloader:
             showcase_html = self.open_showcase_window(driver)
             print('ATTEMPTING TO SAVE SHOWCASE')
             undergrad_showcases_in_college.save_currrent_showcase(current_showcase_html=showcase_html, corresponding_dprog=self.get_corresponding_dprog(proposal_url=url))
-            #driver.quit()
         except Exception as e:
             print(f'Error downloading showcase: {e}')
