@@ -24,7 +24,8 @@ class ShowcaseDownloader:
             service = webdriver.ChromeService()
             options = webdriver.ChromeOptions()
             options.add_argument('--headless=new')
-            self.webdrivers.append(webdriver.Chrome(service=service, options=options))
+            driver = webdriver.Chrome(service=service, options=options)
+            self.webdrivers.append(driver)
         with open(os.path.join(config('MAIN_CURRICULOG_DIR'), f'showcase_css.css'), 'r', encoding='utf-8') as  css_file:
             css = css_file.read()
             self.css = css
@@ -51,6 +52,7 @@ class ShowcaseDownloader:
     def _send_duo_push(self, driver):
         """Clicks the button to send the logged in user a push notification to authorize login"""
         try:
+            print('SENDING DUO PUSH')
             trust_browser_button = WebDriverWait(driver, 10).until(EC.visibility_of_element_located((By.ID, "trust-browser-button")))
             trust_browser_button.click()
         except TimeoutException:
@@ -59,6 +61,7 @@ class ShowcaseDownloader:
 
     def _open_login(self, driver):
         """Opens the login page for each driver."""
+        print('OPENING LOGIN PAGE')
         driver.get('https://utk.curriculog.com')
         driver.maximize_window()
         #time.sleep(10)
