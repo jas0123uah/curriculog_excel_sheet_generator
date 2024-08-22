@@ -5,7 +5,7 @@ from .field import Field
 import logging, sys
 from decouple import config
 import configparser
-
+import concurrent.futures
 
 # Configure root logger  
 logging.basicConfig(format='%(asctime)s | %(name)s | %(levelname)s |', 
@@ -95,8 +95,20 @@ class ReportGenerator:
             self.get_ap_ids()
         else:
             self.ap_ids = [ap_id]
+
+        # Define a helper function to make API calls
+        # def make_api_call(ap_id):
+        #     print(f'Submitting Proposal Field Report request for ap_id {ap_id}')
+        #     request_params = {'ap_id': ap_id}
+        #     request_params.update(api_filters)
+        #     request_params = json.dumps(request_params)
+        #     report_id = self.run_report(api_endpoint='/api/v1/report/proposal_field/', request_params=request_params, report_type='PROPOSAL FIELD', wait_for_results=False)
+        #     self.report_ids.append(report_id)
+        #     return report_id
+
         for ap_id in self.ap_ids:
-            logger.info(f'Submitting Proposal Field Report request for ap_id {ap_id}')
+            print(f'Submitting Proposal Field Report request for ap_id {ap_id}')
+            #logger.info(f'Submitting Proposal Field Report request for ap_id {ap_id}')
             
             request_params = {'ap_id': ap_id}
             request_params.update(api_filters)
@@ -105,6 +117,19 @@ class ReportGenerator:
             report_id = self.run_report(api_endpoint='/api/v1/report/proposal_field/', request_params=request_params, report_type='PROPOSAL FIELD', wait_for_results=False )
             self.report_ids.append(report_id)
         # Write report ids to file so we can easily pull the API responses if the script crashes
+        # with concurrent.futures.ThreadPoolExecutor() as executor:
+        # # Submit API calls for each ap_id
+        #     futures = {executor.submit(make_api_call, ap_id): ap_id for ap_id in self.ap_ids}
+            
+        #     # As each API call completes, retrieve the results
+        #     for future in concurrent.futures.as_completed(futures):
+        #         ap_id = futures[future]
+        #         try:
+        #             report_id = future.result()
+        #         except Exception as e:
+        #             print(f"Error making API call for ap_id {ap_id}: {e}")
+        
+        
         self.write_report_ids()
 
         for report_id in self.report_ids:
@@ -125,6 +150,7 @@ class ReportGenerator:
         else:
             response = requests.post(url=url, headers=self.headers, allow_redirects=True)
         #pprint(vars(response))
+        print(f'THIS IS JSON {response.json()}')
         report_id = response.json()['report_id']
         if report_type == 'USER LIST':
             self.user_report_id = report_id
@@ -155,7 +181,7 @@ class ReportGenerator:
         #print(response.json())
         no_results = 'error' in meta and 'message' in meta['error'] and 'No results' in meta['error']['message']
         if no_results:
-            remaining_num_attempts = 1
+            remaining_num_attempts = 5
             remaining_num_attempts -= 1
             while no_results and remaining_num_attempts:
                 now = datetime.datetime.now()
@@ -163,9 +189,11 @@ class ReportGenerator:
                 #print(meta['error'])
                 print(f'No results for report id {report_id}. Waiting 60 seconds and trying again at {sixty_secs_from_now.strftime("%I:%M:%S")}. {remaining_num_attempts} attempts remaining.')
                 #logger.info(f"No results for report id {report_id}. Waiting 60 seconds and trying again at {sixty_secs_from_now.strftime('%I:%M:%S')}. {remaining_num_attempts} attempts remaining.")
-                #time.sleep(1)
+                time.sleep(60)
                 response = requests.get(url=url, headers=self.headers, allow_redirects=True)
+                print(response.json())
                 meta = response.json()['meta']
+                print(meta)
                 no_results = 'error' in meta and 'message' in meta['error'] and 'No results' in meta['error']['message']
                 remaining_num_attempts -= 1
         
@@ -194,9 +222,11 @@ class ReportGenerator:
     def get_ap_ids(self): 
         """Loops over proposal_list to return a unique list of ap_ids."""
         ap_ids = []
-        for proposal in self.proposal_list:
-            if proposal['ap_id'] not in ap_ids:
-                ap_ids.append(proposal['ap_id'])
+        # for proposal in self.proposal_list:
+        #     if proposal['ap_id'] not in ap_ids:
+        #         ap_ids.append(proposal['ap_id'])
+        #ap_ids = [104, 106, 111, 108, 115, 109, 105 ]
+        ap_ids = [82, 78, 80 ]
         self.ap_ids = ap_ids
         return ap_ids
 

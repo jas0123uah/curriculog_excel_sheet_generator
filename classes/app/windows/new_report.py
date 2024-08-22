@@ -14,7 +14,7 @@ def build_new_report_window():
             download_showcases()
             loading_window.destroy()
             return
-        loading_window = LoadingWindow()
+        #loading_window = LoadingWindow()
         print(config('TOP_OUTPUT_DIR'))
         print(get_selected_file(listbox, xlsx_files_dict))
         #os.makedirs( os.path.join(config('TOP_OUTPUT_DIR'), get_selected_file(listbox, xlsx_files_dict).split(".")[0], 'current'), exist_ok=True)
@@ -31,7 +31,7 @@ def build_new_report_window():
             data = json.load(f)
         report_generator.pull_previous_results(data)
         process_api_responses(report_generator, input_excel= get_selected_file(listbox, xlsx_files_dict))
-        loading_window.destroy()
+        #loading_window.destroy()
 
     
     def on_selection_change(listbox, submit_button, api_key_entry):
