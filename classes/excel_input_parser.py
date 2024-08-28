@@ -30,6 +30,7 @@ class ExcelInputParser:
         """Constructor for ExcelInputParser instance. Accepts the path to an Excel Workbook"""
         import openpyxl
         self.workbook = openpyxl.load_workbook(input_workbook)
+        print(f'Parsing workbook: {input_workbook}')
         self.columns = {}
         self.fields = []
         self.filters = []

@@ -37,6 +37,7 @@ class ShowcaseDownloader:
         self.undergraduate_program_proposals = programs["undergraduate_programs"]
         self.graduate_program_proposals = programs["graduate_programs"]
         self.num_webdrivers = int(config('NUM_WEBDRIVERS'))
+        self.dprog_overview_table = pd.read_excel(config('DPROG_OVERVIEW_TABLE'))
         self.webdrivers = []
         for _ in range(self.num_webdrivers):
             service = webdriver.ChromeService()
@@ -62,9 +63,9 @@ class ShowcaseDownloader:
     def get_programs(self):
         """Filter concatenated_proposals to identify only those that are for a Graduate or Undergraduate program. Stores programs under graduate_programs and undergraduate_programs, respectively."""
         # undergraduate_programs = self.proposal_list_report[(self.proposal_list_report['GR/UG'] == 'UG') &  (self.proposal_list_report['Proposal Type'] == 'program') &  (self.proposal_list_report['completed_date'].notnull())]
-        undergraduate_programs = self.proposal_list_report[(self.proposal_list_report['GR/UG'] == 'UG') &  (self.proposal_list_report['Proposal Type'] == 'program')]
+        undergraduate_programs = self.proposal_list_report[(self.proposal_list_report['GR/UG'] == 'UG') &  (self.proposal_list_report['Proposal Type'] == 'program') ]
         graduate_programs = self.proposal_list_report[(self.proposal_list_report['GR/UG'] == 'GR') &  (self.proposal_list_report['Proposal Type'] == 'program')]
-        #print( self.concatenated_dataframe.columns)
+        print(undergraduate_programs['URL'])
         return {'undergraduate_programs': undergraduate_programs, 'graduate_programs': graduate_programs}
     
     def _send_duo_push(self, driver):
@@ -105,43 +106,25 @@ class ShowcaseDownloader:
             print(f'No preview found for proposal found at {proposal_url}')
             return f'No preview found for proposal found at {proposal_url}'
         preview_curriculum_button.click()
-        #time.sleep(7)
         print(f'There are {len(driver.window_handles)} windows in the webdriver')
 
         driver.switch_to.window(driver.window_handles[-1])
         # Wait for the masked class to be removed from the body
-        # print('ATTEMPTING TO WAIT FOR MASK TO GO AWAY ROUND 1')
         wait = WebDriverWait(driver, 10)
         wait.until(element_does_not_have_css_class((By.TAG_NAME, 'body'), "masked"))
-        # body = driver.find_element(By.TAG_NAME, 'body')
-        #time.sleep(10)
-        print('CLICKING THE PREVIEW MARKUP BUTTON')
         driver.find_element(By.CSS_SELECTOR, 'button#markup').click()
         wait.until(element_does_not_have_css_class((By.TAG_NAME, 'body'), "masked"))
-        #print('WAITING FOR 10 SECONDS FOR PREVIEW MARKUP')
-        #time.sleep(10)
-        #print('ATTEMPTING TO WAIT FOR MASK TO GO AWAY ROUND 2')
-        # body = driver.find_element(By.TAG_NAME, 'body')
-        # WebDriverWait(driver, 10).until(EC.none_of( 'masked' in body.get_attribute('class').split()))
-        #images = driver.find_elements(By.TAG_NAME, 'img')
+        
         buttons = []
-        print('FINDING BUTTONS')
     
         buttons = driver.find_elements(By.TAG_NAME, 'button')
-        print(f'FOUND BUTTONS: {buttons}')
         tables = driver.find_elements(By.TAG_NAME, 'table')
-        print('FINDING TABLES')
-        print(f'FOUND TABLES: {tables}')
+
         for table in tables:
-            print(f'Setting table width to 100')
             driver.execute_script("arguments[0].setAttribute('width',arguments[1])",table, '100')
         els = [*buttons]
-        # for image in els:
-        #     # Do something with the button elements here
-        #     pass
-        # Now you can remove the button elements if you want to
+      
         for image in els:
-            print(f'REMOVING BUTTON: {image}')
 
             driver.execute_script("""
             var element = arguments[0];
@@ -189,34 +172,48 @@ class ShowcaseDownloader:
                     undergrad_showcases_in_college = Doc(college, college_type, program_type)
                     print(f'Getting {college_type} proposals in college {college} for program type {program_type}')
                     proposals_of_given_type_in_college = proposals_in_college[proposals_in_college['Action'] == program_type]
-                    proposals_of_given_type_in_college = proposals_of_given_type_in_college.head(3)
+                    #proposals_of_given_type_in_college = proposals_of_given_type_in_college.head(3)
 
-
-                    for idx, row in proposals_of_given_type_in_college.iterrows():
-                        
-                        with concurrent.futures.ThreadPoolExecutor() as executor:
+                    departments = proposals_of_given_type_in_college['Department'].unique()
+                    for department in departments:
+                        print(f'Getting {college_type} proposals in college {college} for program type {program_type} in department {department}')
+                        proposals_of_given_type_in_department = proposals_of_given_type_in_college[proposals_of_given_type_in_college['Department'] == department]
+                        #for idx, row in proposals_of_given_type_in_college.iterrows():
+                            
+                        with concurrent.futures.ThreadPoolExecutor(max_workers=len(self.webdrivers)) as executor:
                             futures = []
-                            for idx, row in proposals_of_given_type_in_college.iterrows():
+                            for idx, row in proposals_of_given_type_in_department.iterrows():
                                 url = row['URL']
+                                # print(f'THERES A PROPOSAL AT URL: {url}')
+                                department = row['Department']
+                                action = row['Action']
                                 driver = self.webdrivers[idx % len(self.webdrivers)]
-                                futures.append(executor.submit(self.download_showcase, url, undergrad_showcases_in_college, driver))
+                                futures.append(executor.submit(self.download_showcase, url, undergrad_showcases_in_college, driver, department, action))
                             for future in concurrent.futures.as_completed(futures):
                                 future.result()
-                     
+                        undergrad_showcases_in_college.save_proposals_in_department(department=department, action=program_type)
                     undergrad_showcases_in_college.save_concatenated_html()
 
     def get_corresponding_dprog(self, proposal_url):
         """Returns the corresponding dprog for the given proposal url."""
         #return current millisecond
-        return int(round(time.time() * 1000))
-    def download_showcase(self, url, undergrad_showcases_in_college, driver):
+        # Get the row in self.dprog_overview_table that matches the proposal url at 'Curriculog Link'
+        df = self.dprog_overview_table[self.dprog_overview_table['Curriculog Link'] == proposal_url]
+        if df.empty:
+            # We dont have a dprog for this proposal, just return the current millisecond
+            return int(round(time.time() * 1000))
+        dprog = df.iloc[0]['Dprog']
+        return dprog.replace('/', '_')
+    def download_showcase(self, url, undergrad_showcases_in_college, driver, department, action):
         """Take a driver thread and downloads the showcase."""
         try:
             print(f'Getting showcase at url: {url}')
             driver.get(url)
             time.sleep(4)
             showcase_html = self.open_showcase_window(driver)
-            print('ATTEMPTING TO SAVE SHOWCASE')
-            undergrad_showcases_in_college.save_currrent_showcase(current_showcase_html=showcase_html, corresponding_dprog=self.get_corresponding_dprog(proposal_url=url))
+            undergrad_showcases_in_college.raw_data+=showcase_html
+            undergrad_showcases_in_college.proposals_in_department += showcase_html
+            undergrad_showcases_in_college.save_currrent_showcase(current_showcase_html=showcase_html, corresponding_dprog=self.get_corresponding_dprog(proposal_url=url), department=department, action= action)
         except Exception as e:
             print(f'Error downloading showcase: {e}')
+        

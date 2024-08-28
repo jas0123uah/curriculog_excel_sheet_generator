@@ -8,17 +8,18 @@ from curriculog_excel_sheet_generator.classes.app.utils import LoadingWindow, ge
 from pathlib import Path
 from decouple import config
 def build_new_report_window():
-    def use_last_api_calls_callback(input_excel):
-        if "/output/proposal_overview/current" in input_excel:
-            loading_window = LoadingWindow()
+    def use_last_api_calls_callback(input_excel, ):
+        normalized_path = os.path.normpath(input_excel)
+        print(f'NORMALIZED PATH: {normalized_path}')
+        if  r'\output\proposal_overview\current' in  normalized_path or  "/output/proposal_overview/current" in normalized_path:
+            print(f'DOWNLOADING SHOWCASES')
             download_showcases()
-            loading_window.destroy()
             return
         #loading_window = LoadingWindow()
         print(config('TOP_OUTPUT_DIR'))
         print(get_selected_file(listbox, xlsx_files_dict))
         #os.makedirs( os.path.join(config('TOP_OUTPUT_DIR'), get_selected_file(listbox, xlsx_files_dict).split(".")[0], 'current'), exist_ok=True)
-        output_file = os.path.join(config('TOP_OUTPUT_DIR'), Path(get_selected_file(listbox, xlsx_files_dict)).stem, 'current', 'test.xlsx')
+        output_file = os.path.join(config('TOP_OUTPUT_DIR'), Path(get_selected_file(listbox, xlsx_files_dict)).stem, 'current')
         print(f'THIS IS THE OUTPUT FILE: {output_file}')
         prev_report_id_file = config('PREVIOUS_REPORT_IDS')+'previous_report_ids.json'
         if os.path.exists(prev_report_id_file) == False:
@@ -31,6 +32,7 @@ def build_new_report_window():
             data = json.load(f)
         report_generator.pull_previous_results(data)
         process_api_responses(report_generator, input_excel= get_selected_file(listbox, xlsx_files_dict))
+        messagebox.showinfo("Report Generated", f"Report created successfully under: {output_file}")
         #loading_window.destroy()
 
     
@@ -122,6 +124,8 @@ def build_new_report_window():
     api_key_label = tk.Label(api_key_frame, text="API Key:")
     api_key_label.grid(row=0, column=0)
     api_key_entry = tk.Entry(api_key_frame)
+    api_key = config('API_KEY', default='AAAAAAAAAAA')
+    api_key_entry.insert(0, api_key)
     api_key_entry.grid(row=0, column=1)
     api_key_entry.bind("<KeyRelease>", lambda event: validate_api_key())  # Bind the validation function to the KeyRelease event
 
