@@ -11,33 +11,25 @@ from decouple import config
 def build_new_report_window():
     def use_last_api_calls_callback(input_excel, ):
         normalized_path = os.path.normpath(input_excel)
-        print(f'NORMALIZED PATH: {normalized_path}')
         if  r'\output\proposal_overview\current' in  normalized_path or  "/output/proposal_overview/current" in normalized_path:
-            print(f'DOWNLOADING SHOWCASES')
             download_showcases()
             return
-        #loading_window = LoadingWindow()
-        print(config('TOP_OUTPUT_DIR'))
         input_excel = get_selected_file(listbox, xlsx_files_dict)
         excel_parser = ExcelInputParser(input_excel)
         excel_parser.parse_workbook()
         excel_parser.get_api_filters()
         output_file = os.path.join(config('TOP_OUTPUT_DIR'), Path(input_excel).stem, 'current')
-        print(f'THIS IS THE OUTPUT FILE: {output_file}')
         prev_report_id_file = config('PREVIOUS_REPORT_IDS')+'previous_report_ids.json'
         if os.path.exists(prev_report_id_file) == False:
             messagebox.showerror(title="Error", message=f"{prev_report_id_file} does not exist. This file contains the previous report IDs. Please generate a new report.")
-            #messagebox(new_window, text=f"{prev_report_id_file} does not exist. This file contains the previous report IDs. Please generate a new report.").pack()
         report_generator = ReportGenerator(api_token=api_key_entry.get())
         report_generator.actions = excel_parser.actions
         # Read in prev_report_id_file
         with open(prev_report_id_file) as f:
-            print(f)
             data = json.load(f)
         report_generator.pull_previous_results(data)
         process_api_responses(report_generator, input_excel= input_excel, excel_parser=excel_parser)
         messagebox.showinfo("Report Generated", f"Report created successfully under: {output_file}")
-        #loading_window.destroy()
 
     
     def on_selection_change(listbox, submit_button, api_key_entry):
@@ -49,8 +41,6 @@ def build_new_report_window():
     # Define a function to get the selected file from the listbox
     def get_selected_file(listbox, xlsx_files_dict):
         selected_index = listbox.curselection()
-        print(f'selected_index: {selected_index}')
-        print(f'xlsx_files_dict: {xlsx_files_dict}')
         if selected_index:
             selected_file = listbox.get(selected_index)
             return xlsx_files_dict[selected_file]
@@ -109,7 +99,7 @@ def build_new_report_window():
     xlsx_files_dict = dict(zip(xlsx_files_transformed, xlsx_files))
 
     # Create a listbox to display the filenames
-    listbox = tk.Listbox(new_window)
+    listbox = tk.Listbox(new_window, width=100)
     listbox.pack(pady=10)
     listbox.bind("<<ListboxSelect>>", lambda event: on_selection_change(listbox, submit_button, api_key_entry))
 

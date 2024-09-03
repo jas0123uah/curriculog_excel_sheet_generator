@@ -30,7 +30,6 @@ class ExcelInputParser:
         """Constructor for ExcelInputParser instance. Accepts the path to an Excel Workbook"""
         import openpyxl
         self.workbook = openpyxl.load_workbook(input_workbook)
-        print(f'Parsing workbook: {input_workbook}')
         self.columns = {}
         self.fields = []
         self.filters = []
@@ -84,9 +83,6 @@ class ExcelInputParser:
                 dont_return_field= dont_return_field if dont_return_field else False, 
                 embed_url= embed_url if embed_url else False
                 )
-            # print('APPENDING:\n')
-            # if(field.filters):
-            #     pprint(vars(field.filters))
             self.fields.append(field)
 
     def _get_field_filters(self, row) -> Filter: 
@@ -123,16 +119,12 @@ class ExcelInputParser:
     def get_api_filters(self):
         """Loops over self.fields to get all fields that may be used in API filtering."""
         api_filters = {}
-        #print(self.fields)
-        #pprint(vars(self.fields))
         for field in self.fields:
             api_filter_field = self.api_field_name_from_user_friendly_field_name.get(field.field_name)
             ##The only operator the api supports is =. Everything else we will do on our 
             if api_filter_field and field.filters and field.filters.operator == '=':
                 api_filters[api_filter_field] = field.filters.values
         self.api_filters = api_filters
-        print(f'THE API FILTERS {self.api_filters}')
-        #logging.info(msg=f'THE API FILTERS {self.api_filters}')
         
 
     def get_grouping_rule(self): 

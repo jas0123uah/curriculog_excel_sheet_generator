@@ -85,7 +85,6 @@ class ReportGenerator:
         """Wrapper function for handling API call to '/api/v1/attachments'. Returns a list of all attachments for the report."""
         if report_id is None:
             attachments_list = self.run_report(api_endpoint='/api/v1/attachments/3', report_type='ATTACHMENTS')
-            #print(attachments_list)
             return attachments_list
         else:
             attachments = self.run_report(api_endpoint=f'/api/v1/attachments/{report_id}')
@@ -97,19 +96,9 @@ class ReportGenerator:
         else:
             self.ap_ids = [ap_id]
 
-        # Define a helper function to make API calls
-        # def make_api_call(ap_id):
-        #     print(f'Submitting Proposal Field Report request for ap_id {ap_id}')
-        #     request_params = {'ap_id': ap_id}
-        #     request_params.update(api_filters)
-        #     request_params = json.dumps(request_params)
-        #     report_id = self.run_report(api_endpoint='/api/v1/report/proposal_field/', request_params=request_params, report_type='PROPOSAL FIELD', wait_for_results=False)
-        #     self.report_ids.append(report_id)
-        #     return report_id
 
         for ap_id in self.ap_ids:
             print(f'Submitting Proposal Field Report request for ap_id {ap_id}')
-            #logger.info(f'Submitting Proposal Field Report request for ap_id {ap_id}')
             
             request_params = {'ap_id': ap_id}
             request_params.update(api_filters)
@@ -117,18 +106,6 @@ class ReportGenerator:
             
             report_id = self.run_report(api_endpoint='/api/v1/report/proposal_field/', request_params=request_params, report_type='PROPOSAL FIELD', wait_for_results=False )
             self.report_ids.append(report_id)
-        # Write report ids to file so we can easily pull the API responses if the script crashes
-        # with concurrent.futures.ThreadPoolExecutor() as executor:
-        # # Submit API calls for each ap_id
-        #     futures = {executor.submit(make_api_call, ap_id): ap_id for ap_id in self.ap_ids}
-            
-        #     # As each API call completes, retrieve the results
-        #     for future in concurrent.futures.as_completed(futures):
-        #         ap_id = futures[future]
-        #         try:
-        #             report_id = future.result()
-        #         except Exception as e:
-        #             print(f"Error making API call for ap_id {ap_id}: {e}")
         
         
         self.write_report_ids()
@@ -151,14 +128,12 @@ class ReportGenerator:
         else:
             response = requests.post(url=url, headers=self.headers, allow_redirects=True)
         #pprint(vars(response))
-        print(f'THIS IS JSON {response.json()}')
         report_id = response.json()['report_id']
         if report_type == 'USER LIST':
             self.user_report_id = report_id
         elif report_type == 'PROPOSAL LIST':
             self.proposal_list_report_id = report_id
         print(f'{report_type} IS UNDER REPORT ID: {report_id}')
-        #logger.info(f'{report_type} IS UNDER REPORT ID: {report_id}')
         if wait_for_results:
             results = self.get_report_results(report_id)
             return results
@@ -178,8 +153,6 @@ class ReportGenerator:
         meta = response.json()['meta']
 
         # print(f'META:{meta}')
-        # print(self.api_token)
-        #print(response.json())
         no_results = 'error' in meta and 'message' in meta['error'] and 'No results' in meta['error']['message']
         if no_results:
             remaining_num_attempts = 5
@@ -198,18 +171,15 @@ class ReportGenerator:
                 no_results = 'error' in meta and 'message' in meta['error'] and 'No results' in meta['error']['message']
                 remaining_num_attempts -= 1
         
-        #print(meta)
         if no_results:
             print(f'NO RESULTS FOR REPORT ID  {report_id}. SKIPPING')
             return []
-        #print(meta)
         if meta['total_results'] != meta['results_current_page']:
             err = f'There are {meta["total_results"]} total results and only {meta["results_current_page"]} results are on the current page. Please contact jspenc35@utk.edu with this error and provide the report_id {report_id}.'
             logger.error(err)
             raise Exception(err)
-        # FIX HERE
-        directory = r'C:\Users\jspenc35\projects\curriculog_excel_sheet_generator\reports'
-        self.write_json(response.json()['results'], directory + "\\" +report_id)
+        directory = config('REPORTS_DIR')
+        self.write_json(response.json()['results'], directory + report_id)
         return response.json()['results']
     def refresh_api_token(self):
         """Refreshes the Curriculog API token to prevent token expiration errors."""
@@ -232,17 +202,9 @@ class ReportGenerator:
         else:
             # Pull the values from ap_id lookup that have keys in self.actions
             self.ap_ids = [ap_id_lookup[action] for action in self.actions]
-        print('THESE ARE THE AP IDS: ', self.ap_ids)
         return self.ap_ids
-        # for proposal in self.proposal_list:
-        #     if proposal['ap_id'] not in ap_ids:
-        #         ap_ids.append(proposal['ap_id'])
-        #ap_ids = [104, 106, 111, 108, 115, 109, 105 ]
-        # ap_ids = [82, 78, 80 ]
-        # self.ap_ids = ap_ids
 
     def pull_previous_results(self, args):
-        print(args)
         """Wrapper function that makes it possible to recreate previous runs of the script."""
         ### Pulling for /api/report/proposal here
         self.proposal_list = self.get_report_results(args['proposal_list_report_id']) 

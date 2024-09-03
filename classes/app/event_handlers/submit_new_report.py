@@ -11,7 +11,6 @@ from curriculog_excel_sheet_generator.classes.pandas_helper import PandasHelper
 from curriculog_excel_sheet_generator.classes.excel_writer import ExcelWriter
 def generate_report(api_token, input_excel, window):
     # If input_excel cotains "/output/proposal_overview/current" call download_showcases.download_showcases()
-    print(f'input_excel: {input_excel}')
     path = os.path.normpath(input_excel)
     dirs = path.split(os.sep)
 
@@ -24,13 +23,11 @@ def generate_report(api_token, input_excel, window):
         #loading_window.destroy()
         return
     loading_window = LoadingWindow()
-    print(f'API TOKEN: {api_token}')
     excel_parser = ExcelInputParser(input_excel)
     excel_parser.parse_workbook()
     excel_parser.get_api_filters()
     report_runner = ReportGenerator(api_token)
     report_runner.actions = excel_parser.actions
-    print(f'FOUND THESE ACTIONS: {excel_parser.actions}')
     report_runner.get_proposal_list()
     report_runner.get_user_list()
     report_runner.get_all_proposal_field_reports(excel_parser.api_filters)
@@ -59,7 +56,6 @@ def process_api_responses(report_runner, excel_parser, input_excel):
 
     data_manipulator.transform_column_names()
     data_manipulator.filter_concatenated_proposals(excel_parser.filters)
-    print(data_manipulator.concatenated_dataframe)
     data_manipulator.sort_concatenated_proposals(sorting_rules=excel_parser.sorting_rules)
     #data_manipulator.get_programs()
     data_manipulator.get_relevant_columns(excel_parser.fields)
@@ -67,11 +63,6 @@ def process_api_responses(report_runner, excel_parser, input_excel):
     writer = ExcelWriter(data_manipulator.concatenated_dataframe, data_manipulator.additional_dataframes, excel_parser.fields, data_manipulator.grouping_rule, report_name=input_excel)
     writer.create_workbook()
 
-def on_listbox_click(listbox, xlsx_files):
-        # Adjust the size of the listbox based on the number of xlsx files found in the directory
-        listbox.configure(width=200, height=5*int((len(xlsx_files) * 20) + 20)) # Adjust the size of the listbox based on the number of xlsx files found in the directory
-        listbox.configure(font=("Arial", 12, "bold"))
-        listbox.configure(bg="#E6E6E6E6" if len(xlsx_files) > 0 else ("Arial", 12, "bold"))
     
 def on_selection_change(listbox, submit_button):
     if listbox.curselection():
@@ -84,7 +75,6 @@ def get_selected_file(listbox, xlsx_files_dict):
     selected_index = listbox.curselection()
     if selected_index:
         selected_file = listbox.get(selected_index)
-        print(xlsx_files_dict[selected_file])
         return xlsx_files_dict[selected_file]
     else:
         return None
