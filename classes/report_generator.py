@@ -3,6 +3,9 @@ import datetime
 from pprint import pprint
 from .field import Field
 import logging, sys
+from decouple import config
+import configparser
+import concurrent.futures
 
 # Configure root logger  
 logging.basicConfig(format='%(asctime)s | %(name)s | %(levelname)s |', 
@@ -32,6 +35,10 @@ class ReportGenerator:
             'Authorization': f'Bearer {self.api_token}'
         }
         self.all_proposal_data = []
+        self.proposal_list_report_id = None
+        self.user_report_id = None
+        self.actions = []
+        self.report_ids = []
         #Default empty list for api/v1/reports/user/ report
         self.user_list = []
         
@@ -78,29 +85,32 @@ class ReportGenerator:
         """Wrapper function for handling API call to '/api/v1/attachments'. Returns a list of all attachments for the report."""
         if report_id is None:
             attachments_list = self.run_report(api_endpoint='/api/v1/attachments/3', report_type='ATTACHMENTS')
-            #print(attachments_list)
             return attachments_list
         else:
             attachments = self.run_report(api_endpoint=f'/api/v1/attachments/{report_id}')
     def get_all_proposal_field_reports(self, api_filters = {}, ap_id=None):
         """Wrapper function for handling API call to '/api/v1/report/proposal_field'. Loops over self.ap_ids to gather proposal fields for all proposals. Stores API responses in all_proposal_data. """
-        report_ids = []
         all_proposals_w_data = []
         if ap_id is None:
             self.get_ap_ids()
         else:
             self.ap_ids = [ap_id]
+
+
         for ap_id in self.ap_ids:
-            logger.info(f'Submitting Proposal Field Report request for ap_id {ap_id}')
+            print(f'Submitting Proposal Field Report request for ap_id {ap_id}')
             
             request_params = {'ap_id': ap_id}
             request_params.update(api_filters)
             request_params = json.dumps(request_params)
             
             report_id = self.run_report(api_endpoint='/api/v1/report/proposal_field/', request_params=request_params, report_type='PROPOSAL FIELD', wait_for_results=False )
-            report_ids.append(report_id)
+            self.report_ids.append(report_id)
+        
+        
+        self.write_report_ids()
 
-        for report_id in report_ids:
+        for report_id in self.report_ids:
             proposals_w_data = self.get_report_results(report_id)
             all_proposals_w_data = [*all_proposals_w_data, *proposals_w_data]
         
@@ -119,7 +129,11 @@ class ReportGenerator:
             response = requests.post(url=url, headers=self.headers, allow_redirects=True)
         #pprint(vars(response))
         report_id = response.json()['report_id']
-        logger.info(f'{report_type} IS UNDER REPORT ID: {report_id}')
+        if report_type == 'USER LIST':
+            self.user_report_id = report_id
+        elif report_type == 'PROPOSAL LIST':
+            self.proposal_list_report_id = report_id
+        print(f'{report_type} IS UNDER REPORT ID: {report_id}')
         if wait_for_results:
             results = self.get_report_results(report_id)
             return results
@@ -127,7 +141,8 @@ class ReportGenerator:
     
     def get_report_results(self, report_id): 
         """Given a report_id call /api/v1/report/result/{report_id} to get the results for a Curriculog report."""
-        logger.info(f'Pulling results for report id {report_id}.')
+        print(f'Pulling results for report id {report_id}.')
+        #logger.info(f'Pulling results for report id {report_id}.')
         if os.path.exists(f'./reports/{report_id}.json'):
             with open(f'./reports/{report_id}.json', 'r', encoding='utf-8', errors="ignore") as f:
                 data = f.read()
@@ -137,32 +152,34 @@ class ReportGenerator:
         response = requests.get(url=url, headers=self.headers, allow_redirects=True)
         meta = response.json()['meta']
 
-        print(f'META:{meta}')
-        #print(response.json())
+        # print(f'META:{meta}')
         no_results = 'error' in meta and 'message' in meta['error'] and 'No results' in meta['error']['message']
         if no_results:
-            remaining_num_attempts = 2
+            remaining_num_attempts = 5
             remaining_num_attempts -= 1
             while no_results and remaining_num_attempts:
                 now = datetime.datetime.now()
                 sixty_secs_from_now = now + datetime.timedelta(0, 60)
                 #print(meta['error'])
-                logger.info(f"No results for report id {report_id}. Waiting 60 seconds and trying again at {sixty_secs_from_now.strftime('%I:%M:%S')}. {remaining_num_attempts} attempts remaining.")
-                #time.sleep(1)
+                print(f'No results for report id {report_id}. Waiting 60 seconds and trying again at {sixty_secs_from_now.strftime("%I:%M:%S")}. {remaining_num_attempts} attempts remaining.')
+                #logger.info(f"No results for report id {report_id}. Waiting 60 seconds and trying again at {sixty_secs_from_now.strftime('%I:%M:%S')}. {remaining_num_attempts} attempts remaining.")
+                time.sleep(60)
                 response = requests.get(url=url, headers=self.headers, allow_redirects=True)
+                print(response.json())
                 meta = response.json()['meta']
+                print(meta)
                 no_results = 'error' in meta and 'message' in meta['error'] and 'No results' in meta['error']['message']
                 remaining_num_attempts -= 1
         
-        #print(meta)
         if no_results:
             print(f'NO RESULTS FOR REPORT ID  {report_id}. SKIPPING')
-            return
+            return []
         if meta['total_results'] != meta['results_current_page']:
             err = f'There are {meta["total_results"]} total results and only {meta["results_current_page"]} results are on the current page. Please contact jspenc35@utk.edu with this error and provide the report_id {report_id}.'
             logger.error(err)
             raise Exception(err)
-        self.write_json(response.json()['results'], f'./reports/{report_id}')
+        directory = config('REPORTS_DIR')
+        self.write_json(response.json()['results'], directory + report_id)
         return response.json()['results']
     def refresh_api_token(self):
         """Refreshes the Curriculog API token to prevent token expiration errors."""
@@ -175,27 +192,32 @@ class ReportGenerator:
     ######## MISC FUNCTIONS ########
     def get_ap_ids(self): 
         """Loops over proposal_list to return a unique list of ap_ids."""
-        ap_ids = []
+        ap_id_lookup = {}
         for proposal in self.proposal_list:
-            if proposal['ap_id'] not in ap_ids:
-                ap_ids.append(proposal['ap_id'])
-        self.ap_ids = ap_ids
-        return ap_ids
+            ap_id = proposal['ap_id']
+            proposal_name = proposal['ap_name']
+            ap_id_lookup[proposal_name] = ap_id
+        if len(self.actions) == 0:
+            self.ap_ids = list(ap_id_lookup.values())
+        else:
+            # Pull the values from ap_id lookup that have keys in self.actions
+            self.ap_ids = [ap_id_lookup[action] for action in self.actions]
+        return self.ap_ids
 
     def pull_previous_results(self, args):
         """Wrapper function that makes it possible to recreate previous runs of the script."""
         ### Pulling for /api/report/proposal here
-        self.proposal_list = self.get_report_results(args.proposal_list_report_id) 
+        self.proposal_list = self.get_report_results(args['proposal_list_report_id']) 
         
         ### Pulling for /api/report/user here
-        self.user_list = self.get_report_results(args.user_report_id) 
+        self.user_list = self.get_report_results(args['user_list_report_id'])
         
         ### Pulling for /api/report/proposal_field here
-        report_id_range = args.proposal_field_report_range.split(',')
+        report_id_range = args['proposal_field_report_range'].split(',')
         
         all_results = []
         for report_id in range(int(report_id_range[0].strip()), int(report_id_range[1].strip())+1):
-            results = self.get_report_results(report_id)
+            results = self.get_report_results(str(report_id))
             if results is not None:
                 all_results = [*all_results, *results]
         self.all_proposal_data = all_results
@@ -203,5 +225,10 @@ class ReportGenerator:
     
     def write_json(self, data, file_name):
         """Write out an API response"""
-        with open(f'{file_name}.json', 'w', encoding='utf-8') as f:
+        with open(r"{}".format(f"{file_name}.json"), 'w', encoding='utf-8')as f:
             json.dump(data, f, ensure_ascii=False, indent=4)
+    
+    def write_report_ids(self):
+        """Write out report ids for self.report_ids, self.proposal_list_report_id, and self.user_report_id. to allow recreation of previous runs of the script."""
+        data = {'proposal_field_report_range': f"{self.report_ids[0]},{self.report_ids[-1]}", 'proposal_list_report_id': self.proposal_list_report_id, 'user_list_report_id': self.user_report_id}
+        self.write_json(data,f'{config("PREVIOUS_REPORT_IDS")+"previous_report_ids"}')

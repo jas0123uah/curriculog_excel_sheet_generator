@@ -2,119 +2,98 @@ import openpyxl, re, os
 from openpyxl.comments import Comment
 from openpyxl.styles import Color, PatternFill, Font
 from openpyxl.workbook.child import INVALID_TITLE_REGEX
+from openpyxl.utils.dataframe import dataframe_to_rows
+from datetime import datetime
+from pathlib import Path
+from decouple import config
 class ExcelWriter:
     import pandas as pd
     from .field import Field
-    def __init__(self, concatenated_dataframe:pd.DataFrame, additional_dataframes:list[pd.DataFrame], fields:list[Field], grouping_rule:str ): 
+    def __init__(self, concatenated_dataframe:pd.DataFrame, additional_dataframes:list[pd.DataFrame], fields:list[Field], grouping_rule:str, report_name:str ): 
         """Constructor for ExcelWriter instance. Converts dataframes to rows with openpyxl's dataframe_to_rows. concatenated_dataframe is stored as concatenated_rows. additional_dataframes are stored as additional_rows"""
-        self.col_lookup = {}
-        self.target_comment_column_map = {}
-        self.columns_with_embedded_urls = []
+        self.col_lookups = []
         self.concatenated_dataframe = concatenated_dataframe
         self.additional_dataframes = additional_dataframes
-        self.additional_workbook_paths = {}
-        #Write the additional dataframes we have to Excel workbooks. OpenPyxl doesn't play nice w/ pandas dfs, but does load xlsx files fine.
-        for df_data in self.additional_dataframes:
-            for df_name, df in df_data.items():
-                df_name = re.sub(INVALID_TITLE_REGEX, '_', df_name)
-                #Excel sheet titles can't be > 31 characters. Trimming to supress warning message.
-                if len(df_name) > 31:
-                    df_name = df_name[:31]
-                #Happens in cases where one of the values in the group by is empty
-                if df_name == '':
-                    df_name = 'EMPTY'
-                df.to_excel(f'additional_dataframe_{df_name}.xlsx', sheet_name=df_name)
-                self.additional_workbook_paths[df_name] = f'additional_dataframe_{df_name}.xlsx'
-        self.additional_workbooks = [{sheet_name: openpyxl.load_workbook(additional_workbook_path)} for sheet_name, additional_workbook_path in self.additional_workbook_paths.items()]
+        self.report_name = report_name
+        self._create_output_dir()
         self.fields = fields
         self.grouping_rule = grouping_rule
-        self.workbook = openpyxl.load_workbook('./test.xlsx')
-        self.workbook.active.title = 'Main'
-        self.current_sheet = self.workbook.active
-        for field in self.fields:
-            if field.comment_field:
-                self.target_comment_column_map[field.field_name] = field.comment_field
-            if field.embed_url:
-                self.columns_with_embedded_urls.append(field.field_name)
+        self.workbook = openpyxl.Workbook()
         
-        self.get_column_indices_by_name()
-
+    def _create_output_dir(self):
+        report_dir = os.path.join(config('TOP_OUTPUT_DIR'), Path(self.report_name).stem)
+        os.makedirs(report_dir, exist_ok=True)
+        self.current_output_dir = os.path.join(report_dir, 'current',)
+        self.previous_output_dir = os.path.join(report_dir, 'previous')
+        os.makedirs(self.current_output_dir, exist_ok=True)
+        os.makedirs(self.previous_output_dir, exist_ok=True)
     def create_workbook(self): 
         """Creates an output Excel workbook titled 'output_TIMESTAMP'.xlsx TIMESTAMP is the current timestamp when the output Excel workbook is being generated. The first sheet titled "Main" is the concatenated_rows. Additional sheets correspond to additional_rows , with the sheets having names corresponding to additional_dataframe_names."""
+        self._write_sheets()
+        self._create_column_lookups()
         
-        self.get_column_names_needing_comments()
-        for row in self.workbook.active.iter_rows():
-            self.set_cells_needing_comment(row)
-            self.set_cells_needing_embedded_url(row)
-            self.format_impact_cell(row)
-        self.delete_comment_columns(self.workbook.active)
-        self.delete_group_by_col_name(self.workbook.active)
-        self.add_additional_sheets()
-        output_dir = f'./output/'
-        os.makedirs(output_dir, exist_ok=True)
-        self.workbook.save(f'{output_dir}output.xlsx')
-        self.delete_temp_workbooks()
-        
-    def add_additional_sheets(self):
-        """Adds sheets for workbooks in self.additional_workbooks."""
-        for wb_container in self.additional_workbooks:
-            for sheet_name, additional_workbook in wb_container.items():
-                additional_sheet = self.workbook.create_sheet(sheet_name)
-                for i in range(1, additional_workbook.active.max_row+1): 
-                    
-                    for j in range(1, additional_workbook.active.max_column+1): 
-                        cell_obj = additional_workbook.active.cell(row=i, column=j) 
-                        additional_sheet.cell(row=i, column=j).value = cell_obj.value
-                        if(i == 1 or j == 1):
-                            additional_sheet.cell(row=i, column=j).style = 'Pandas'
-            
-                for row in additional_sheet.iter_rows():
-                    self.format_impact_cell(row)
-                    self.set_cells_needing_comment(row)
-                    self.set_cells_needing_embedded_url(row)
-                self.delete_comment_columns(additional_sheet)
-                self.delete_group_by_col_name(additional_sheet)
+        for worksheet_index, worksheet in enumerate(self.workbook.worksheets):
+            for row in worksheet.iter_rows(1, worksheet.max_row):
+                self.set_cells_needing_comment(row, worksheet_index)
+                self.set_cells_needing_embedded_url(row, worksheet_index)
+                self.format_impact_cell(row, worksheet_index)
+        for worksheet_index, worksheet in enumerate(self.workbook.worksheets):
+            self.delete_extra_columns(worksheet=worksheet, worksheet_index=worksheet_index)
+        #Current timestamp in YYYY-MM-DD-HH-MM-SS format using 12 hour clock
+        now = datetime.now().strftime('%Y_%m_%d_%I_%M_%p')
+        # Move all of the xlsx files in current_output_dir to the previous_output_dir
+        for file in os.listdir(self.current_output_dir):
+            os.rename(os.path.join(self.current_output_dir, file), os.path.join(self.previous_output_dir, file))
+        self.workbook.save(os.path.join(f'{self.current_output_dir}', f'{now}.xlsx'))
+           
     
-    def delete_temp_workbooks(self):
-        """Delete the workbooks we temporarily created due to openpyxl not playing nice with pandas."""
-        #os.remove('test.xlsx')
-        for temp_workbook in self.additional_workbook_paths.values():
-            os.remove(temp_workbook)
-        
-    def get_column_names_needing_comments(self): 
-        """Loops over a list of fields to determine which should have a comment. Excel columns which should have comments are stored as column_names_needing_comments."""
-        ### Map over fields, returning field_name
-        column_names = []
-        for field in self.fields:
-            if field.comment_field:
-                column_names.append(field.comment_field)
-        self.column_names_needing_comments = column_names
+    def _write_sheets(self):
+        """Write the dataframes to the output workbook."""
+        # Write concatenated dataframe to sheet "Main"
+        dfs = [{'Main': self.concatenated_dataframe }, *self.additional_dataframes]
+        for idx, df_data in enumerate(dfs):
+            for df_name, df in df_data.items():
+                df_name = re.sub(INVALID_TITLE_REGEX, '_', df_name)
+                if len(df_name) > 31:
+                    df_name = df_name[:31]
+                if df_name == '':
+                    df_name = 'EMPTY'
+                sheet = self.workbook.create_sheet(df_name) if idx != 0 else self.workbook.active
+                sheet.title = df_name
+                for r in dataframe_to_rows(df, index=False, header=True):
+                    sheet.append(r)
+                # Freeze the top row of the additional sheet
+                sheet.freeze_panes = 'A2'
 
-    def set_cells_needing_comment(self, row): 
+    def set_cells_needing_comment(self, row, worksheet_index): 
         """Given an input row use column_names_needing_comments to find which cells in a row need a comment and give them a comment."""
         ##Loop over a dict mapping columns that need comments (target columns) to (comment_columns)
-        for target_column, comment_column in self.target_comment_column_map.items():
-            
+        worksheet_col_lookup = self.col_lookups[worksheet_index]
+        for target_column, target_column_info in worksheet_col_lookup.items():
             ##Get cell in row needing comment.
-            cell_needing_comment = self.find_cell_by_column(row, target_column )
+            cell_needing_comment = self.find_cell_by_column(row=row, column_name=target_column,  worksheet_index=worksheet_index)
             ##Find other column which contains the comment text
-            cell_with_comment = self.find_cell_by_column(row, comment_column)
-            ##Call set_cell_comment IF CHECK IGNORES THE HEADER
-            if cell_with_comment.value != comment_column:
-                self.set_cell_comment(cell_needing_comment, cell_with_comment.value)
-    def set_cells_needing_embedded_url(self, row):
+            if target_column_info["comment_field"] != '':
+                comment_column = target_column_info['comment_field']
+                cell_with_comment = self.find_cell_by_column(row=row, column_name=comment_column, worksheet_index=worksheet_index)
+                ##Call set_cell_comment IF CHECK IGNORES THE HEADER
+                if cell_with_comment.value != comment_column:
+                    self.set_cell_comment(cell_needing_comment, cell_with_comment.value)
+    def set_cells_needing_embedded_url(self, row, worksheet_index):
         """Given an input row use columns_with_embedded_urls to find which cells in a row need the proposal url embedded and embed the url.""" 
-        for column_name in self.columns_with_embedded_urls:
-            cell_needing_embedded_url = self.find_cell_by_column(row, column_name)
-            cell_with_embedded_url = self.find_cell_by_column(row, 'URL')
+        col_lookup = self.col_lookups[worksheet_index]
+        columns_needing_embedded_url = [target_col for target_col, target_col_data in col_lookup.items() if col_lookup[target_col]['embed_url'] is True]
+        for column_name in columns_needing_embedded_url:
+            cell_needing_embedded_url = self.find_cell_by_column(row, column_name, worksheet_index)
+            cell_with_embedded_url = self.find_cell_by_column(row, 'URL', worksheet_index)
             url = cell_with_embedded_url.value
             if cell_needing_embedded_url.value!= column_name:
                 cell_needing_embedded_url.hyperlink = url
                 cell_needing_embedded_url.style = 'Hyperlink'
-    def find_cell_by_column(self, row, column_name:str): 
+    def find_cell_by_column(self, row, column_name:str, worksheet_index:int = 0): 
         """Given an input row and column_name, find the cell corresponding to column_name and return its value."""
-        
-        idx = self.col_lookup[column_name]
+        col_lookup = self.col_lookups[worksheet_index]
+        idx = col_lookup[column_name]["idx"]
         
         target_cell = list(filter(lambda cell: cell.column == idx +1, row))[0]
         return target_cell
@@ -123,20 +102,36 @@ class ExcelWriter:
         """Set a given cell's comment."""
         comment = Comment(comment_text, 'OpenPyxl')
         cell.comment = comment
-    def get_column_indices_by_name(self):
-        """Create a lookup of column names and indices for the given column name. Lookup used for manipulating data in spreadsheet."""
+    def _create_column_lookups(self):
+        """Create a lookup of column names and indices for the given column name for each worksheet in the workbook. Lookup used for manipulating data in each worksheet."""
         #https://stackoverflow.com/questions/51478413/select-a-column-by-its-name-openpyxl
-        col_lookup = {}
+        self.col_lookups = []
         column_idx  = 0
-        for col in self.current_sheet.iter_cols(1, self.current_sheet.max_column):
-            col_lookup[col[0].value] = column_idx
-            column_idx += 1
-        self.col_lookup = col_lookup
-    def delete_comment_columns(self, worksheet): 
-        """Delete columns from rows which contain comment text as a value. (Comments are stored as fields in the pandas dataframe this step removes those columns)."""
+        # Loop over the worksheets in the workbook
+        col_lookup = {}
+        for sheet in self.workbook.worksheets:
+            # Loop over the columns in the worksheet
+            for col in sheet.iter_cols(1, sheet.max_column):
+                column_name = col[0].value
+                field = next((field for field in self.fields if field.field_name == column_name), None)
+                comment_field = field.comment_field if field is not None else ''
+                dont_return_field = field.dont_return_field if field is not None else ''
+                embed_url = field.embed_url if field is not None else False
+
+                col_lookup[column_name] = {'idx': column_idx, 'comment_field': comment_field, 'dont_return_field': dont_return_field, 'embed_url': embed_url}
+                column_idx += 1
+            self.col_lookups.append(col_lookup)
+            column_idx = 0
+            col_lookup = {}
+    def delete_extra_columns(self, worksheet, worksheet_index): 
+        """Delete columns from rows which were used solely for grouping OR contain comment text as a value. (Comments are stored as fields in the pandas dataframe this step removes those columns)."""
+        column_lookup = self.col_lookups[worksheet_index]
+        columns_to_delete = [column_lookup[col]['comment_field'] for col in column_lookup if column_lookup[col]['comment_field'] != '']
+        
+
         #Loop over column_names_needing_comments
-        for col_name in self.column_names_needing_comments:
-            col_idx = self.col_lookup[col_name]
+        for col_name in columns_to_delete:
+            col_idx = column_lookup[col_name]['idx']
             worksheet.delete_cols(col_idx+1, 1)
     def delete_group_by_col_name(self,worksheet):
         """Looks for a column used to create additional sheets in the output excel workbook. If that field was not requested, that column is deleted."""
@@ -174,9 +169,9 @@ class ExcelWriter:
             return Color(rgb='9C5700')
         elif impact == 'Low':
             return Color(rgb='006100')
-    def format_impact_cell(self, row):
+    def format_impact_cell(self, row, worksheet_index=0):
         """Function for formatting the impact column cells with proper background and font color"""
-        cell = self.find_cell_by_column(row, 'Impact Level')
+        cell = self.find_cell_by_column(row=row, column_name='Impact Level', worksheet_index=worksheet_index)
         cell_color = self.get_impact_color(cell.value)
         text_color = self.get_text_color(cell.value)
         if cell_color != None:

@@ -36,6 +36,7 @@ class ExcelInputParser:
         self.sorting_rules = []
         #Default to an empty field instance
         self.grouping_rule = None
+        self.actions = []
         self.api_filters = {}
         self.api_field_name_from_user_friendly_field_name = {
             'Completed Date': 'completed_date',
@@ -65,6 +66,7 @@ class ExcelInputParser:
         """Primary function to parse input Excel workbook. Makes use of helper functions _get_requested_fields, _get_field_filters, _get_field_comment to parse input excel workbook."""
         self._get_worksheet_by_columns()
         self._get_requested_fields()
+        self._get_actions()
         self._get_sorting_rules()
         self.get_grouping_rule()
 
@@ -81,9 +83,6 @@ class ExcelInputParser:
                 dont_return_field= dont_return_field if dont_return_field else False, 
                 embed_url= embed_url if embed_url else False
                 )
-            # print('APPENDING:\n')
-            # if(field.filters):
-            #     pprint(vars(field.filters))
             self.fields.append(field)
 
     def _get_field_filters(self, row) -> Filter: 
@@ -120,15 +119,12 @@ class ExcelInputParser:
     def get_api_filters(self):
         """Loops over self.fields to get all fields that may be used in API filtering."""
         api_filters = {}
-        #print(self.fields)
-        #pprint(vars(self.fields))
         for field in self.fields:
             api_filter_field = self.api_field_name_from_user_friendly_field_name.get(field.field_name)
             ##The only operator the api supports is =. Everything else we will do on our 
             if api_filter_field and field.filters and field.filters.operator == '=':
                 api_filters[api_filter_field] = field.filters.values
         self.api_filters = api_filters
-        logging.info(msg=f'THE API FILTERS {self.api_filters}')
         
 
     def get_grouping_rule(self): 
@@ -156,3 +152,7 @@ class ExcelInputParser:
         data = list(map(lambda word: word.strip(), data))
         #Return values of interest as comma separated string. No spaces.
         return ",".join(data)
+    def _get_actions(self):
+        """Loops over self.fields to return the request form types under "Action". If no Action field was requested, it returns an empty list."""
+        action_field = next(( x for x in self.fields if x.field_name == 'Action'), None)
+        self.actions = [] if action_field is None else action_field.filters.values

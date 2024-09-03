@@ -2,6 +2,7 @@
 
 from classes import report_generator, excel_writer, excel_input_parser, pandas_helper, showcase_downloader 
 import argparse, shutil, os, sys
+from pathlib import Path
 
 parser = argparse.ArgumentParser()
 parser.add_argument('-a', '--api_token', help="The token associated with your API key. Used to pull data from Curriculog. Tokens expire every 25 hours so make sure you have a recent token.")
@@ -23,6 +24,11 @@ args = parser.parse_args()
 
 os.makedirs('reports', exist_ok=True)
 report_runner = report_generator.ReportGenerator(args.api_token)
+
+if args.get_showcases is True:
+    downloader = showcase_downloader.ShowcaseDownloader()
+    downloader.download_showcases()
+
 if args.get_ap_names is not False:
     report_runner.get_ap_names()
     sys.exit()
@@ -33,6 +39,7 @@ if args.field_report:
 excel_parser = excel_input_parser.ExcelInputParser(args.input_excel)
 excel_parser.parse_workbook()
 excel_parser.get_api_filters()
+report_runner.actions = excel_parser.actions
 
 #report_runner.refresh_api_token()
 
@@ -61,20 +68,13 @@ data_manipulator.transform_column_names()
 data_manipulator.filter_concatenated_proposals(excel_parser.filters)
 data_manipulator.sort_concatenated_proposals(sorting_rules=excel_parser.sorting_rules)
 data_manipulator.get_programs()
-print(data_manipulator.undergraduate_programs['URL'])
-if args.get_showcases:
-    data_manipulator.get_programs()
-    downloader = showcase_downloader.ShowcaseDownloader(data_manipulator.undergraduate_programs, data_manipulator.graduate_programs, args)
-    downloader.download_showcases()
-#print(data_manipulator.undergraduate_programs['URL'])
-
 
 data_manipulator.get_relevant_columns(excel_parser.fields)
 data_manipulator.get_additional_dataframes()
+output_file = os.path.join(os.getcwd(), 'output', args.input_excel, 'current', 'test.xlsx')
+data_manipulator.concatenated_dataframe.to_excel(output_file, index=False)
 
-data_manipulator.concatenated_dataframe.to_excel('test.xlsx')
-
-writer = excel_writer.ExcelWriter(data_manipulator.concatenated_dataframe, data_manipulator.additional_dataframes, excel_parser.fields, data_manipulator.grouping_rule)
+writer = excel_writer.ExcelWriter(data_manipulator.concatenated_dataframe, data_manipulator.additional_dataframes, excel_parser.fields, data_manipulator.grouping_rule, report_name=Path(args.input_excel).stem, init_data=output_file)
 writer.create_workbook()
 if args.debug_mode == False:
     shutil.rmtree('./reports')
