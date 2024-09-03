@@ -18,7 +18,11 @@ def build_new_report_window():
         excel_parser = ExcelInputParser(input_excel)
         excel_parser.parse_workbook()
         excel_parser.get_api_filters()
+        if not os.path.exists(config('TOP_OUTPUT_DIR')):
+            os.makedirs(config('TOP_OUTPUT_DIR'))
         output_file = os.path.join(config('TOP_OUTPUT_DIR'), Path(input_excel).stem, 'current')
+        if not os.path.exists(output_file):
+            os.makedirs(output_file)
         prev_report_id_file = config('PREVIOUS_REPORT_IDS')+'previous_report_ids.json'
         if os.path.exists(prev_report_id_file) == False:
             messagebox.showerror(title="Error", message=f"{prev_report_id_file} does not exist. This file contains the previous report IDs. Please generate a new report.")

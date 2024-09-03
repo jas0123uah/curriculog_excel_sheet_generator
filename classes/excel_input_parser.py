@@ -98,6 +98,7 @@ class ExcelInputParser:
                 values=vals[2].split(",")
             else:
                 values=vals[2].strftime('%Y-%m-%d')
+                values = [values]
             field_filter = Filter(field_name=vals[0], operator=vals[1], values=values)
             #Keep the filter by itself for easy access later
             self.filters.append(field_filter)
@@ -122,7 +123,8 @@ class ExcelInputParser:
         for field in self.fields:
             api_filter_field = self.api_field_name_from_user_friendly_field_name.get(field.field_name)
             ##The only operator the api supports is =. Everything else we will do on our 
-            if api_filter_field and field.filters and field.filters.operator == '=':
+            print(f'api_filter_field: {api_filter_field}')
+            if api_filter_field and field.filters and field.filters.operator == '=' and "(Date)" not in api_filter_field:
                 api_filters[api_filter_field] = field.filters.values
         self.api_filters = api_filters
         

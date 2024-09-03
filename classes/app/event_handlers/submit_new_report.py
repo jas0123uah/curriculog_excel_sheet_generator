@@ -29,8 +29,8 @@ def generate_report(api_token, input_excel, window):
     report_runner.actions = excel_parser.actions
     report_runner.get_proposal_list()
     report_runner.get_user_list()
-    report_runner.get_all_proposal_field_reports(excel_parser.api_filters)
-    process_api_responses(report_runner, excel_parser, input_excel=input_excel)
+    report_runner.get_all_proposal_field_reports(api_filters=excel_parser.api_filters)
+    process_api_responses(report_runner, excel_parser, input_excel=input_excel, )
     
 
     # Display a message to the user when the API calls are finished
