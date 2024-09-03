@@ -5,7 +5,6 @@ class PrintToMessageBox:
 
     def write(self, message):
         self.messagebox_widget.insert(tk.END, message)
-        #self.messagebox_widget.showinfo(tk.END, message)
         self.messagebox_widget.see(tk.END)
 
     def flush(self):

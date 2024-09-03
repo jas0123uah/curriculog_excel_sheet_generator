@@ -1,4 +1,3 @@
-#from ..curriculog_report_generator import generate_report
 import tkinter as tk
 from tkinter import messagebox
 import os
