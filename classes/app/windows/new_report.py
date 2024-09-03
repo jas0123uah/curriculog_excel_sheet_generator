@@ -1,7 +1,7 @@
 import tkinter as tk
 from tkinter import messagebox
 import os, json
-from curriculog_excel_sheet_generator.classes.app.event_handlers import generate_report, process_api_responses
+from ..event_handlers import generate_report, process_api_responses
 from curriculog_excel_sheet_generator.classes.app.event_handlers.showcase_downloader import download_showcases
 from curriculog_excel_sheet_generator.classes.report_generator import ReportGenerator
 from curriculog_excel_sheet_generator.classes.excel_input_parser import ExcelInputParser

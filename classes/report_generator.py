@@ -178,7 +178,7 @@ class ReportGenerator:
             err = f'There are {meta["total_results"]} total results and only {meta["results_current_page"]} results are on the current page. Please contact jspenc35@utk.edu with this error and provide the report_id {report_id}.'
             logger.error(err)
             raise Exception(err)
-        directory = config('REPORTS_DIR')
+        directory = config('API_REPONSES_DIR')
         self.write_json(response.json()['results'], directory + report_id)
         return response.json()['results']
     def refresh_api_token(self):
