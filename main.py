@@ -39,6 +39,7 @@ if args.field_report:
 excel_parser = excel_input_parser.ExcelInputParser(args.input_excel)
 excel_parser.parse_workbook()
 excel_parser.get_api_filters()
+report_runner.actions = excel_parser.actions
 
 #report_runner.refresh_api_token()
 

@@ -29,10 +29,12 @@ def generate_report(api_token, input_excel, window):
     excel_parser.parse_workbook()
     excel_parser.get_api_filters()
     report_runner = ReportGenerator(api_token)
+    report_runner.actions = excel_parser.actions
+    print(f'FOUND THESE ACTIONS: {excel_parser.actions}')
     report_runner.get_proposal_list()
     report_runner.get_user_list()
     report_runner.get_all_proposal_field_reports(excel_parser.api_filters)
-    process_api_responses(report_runner, input_excel, excel_parser)
+    process_api_responses(report_runner, excel_parser, input_excel=input_excel)
     
 
     # Display a message to the user when the API calls are finished
@@ -42,12 +44,9 @@ def generate_report(api_token, input_excel, window):
     #generator = report_generator.ReportGenerator(api_token=api_token)
 
 
-def process_api_responses(report_runner, input_excel, excel_parser=None):
+def process_api_responses(report_runner, excel_parser, input_excel):
   
-    if excel_parser is None:
-        excel_parser = ExcelInputParser(input_excel)
-        excel_parser.parse_workbook()
-        excel_parser.get_api_filters()
+        
     data_manipulator = PandasHelper(
     proposal_fields_res= report_runner.all_proposal_data,
     proposal_list_res= report_runner.proposal_list,

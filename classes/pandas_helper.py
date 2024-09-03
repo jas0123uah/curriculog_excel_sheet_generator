@@ -311,9 +311,9 @@ class PandasHelper:
                 self.concatenated_dataframe = self.concatenated_dataframe[self.concatenated_dataframe[filter_item.field_name] <= filter_item.values[0]]
             elif filter_item.operator == '=':
                 #comment
-                print(f'{filter_item.field_name} should equal: {filter_item.values[0].lower()}')
+                print(f'{filter_item.field_name} should equal: {filter_item.values[0]}')
                 print(filter_item.values[0])
-                #self.concatenated_dataframe = self.concatenated_dataframe.loc[self.concatenated_dataframe[filter_item.field_name] == filter_item.values[0]]
+                self.concatenated_dataframe = self.concatenated_dataframe.loc[self.concatenated_dataframe[filter_item.field_name] == filter_item.values[0]]
                 #rslt_df = dataframe.loc[dataframe['Percentage'] > 70] 
                 print(self.concatenated_dataframe)
                 #self.concatenated_dataframe = self.concatenated_dataframe[self.concatenated_dataframe[filter_item.field_name] == filter_item.values[0]]

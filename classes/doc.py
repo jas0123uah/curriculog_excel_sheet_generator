@@ -26,9 +26,6 @@ class Doc:
             output_file = f'{output_dir}{action}_ALL_showcases.html'
             if os.path.exists(output_file):
                 os.remove(output_file)
-                # print(f'FILE ALREADY EXISTS, {corresponding_dprog}')
-                # #corresponding_dprog = str(int(corresponding_dprog) + 1000)
-                # print(f'NEW FILE NAME: {corresponding_dprog}')
             with open(output_file, 'w+', encoding='utf-8', errors='ignore') as html_file:
                 html_file.write(self.proposals_in_department)
                 print(f' SUCCESSFULLY WROTE TO {output_file}')
@@ -43,9 +40,6 @@ class Doc:
             output_file = f'{output_dir}{corresponding_dprog}_{self.program_type}_showcase.html'
             if os.path.exists(output_file):
                 os.remove(output_file)
-                # print(f'FILE ALREADY EXISTS, {corresponding_dprog}')
-                # #corresponding_dprog = str(int(corresponding_dprog) + 1000)
-                # print(f'NEW FILE NAME: {corresponding_dprog}')
                 output_file = f'{output_dir}{corresponding_dprog}_{self.program_type}_showcase.html'
             print('WRITING TO FILE', output_file)
             with open(output_file, 'w+', encoding='utf-8', errors='ignore') as html_file:

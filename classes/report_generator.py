@@ -37,6 +37,7 @@ class ReportGenerator:
         self.all_proposal_data = []
         self.proposal_list_report_id = None
         self.user_report_id = None
+        self.actions = []
         self.report_ids = []
         #Default empty list for api/v1/reports/user/ report
         self.user_list = []
@@ -221,14 +222,24 @@ class ReportGenerator:
     ######## MISC FUNCTIONS ########
     def get_ap_ids(self): 
         """Loops over proposal_list to return a unique list of ap_ids."""
-        ap_ids = []
+        ap_id_lookup = {}
+        for proposal in self.proposal_list:
+            ap_id = proposal['ap_id']
+            proposal_name = proposal['ap_name']
+            ap_id_lookup[proposal_name] = ap_id
+        if len(self.actions) == 0:
+            self.ap_ids = list(ap_id_lookup.values())
+        else:
+            # Pull the values from ap_id lookup that have keys in self.actions
+            self.ap_ids = [ap_id_lookup[action] for action in self.actions]
+        print('THESE ARE THE AP IDS: ', self.ap_ids)
+        return self.ap_ids
         # for proposal in self.proposal_list:
         #     if proposal['ap_id'] not in ap_ids:
         #         ap_ids.append(proposal['ap_id'])
         #ap_ids = [104, 106, 111, 108, 115, 109, 105 ]
-        ap_ids = [82, 78, 80 ]
-        self.ap_ids = ap_ids
-        return ap_ids
+        # ap_ids = [82, 78, 80 ]
+        # self.ap_ids = ap_ids
 
     def pull_previous_results(self, args):
         print(args)

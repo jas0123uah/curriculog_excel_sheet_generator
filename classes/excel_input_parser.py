@@ -37,6 +37,7 @@ class ExcelInputParser:
         self.sorting_rules = []
         #Default to an empty field instance
         self.grouping_rule = None
+        self.actions = []
         self.api_filters = {}
         self.api_field_name_from_user_friendly_field_name = {
             'Completed Date': 'completed_date',
@@ -66,6 +67,7 @@ class ExcelInputParser:
         """Primary function to parse input Excel workbook. Makes use of helper functions _get_requested_fields, _get_field_filters, _get_field_comment to parse input excel workbook."""
         self._get_worksheet_by_columns()
         self._get_requested_fields()
+        self._get_actions()
         self._get_sorting_rules()
         self.get_grouping_rule()
 
@@ -158,3 +160,7 @@ class ExcelInputParser:
         data = list(map(lambda word: word.strip(), data))
         #Return values of interest as comma separated string. No spaces.
         return ",".join(data)
+    def _get_actions(self):
+        """Loops over self.fields to return the request form types under "Action". If no Action field was requested, it returns an empty list."""
+        action_field = next(( x for x in self.fields if x.field_name == 'Action'), None)
+        self.actions = [] if action_field is None else action_field.filters.values

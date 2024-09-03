@@ -4,6 +4,7 @@ import os, json
 from curriculog_excel_sheet_generator.classes.app.event_handlers import generate_report, process_api_responses
 from curriculog_excel_sheet_generator.classes.app.event_handlers.showcase_downloader import download_showcases
 from curriculog_excel_sheet_generator.classes.report_generator import ReportGenerator
+from curriculog_excel_sheet_generator.classes.excel_input_parser import ExcelInputParser
 from curriculog_excel_sheet_generator.classes.app.utils import LoadingWindow, get_current_proposal_overview_report
 from pathlib import Path
 from decouple import config
@@ -17,21 +18,24 @@ def build_new_report_window():
             return
         #loading_window = LoadingWindow()
         print(config('TOP_OUTPUT_DIR'))
-        print(get_selected_file(listbox, xlsx_files_dict))
-        #os.makedirs( os.path.join(config('TOP_OUTPUT_DIR'), get_selected_file(listbox, xlsx_files_dict).split(".")[0], 'current'), exist_ok=True)
-        output_file = os.path.join(config('TOP_OUTPUT_DIR'), Path(get_selected_file(listbox, xlsx_files_dict)).stem, 'current')
+        input_excel = get_selected_file(listbox, xlsx_files_dict)
+        excel_parser = ExcelInputParser(input_excel)
+        excel_parser.parse_workbook()
+        excel_parser.get_api_filters()
+        output_file = os.path.join(config('TOP_OUTPUT_DIR'), Path(input_excel).stem, 'current')
         print(f'THIS IS THE OUTPUT FILE: {output_file}')
         prev_report_id_file = config('PREVIOUS_REPORT_IDS')+'previous_report_ids.json'
         if os.path.exists(prev_report_id_file) == False:
             messagebox.showerror(title="Error", message=f"{prev_report_id_file} does not exist. This file contains the previous report IDs. Please generate a new report.")
             #messagebox(new_window, text=f"{prev_report_id_file} does not exist. This file contains the previous report IDs. Please generate a new report.").pack()
         report_generator = ReportGenerator(api_token=api_key_entry.get())
+        report_generator.actions = excel_parser.actions
         # Read in prev_report_id_file
         with open(prev_report_id_file) as f:
             print(f)
             data = json.load(f)
         report_generator.pull_previous_results(data)
-        process_api_responses(report_generator, input_excel= get_selected_file(listbox, xlsx_files_dict))
+        process_api_responses(report_generator, input_excel= input_excel, excel_parser=excel_parser)
         messagebox.showinfo("Report Generated", f"Report created successfully under: {output_file}")
         #loading_window.destroy()
 
@@ -73,15 +77,11 @@ def build_new_report_window():
     title_label = tk.Label(title_frame, text="Reports", font=("Arial", 16, "bold"))
     title_label.pack(side=tk.LEFT)
 
-    # Get the directory from the config file
-    # config = configparser.ConfigParser()
-    # config.read('config.ini')
     directory = r'C:\Users\jspenc35\projects\curriculog_excel_sheet_generator\inputs'
     
     # Get the absolute path of the xlsx files in the directory
     xlsx_files = [os.path.join(directory, f) for f in os.listdir(directory) if f.endswith('.xlsx')]
 
-    # Get the filenames of the xlsx files in the directory
     xlsx_files_transformed = [f for f in os.listdir(directory) if f.endswith('.xlsx')]
 
 
@@ -91,8 +91,6 @@ def build_new_report_window():
     if current_proposal_overview_report is not None:
         xlsx_files.append(current_proposal_overview_report)
 
-    print('EXCEL FILES')
-    print(xlsx_files)
 
     # #Make the Filenames Title Case
     xlsx_files_transformed = [f.title() for f in xlsx_files_transformed]
@@ -124,7 +122,7 @@ def build_new_report_window():
     api_key_label = tk.Label(api_key_frame, text="API Key:")
     api_key_label.grid(row=0, column=0)
     api_key_entry = tk.Entry(api_key_frame)
-    api_key = config('API_KEY', default='AAAAAAAAAAA')
+    api_key = config('API_KEY', default='')
     api_key_entry.insert(0, api_key)
     api_key_entry.grid(row=0, column=1)
     api_key_entry.bind("<KeyRelease>", lambda event: validate_api_key())  # Bind the validation function to the KeyRelease event
@@ -147,7 +145,6 @@ def build_new_report_window():
     listbox.configure(width=30, height=1.2*int((len(xlsx_files)) + 10)) # Adjust the size of the listbox based on the number of xlsx files found in the directory
     listbox.configure(font=("Arial", 12, "bold"))
     listbox.configure(bg="#E6E6E6E6" if len(xlsx_files) > 0 else ("Arial", 12, "bold"))
-    #listbox.bind("<Button-1>", lambda: on_listbox_click(listbox, xlsx_files, api_key_entry))
 
     # Start the main loop of the new window
     new_window.mainloop()

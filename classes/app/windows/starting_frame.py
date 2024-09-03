@@ -14,9 +14,3 @@ def build_starting_frame(main_window):
     # Create the buttons
     new_report_button = tk.Button(button_frame, text="New Report", command=build_new_report_window)
     new_report_button.grid(row=0, column=0, padx=10, pady=10)
-
-    update_report_button = tk.Button(button_frame, text="Update Existing Report")
-    update_report_button.grid(row=0, column=1, padx=10, pady=10)
-
-    restore_previous_report_button = tk.Button(button_frame, text="Restore Previous Report")
-    restore_previous_report_button.grid(row=0, column=2, padx=10, pady=10)
