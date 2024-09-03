@@ -2,12 +2,14 @@ import tkinter as tk
 from tkinter import messagebox
 import os
 from decouple import config
-from curriculog_excel_sheet_generator.classes.app.event_handlers.showcase_downloader import download_showcases
-from curriculog_excel_sheet_generator.classes.app.utils.loading_window import LoadingWindow
-from curriculog_excel_sheet_generator.classes.report_generator import ReportGenerator
-from curriculog_excel_sheet_generator.classes.excel_input_parser import ExcelInputParser
-from curriculog_excel_sheet_generator.classes.pandas_helper import PandasHelper
-from curriculog_excel_sheet_generator.classes.excel_writer import ExcelWriter
+from ...app.event_handlers.showcase_downloader import download_showcases
+#curriculog_excel_sheet_generator.classes.app.utils.loading_window 
+from ...app.utils.loading_window import LoadingWindow
+#curriculog_excel_sheet_generator.classes.report_generator
+from ...report_generator import ReportGenerator
+from ...excel_input_parser import ExcelInputParser
+from ...pandas_helper import PandasHelper
+from ...excel_writer import ExcelWriter
 def generate_report(api_token, input_excel, window):
     # If input_excel cotains "/output/proposal_overview/current" call download_showcases.download_showcases()
     path = os.path.normpath(input_excel)

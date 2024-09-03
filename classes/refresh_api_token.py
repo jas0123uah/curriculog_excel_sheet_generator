@@ -1,4 +1,4 @@
-from curriculog_excel_sheet_generator.classes.report_generator import ReportGenerator
+from .report_generator import ReportGenerator
 import dotenv, os
 dotenv_file =dotenv.find_dotenv()
 dotenv.load_dotenv(dotenv_file)
