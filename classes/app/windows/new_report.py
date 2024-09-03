@@ -2,10 +2,10 @@ import tkinter as tk
 from tkinter import messagebox
 import os, json
 from ..event_handlers import generate_report, process_api_responses
-from curriculog_excel_sheet_generator.classes.app.event_handlers.showcase_downloader import download_showcases
-from curriculog_excel_sheet_generator.classes.report_generator import ReportGenerator
-from curriculog_excel_sheet_generator.classes.excel_input_parser import ExcelInputParser
-from curriculog_excel_sheet_generator.classes.app.utils import LoadingWindow, get_current_proposal_overview_report
+from ..event_handlers.showcase_downloader import download_showcases
+from ...report_generator import ReportGenerator
+from ...excel_input_parser import ExcelInputParser
+from ...app.utils import LoadingWindow, get_current_proposal_overview_report
 from pathlib import Path
 from decouple import config
 def build_new_report_window():
