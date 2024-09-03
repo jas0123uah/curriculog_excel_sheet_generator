@@ -55,7 +55,7 @@ class ReportGenerator:
     ######## WRAPPER FUNCTIONS W/ USER-FRIENDLY NAMES FOR RUNNING CURRICULOG API REPORTS ########
     def get_proposal_list(self):
         """Wrapper function for handling API call to'/api/v1/report/proposal/'"""
-        self.proposal_list = self.run_report(api_endpoint='/api/v1/report/proposal/', report_type='PROPOSAL LIST')
+        self.proposal_list = self.run_report(api_endpoint='/api/v1/report/proposal/', report_type='PROPOSAL LIST', request_params=api_filters)
         return self.proposal_list
     
     def get_ap_names(self):
@@ -101,6 +101,9 @@ class ReportGenerator:
             print(f'Submitting Proposal Field Report request for ap_id {ap_id}')
             
             request_params = {'ap_id': ap_id}
+            for key, value in api_filters.items():
+                if type(value) is list:
+                    api_filters[key] = value[0]
             request_params.update(api_filters)
             request_params = json.dumps(request_params)
             
@@ -178,6 +181,9 @@ class ReportGenerator:
             err = f'There are {meta["total_results"]} total results and only {meta["results_current_page"]} results are on the current page. Please contact jspenc35@utk.edu with this error and provide the report_id {report_id}.'
             logger.error(err)
             raise Exception(err)
+        # if config('API_REPONSES_DIR') does not exist, create it
+        if not os.path.exists(config('API_REPONSES_DIR')):
+            os.makedirs(config('API_REPONSES_DIR'))
         directory = config('API_REPONSES_DIR')
         self.write_json(response.json()['results'], directory + report_id)
         return response.json()['results']
@@ -231,4 +237,7 @@ class ReportGenerator:
     def write_report_ids(self):
         """Write out report ids for self.report_ids, self.proposal_list_report_id, and self.user_report_id. to allow recreation of previous runs of the script."""
         data = {'proposal_field_report_range': f"{self.report_ids[0]},{self.report_ids[-1]}", 'proposal_list_report_id': self.proposal_list_report_id, 'user_list_report_id': self.user_report_id}
+        # Check if config("PREVIOUS_REPORT_IDS") exists. If it does not, create it.
+        if not os.path.exists(config("PREVIOUS_REPORT_IDS")):
+            os.makedirs(config("PREVIOUS_REPORT_IDS"))
         self.write_json(data,f'{config("PREVIOUS_REPORT_IDS")+"previous_report_ids"}')
