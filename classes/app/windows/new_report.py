@@ -67,7 +67,7 @@ def build_new_report_window():
     title_label = tk.Label(title_frame, text="Reports", font=("Arial", 16, "bold"))
     title_label.pack(side=tk.LEFT)
 
-    directory = r'C:\Users\jspenc35\projects\curriculog_excel_sheet_generator\inputs'
+    directory = config('REPORT_TEMPLATES_DIR')
     
     # Get the absolute path of the xlsx files in the directory
     xlsx_files = [os.path.join(directory, f) for f in os.listdir(directory) if f.endswith('.xlsx')]
