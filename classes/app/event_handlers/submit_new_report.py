@@ -17,9 +17,7 @@ def generate_report(api_token, input_excel, window):
     #Check if proposal_overview and current are in dirs
 
     if "proposal_overview" in dirs and "current" in dirs :
-        #loading_window = LoadingWindow()
         download_showcases()
-        #loading_window.destroy()
         return
     loading_window = LoadingWindow()
     excel_parser = ExcelInputParser(input_excel)
@@ -37,7 +35,6 @@ def generate_report(api_token, input_excel, window):
     loading_window.destroy()
     messagebox.showinfo("Report Generated", "The report has been generated.")
     
-    #generator = report_generator.ReportGenerator(api_token=api_token)
 
 
 def process_api_responses(report_runner, excel_parser, input_excel):
@@ -56,7 +53,6 @@ def process_api_responses(report_runner, excel_parser, input_excel):
     data_manipulator.transform_column_names()
     data_manipulator.filter_concatenated_proposals(excel_parser.filters)
     data_manipulator.sort_concatenated_proposals(sorting_rules=excel_parser.sorting_rules)
-    #data_manipulator.get_programs()
     data_manipulator.get_relevant_columns(excel_parser.fields)
     data_manipulator.get_additional_dataframes()
     writer = ExcelWriter(data_manipulator.concatenated_dataframe, data_manipulator.additional_dataframes, excel_parser.fields, data_manipulator.grouping_rule, report_name=input_excel)
