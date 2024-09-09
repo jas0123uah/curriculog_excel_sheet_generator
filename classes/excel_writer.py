@@ -58,10 +58,12 @@ class ExcelWriter:
                     df_name = df_name[:31]
                 if df_name == '':
                     df_name = 'EMPTY'
-                sheet = self.workbook.create_sheet(df_name) if idx != 0 else self.workbook.active
+                sheet = self.workbook.create_sheet(df_name, ) if idx != 0 else self.workbook.active
                 sheet.title = df_name
-                for r in dataframe_to_rows(df, index=False, header=True):
+                for r in dataframe_to_rows(df, index=True, header=True):
                     sheet.append(r)
+                # HACK: index true and header true together cause a blank row to be added at the top of the sheet. 
+                sheet.delete_rows(2)
                 # Freeze the top row of the additional sheet
                 sheet.freeze_panes = 'A2'
 

@@ -341,11 +341,11 @@ class PandasHelper:
         sorting_rules = list(filter(lambda sorting_rule: sorting_rule.field_name in self.concatenated_dataframe.columns, sorting_rules))
         self.convert_custom_sorts_to_categorical_columns(sorting_rules)
         columns = list(map(lambda sorting_rule: sorting_rule.field_name, sorting_rules))
-        #Ascending works for custom bc pd.Categorical data type
+        # Ascending works for custom bc pd.Categorical data type
         sort_orders = [sorting_rule.sort_order in ['Ascending', 'Custom'] for sorting_rule in sorting_rules]
-        #print(f'Columns:\n{columns}\nSort Order:{sort_orders}')
         order_string = "\n".join([sorting_rule.sort_order if sorting_rule.sort_order != 'Custom' else sorting_rule.values for sorting_rule in sorting_rules])
-        #logger.info(f'Data will be sorted by {" then by ".join(columns)} in the following orders respectively:\n {order_string} ')
+        
+        logger.info(f'Data will be sorted by {" then by ".join(columns)} in the following orders respectively:\n {order_string} ')
         self.concatenated_dataframe.sort_values(by=columns, ascending=sort_orders, inplace=True)
         self.concatenated_dataframe.reset_index(drop=True, inplace=True)
         self.concatenated_dataframe.index += 1
