@@ -21,7 +21,7 @@ def generate_report(api_token, input_excel, window):
     if "proposal_overview" in dirs and "current" in dirs :
         download_showcases()
         return
-    loading_window = LoadingWindow()
+    #loading_window = LoadingWindow()
     excel_parser = ExcelInputParser(input_excel)
     excel_parser.parse_workbook()
     excel_parser.get_api_filters()
@@ -30,11 +30,11 @@ def generate_report(api_token, input_excel, window):
     report_runner.get_proposal_list()
     report_runner.get_user_list()
     report_runner.get_all_proposal_field_reports(api_filters=excel_parser.api_filters)
-    process_api_responses(report_runner, excel_parser, input_excel=input_excel, )
+    process_api_responses(report_runner, excel_parser, input_excel=input_excel,  )
     
 
     # Display a message to the user when the API calls are finished
-    loading_window.destroy()
+    #loading_window.destroy()
     messagebox.showinfo("Report Generated", "The report has been generated.")
     
 

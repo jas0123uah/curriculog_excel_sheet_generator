@@ -158,6 +158,9 @@ class PandasHelper:
                 if 'user_id' in api_resp_as_df.columns:
                     api_resp_as_df.rename(columns={'user_id':'originator_id'}, inplace=True)
                 
+                print(f'api_resp_df {api_resp_as_df.columns}')
+                print(f'concatenated_df {self.concatenated_dataframe.columns}')
+                print(self.concatenated_dataframe)
                 self.concatenated_dataframe = self.merge_dataframes(self.concatenated_dataframe, api_resp_as_df, merge_on)
     
     def __init__(self, proposal_list_res, proposal_fields_res, user_report_res, fields:list, sorting_rules, grouping_rule): 
@@ -173,7 +176,9 @@ class PandasHelper:
         self.fields = fields
         self.sorting_rules = sorting_rules
         self.grouping_rule = grouping_rule
-        self.concatenated_dataframe = pd.DataFrame()
+        # print(f'This is proposal_fields_res {proposal_fields_res}')
+
+        self.concatenated_dataframe = proposal_fields_res
         self.additional_dataframes = []
         self.graduate_programs = None
         self.undergraduate_programs = None
@@ -314,9 +319,6 @@ class PandasHelper:
                 print(f'{filter_item.field_name} should equal: {filter_item.values[0]}')
                 print(filter_item.values[0])
                 self.concatenated_dataframe = self.concatenated_dataframe.loc[self.concatenated_dataframe[filter_item.field_name] == filter_item.values[0]]
-                #rslt_df = dataframe.loc[dataframe['Percentage'] > 70] 
-                print(self.concatenated_dataframe)
-                #self.concatenated_dataframe = self.concatenated_dataframe[self.concatenated_dataframe[filter_item.field_name] == filter_item.values[0]]
             elif filter_item.operator == 'NOT EQUAL TO':
                 print(f'{filter_item.field_name} should NOT equal: {filter_item.values[0].lower()}')
                 self.concatenated_dataframe = self.concatenated_dataframe[self.concatenated_dataframe[filter_item.field_name] != filter_item.values[0]]
@@ -343,7 +345,7 @@ class PandasHelper:
         sort_orders = [sorting_rule.sort_order in ['Ascending', 'Custom'] for sorting_rule in sorting_rules]
         #print(f'Columns:\n{columns}\nSort Order:{sort_orders}')
         order_string = "\n".join([sorting_rule.sort_order if sorting_rule.sort_order != 'Custom' else sorting_rule.values for sorting_rule in sorting_rules])
-        logger.info(f'Data will be sorted by {" then by ".join(columns)} in the following orders respectively:\n {order_string} ')
+        #logger.info(f'Data will be sorted by {" then by ".join(columns)} in the following orders respectively:\n {order_string} ')
         self.concatenated_dataframe.sort_values(by=columns, ascending=sort_orders, inplace=True)
         self.concatenated_dataframe.reset_index(drop=True, inplace=True)
         self.concatenated_dataframe.index += 1
