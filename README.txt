@@ -2,8 +2,9 @@ To use this program:
 1. Open up your terminal and navigate to the directory this file is located in.
 
 If you have never used this script before:
+  1. Run the following command: pip install -r requirements.txt
 
-  Run the following command: python setup.py
+  2. Run the following command: python setup.py
 
 If you have ran setup.py
 
