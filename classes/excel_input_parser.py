@@ -123,8 +123,8 @@ class ExcelInputParser:
         for field in self.fields:
             api_filter_field = self.api_field_name_from_user_friendly_field_name.get(field.field_name)
             ##The only operator the api supports is =. Everything else we will do on our 
-            print(f'api_filter_field: {api_filter_field}')
-            if api_filter_field and field.filters and field.filters.operator == '=' and "(Date)" not in api_filter_field:
+            if api_filter_field and field.filters and field.filters.operator == '=':
+                print(f'api_filter_field: {api_filter_field}, filter_value: {field.filters.values}')
                 api_filters[api_filter_field] = field.filters.values
         self.api_filters = api_filters
         

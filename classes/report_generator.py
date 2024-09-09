@@ -55,7 +55,7 @@ class ReportGenerator:
     ######## WRAPPER FUNCTIONS W/ USER-FRIENDLY NAMES FOR RUNNING CURRICULOG API REPORTS ########
     def get_proposal_list(self):
         """Wrapper function for handling API call to'/api/v1/report/proposal/'"""
-        self.proposal_list = self.run_report(api_endpoint='/api/v1/report/proposal/', report_type='PROPOSAL LIST', request_params=api_filters)
+        self.proposal_list = self.run_report(api_endpoint='/api/v1/report/proposal/', report_type='PROPOSAL LIST')
         return self.proposal_list
     
     def get_ap_names(self):
@@ -117,6 +117,7 @@ class ReportGenerator:
             proposals_w_data = self.get_report_results(report_id)
             all_proposals_w_data = [*all_proposals_w_data, *proposals_w_data]
         
+        #print(f'All Proposals Data: {all_proposals_w_data}')
         self.all_proposal_data = all_proposals_w_data
     ######## BASE-LEVEL FUNCTIONS USED BY WRAPPER FUNCTIONS TO INTERACT WITH THE API ########
     def run_report(self, *, api_endpoint, request_params= None, wait_for_results=True, report_type, ):
@@ -153,9 +154,10 @@ class ReportGenerator:
         api_endpoint = f'/api/v1/report/result/{report_id}'
         url = f'{self.base_url}{api_endpoint}'
         response = requests.get(url=url, headers=self.headers, allow_redirects=True)
+        #print(response.json())
         meta = response.json()['meta']
 
-        # print(f'META:{meta}')
+        #print(f'META:{meta}')
         no_results = 'error' in meta and 'message' in meta['error'] and 'No results' in meta['error']['message']
         if no_results:
             remaining_num_attempts = 5
@@ -168,9 +170,9 @@ class ReportGenerator:
                 #logger.info(f"No results for report id {report_id}. Waiting 60 seconds and trying again at {sixty_secs_from_now.strftime('%I:%M:%S')}. {remaining_num_attempts} attempts remaining.")
                 time.sleep(60)
                 response = requests.get(url=url, headers=self.headers, allow_redirects=True)
-                print(response.json())
+                #print(response.json())
                 meta = response.json()['meta']
-                print(meta)
+                #print(meta)
                 no_results = 'error' in meta and 'message' in meta['error'] and 'No results' in meta['error']['message']
                 remaining_num_attempts -= 1
         
@@ -226,6 +228,7 @@ class ReportGenerator:
             results = self.get_report_results(str(report_id))
             if results is not None:
                 all_results = [*all_results, *results]
+
         self.all_proposal_data = all_results
 
     
