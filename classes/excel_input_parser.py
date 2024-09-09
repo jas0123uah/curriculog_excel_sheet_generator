@@ -68,6 +68,7 @@ class ExcelInputParser:
         self._get_requested_fields()
         self._get_actions()
         self._get_sorting_rules()
+        print(f'These are sorting rules {self.sorting_rules}')
         self.get_grouping_rule()
 
     def _get_requested_fields(self): 
@@ -108,12 +109,14 @@ class ExcelInputParser:
     def _get_sorting_rules(self): 
         """Parses the Sort By, Sort Order, and Custom Sort columns to create an array/list of SortingRules. Returns a list of SortingRules to pass to the PandasHelper constructor."""
         for row_cells in self.workbook.active.iter_rows(min_row=2, max_row=self.workbook.active.max_row):
-            field_name = self._get_value_in_column(row=row_cells, column ='Sort By')
+            sort_order = self._get_value_in_column(row=row_cells, column ='Sort Order')
+            field_name = self._get_value_in_column(row=row_cells, column ='Field')
+            print(f' Sorting field_name: {field_name}')
             #If there is no value in the column 'Sort By', assume no SortingRule for the row
-            if field_name:
+            if sort_order:
                 sorting_rule = SortingRule(
                     field_name= field_name,
-                    sort_order= self._get_value_in_column(row=row_cells, column ='Sort Order'),
+                    sort_order= sort_order,
                     values= self._get_value_in_column(row=row_cells, column ='Custom Sort', delimiter=","),       
                 )
                 self.sorting_rules.append(sorting_rule)
