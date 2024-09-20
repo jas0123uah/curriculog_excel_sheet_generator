@@ -4,8 +4,6 @@ from pprint import pprint
 from .field import Field
 import logging, sys
 from decouple import config
-import configparser
-import concurrent.futures
 
 # Configure root logger  
 logging.basicConfig(format='%(asctime)s | %(name)s | %(levelname)s |', 
@@ -184,9 +182,10 @@ class ReportGenerator:
             logger.error(err)
             raise Exception(err)
         # if config('API_REPONSES_DIR') does not exist, create it
-        if not os.path.exists(config('API_REPONSES_DIR')):
-            os.makedirs(config('API_REPONSES_DIR'))
-        directory = config('API_REPONSES_DIR')
+       
+        directory = config('API_RESPONSES_DIR')
+        if not os.path.exists(directory):
+            os.makedirs(directory)
         self.write_json(response.json()['results'], directory + report_id)
         return response.json()['results']
     def refresh_api_token(self):
