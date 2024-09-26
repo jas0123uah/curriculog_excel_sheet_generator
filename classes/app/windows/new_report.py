@@ -87,7 +87,7 @@ def build_new_report_window():
 
 
     # #Make the Filenames Title Case
-    xlsx_files_transformed = [f.title() for f in xlsx_files_transformed]
+    # xlsx_files_transformed = [f.title() for f in xlsx_files_transformed]
 
     # #Remove their extension
     xlsx_files_transformed = [os.path.splitext(f)[0] for f in xlsx_files_transformed]
@@ -95,6 +95,8 @@ def build_new_report_window():
     # #Remove UnderScores
     xlsx_files_transformed = [f.replace("_", " ") for f in xlsx_files_transformed]
 
+    # Sort the filenames
+    xlsx_files_transformed.sort()
     # Add Download Showcases if there is a current proposal overview report
     if current_proposal_overview_report is not None:
         xlsx_files_transformed.append('Download Showcases')
