@@ -40,8 +40,7 @@ def generate_report(api_token, input_excel, window):
 
 
 def process_api_responses(report_runner, excel_parser, input_excel):
-  
-        
+
     data_manipulator = PandasHelper(
     proposal_fields_res= report_runner.all_proposal_data,
     proposal_list_res= report_runner.proposal_list,
@@ -58,7 +57,10 @@ def process_api_responses(report_runner, excel_parser, input_excel):
     data_manipulator.get_relevant_columns(excel_parser.fields)
     data_manipulator.get_additional_dataframes()
     writer = ExcelWriter(data_manipulator.concatenated_dataframe, data_manipulator.additional_dataframes, excel_parser.fields, data_manipulator.grouping_rule, report_name=input_excel)
-    writer.create_workbook()
+    if 'Dprog Changes' in input_excel:
+        writer.update_workbook(key_column='URL', )
+    else:
+        writer.create_workbook()
 
     
 def on_selection_change(listbox, submit_button):
