@@ -49,10 +49,14 @@ def process_api_responses(report_runner, excel_parser, input_excel):
     grouping_rule= excel_parser.grouping_rule,
     sorting_rules= excel_parser.sorting_rules)
     data_manipulator.concatenate_proposals()
+    if data_manipulator.concatenated_dataframe.empty:
+        raise ValueError('No proposals found. Please check your filters.')
 
 
     data_manipulator.transform_column_names()
     data_manipulator.filter_concatenated_proposals(excel_parser.filters)
+    if data_manipulator.concatenated_dataframe.empty:
+        raise ValueError('No proposals found after filtering. Please check your filters.')
     data_manipulator.sort_concatenated_proposals(sorting_rules=excel_parser.sorting_rules)
     data_manipulator.get_relevant_columns(excel_parser.fields)
     data_manipulator.get_additional_dataframes()

@@ -101,18 +101,13 @@ class ExcelWriter:
             ):  # Assuming row 1 is header
                 old_keys.add(row[common_column_index])  # Adjust index for common column
 
-            # print(f"There are {len(old_keys)} URLs in the old workbook")
-
-            # print(f"Old keys: {old_keys}")
 
             # Iterate through rows in the new workbook
             for row in self.workbook.active.iter_rows(
                 min_row=2, values_only=True
             ):  # Skip header row
                 key = row[common_column_index]  # Get value in the common column
-                #print(f"Key: {key}")
                 if key not in old_keys:
-                    print(f"Key '{key}' not found in old workbook")
                     #old_sheet.insert_rows(1)
                     self.insert_row(data=row, worksheet=old_sheet, start_row=2)
                 
@@ -129,6 +124,11 @@ class ExcelWriter:
 
     def _write_sheets(self):
         """Write the dataframes to the output workbook."""
+        if self.concatenated_dataframe.empty is True:
+            raise ValueError(
+                "Cannot write to workbook. Concatenated dataframe is empty."
+            )
+
         # Write concatenated dataframe to sheet "Main"
         dfs = [{"Main": self.concatenated_dataframe}, *self.additional_dataframes]
         for idx, df_data in enumerate(dfs):
@@ -234,7 +234,6 @@ class ExcelWriter:
             self.col_lookups.append(col_lookup)
             column_idx = 0
             col_lookup = {}
-
     def delete_extra_columns(self, worksheet, worksheet_index):
         """Delete columns from rows which were used solely for grouping OR contain comment text as a value. (Comments are stored as fields in the pandas dataframe this step removes those columns)."""
         column_lookup = self.col_lookups[worksheet_index]

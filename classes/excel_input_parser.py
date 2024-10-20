@@ -96,7 +96,7 @@ class ExcelInputParser:
         field_filter = None
         if vals[1]: ##if there is no operator assume no filter.
             if type(vals[2]) is not datetime.datetime:
-                values=vals[2].split(";")
+                values=str(vals[2]).split(";")
             else:
                 values=vals[2].strftime('%Y-%m-%d')
                 values = [values]
