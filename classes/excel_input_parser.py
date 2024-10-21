@@ -143,6 +143,7 @@ class ExcelInputParser:
         for COL in self.workbook.active.iter_cols(1, self.workbook.active.max_column):
             col_names[COL[0].value] = Current
             Current += 1
+        print(f'This is Self.columns: {col_names}')
         self.columns = col_names
     def _get_value_in_column(self, row, column:str, delimiter=None) -> str:
         """Given a row and column name return the value in column"""
