@@ -5,7 +5,7 @@ def get_current_proposal_overview_report():
     # if config('TOP_OUTPUT_DIR') does not exist, create it:
     if not os.path.exists(config('TOP_OUTPUT_DIR')):
         os.makedirs(config('TOP_OUTPUT_DIR'))
-    proposal_overview_dir = os.path.join(config('TOP_OUTPUT_DIR'), 'proposal_overview', 'current')
+    proposal_overview_dir = os.path.join(config('TOP_OUTPUT_DIR'), config('CATALOG_YEAR_DPROG_CHANGES_REPORT_NAME'), 'current')
     # Get the xlsx files in proposal_overview_dir
     excel_files = [os.path.join(proposal_overview_dir, f) for f in os.listdir(proposal_overview_dir) if f.endswith('.xlsx')]
     if len(excel_files) > 0:
