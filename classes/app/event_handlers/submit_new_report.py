@@ -22,6 +22,7 @@ def generate_report(api_token, input_excel, window, report_name:str):
         download_showcases()
         return
     #loading_window = LoadingWindow()
+    print(f" LOOK input_excel: {input_excel}")
     excel_parser = ExcelInputParser(input_excel)
     excel_parser.parse_workbook()
     excel_parser.get_api_filters()
