@@ -11,4 +11,6 @@ os.makedirs(os.path.join(main_dir, 'output', 'proposal_overview'), exist_ok=True
 os.makedirs(os.path.join(main_dir, 'output', 'proposal_overview', 'current'), exist_ok=True)
 os.makedirs(os.path.join(main_dir, 'output', 'proposal_overview', 'previous'), exist_ok=True)
 with open(os.path.join(main_dir, '.env'), 'w') as f:
-    f.write(f"""PREVIOUS_REPORT_IDS={previous_report_ids_dir}\nNET_ID=''\nPASSWORD=''\nNUM_WEBDRIVERS=1\nMAIN_CURRICULOG_DIR={main_dir}\nTOP_OUTPUT_DIR={output_dir}\nAPI_KEY=''\nAPI_RESPONSES_DIR={api_responses_dir}\nREPORT_TEMPLATES_DIR={report_template_dir}\n""")
+    f.write(
+        f"""PREVIOUS_REPORT_IDS={previous_report_ids_dir}\nNET_ID=''\nPASSWORD=''\nNUM_WEBDRIVERS=1\nMAIN_CURRICULOG_DIR={main_dir}\nTOP_OUTPUT_DIR={output_dir}\nAPI_KEY=''\nAPI_RESPONSES_DIR={api_responses_dir}\nREPORT_TEMPLATES_DIR={report_template_dir}\nCATALOG_YEAR_DPROG_CHANGES_REPORT_NAME=''"""
+    )
