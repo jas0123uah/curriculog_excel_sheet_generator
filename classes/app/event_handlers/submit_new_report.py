@@ -10,7 +10,7 @@ from ...report_generator import ReportGenerator
 from ...excel_input_parser import ExcelInputParser
 from ...pandas_helper import PandasHelper
 from ...excel_writer import ExcelWriter
-def generate_report(api_token, input_excel, window):
+def generate_report(api_token, input_excel, window, report_name:str):
     # If input_excel cotains "/output/proposal_overview/current" call download_showcases.download_showcases()
     path = os.path.normpath(input_excel)
     dirs = path.split(os.sep)
@@ -18,7 +18,7 @@ def generate_report(api_token, input_excel, window):
     # split the input_excel path into a list
     #Check if proposal_overview and current are in dirs
 
-    if "proposal_overview" in dirs and "current" in dirs :
+    if report_name == 'Download Showcases':
         download_showcases()
         return
     #loading_window = LoadingWindow()
@@ -40,8 +40,7 @@ def generate_report(api_token, input_excel, window):
 
 
 def process_api_responses(report_runner, excel_parser, input_excel):
-  
-        
+
     data_manipulator = PandasHelper(
     proposal_fields_res= report_runner.all_proposal_data,
     proposal_list_res= report_runner.proposal_list,
@@ -50,15 +49,22 @@ def process_api_responses(report_runner, excel_parser, input_excel):
     grouping_rule= excel_parser.grouping_rule,
     sorting_rules= excel_parser.sorting_rules)
     data_manipulator.concatenate_proposals()
+    if data_manipulator.concatenated_dataframe.empty:
+        raise ValueError('No proposals found. Please check your filters.')
 
 
     data_manipulator.transform_column_names()
     data_manipulator.filter_concatenated_proposals(excel_parser.filters)
+    if data_manipulator.concatenated_dataframe.empty:
+        raise ValueError('No proposals found after filtering. Please check your filters.')
     data_manipulator.sort_concatenated_proposals(sorting_rules=excel_parser.sorting_rules)
     data_manipulator.get_relevant_columns(excel_parser.fields)
     data_manipulator.get_additional_dataframes()
     writer = ExcelWriter(data_manipulator.concatenated_dataframe, data_manipulator.additional_dataframes, excel_parser.fields, data_manipulator.grouping_rule, report_name=input_excel)
-    writer.create_workbook()
+    if 'Dprog Changes' in input_excel:
+        writer.update_workbook(key_column='URL', )
+    else:
+        writer.create_workbook()
 
     
 def on_selection_change(listbox, submit_button):

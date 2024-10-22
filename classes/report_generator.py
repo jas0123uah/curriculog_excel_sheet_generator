@@ -35,7 +35,7 @@ class ReportGenerator:
         self.all_proposal_data = []
         self.proposal_list_report_id = None
         self.user_report_id = None
-        self.actions = []
+        self._actions = []
         self.report_ids = []
         #Default empty list for api/v1/reports/user/ report
         self.user_list = []
@@ -51,6 +51,14 @@ class ReportGenerator:
             # The 'normalized' field name used in the input Excel workbook: ['Duplicate Curriculog Field Label representing the same concept', 'Represents the same concept']
         ## }
     ######## WRAPPER FUNCTIONS W/ USER-FRIENDLY NAMES FOR RUNNING CURRICULOG API REPORTS ########
+    @property
+    def actions(self):
+
+        return [action for action in self._actions if action != ""]
+    @actions.setter
+    def actions(self, actions):
+
+        self._actions = actions
     def get_proposal_list(self):
         """Wrapper function for handling API call to'/api/v1/report/proposal/'"""
         self.proposal_list = self.run_report(api_endpoint='/api/v1/report/proposal/', report_type='PROPOSAL LIST')
@@ -208,6 +216,7 @@ class ReportGenerator:
             self.ap_ids = list(ap_id_lookup.values())
         else:
             # Pull the values from ap_id lookup that have keys in self.actions
+            print(f'Actions: {self.actions}')
             self.ap_ids = [ap_id_lookup[action] for action in self.actions]
         return self.ap_ids
 

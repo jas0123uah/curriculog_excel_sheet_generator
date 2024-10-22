@@ -1,6 +1,7 @@
 from .doc import Doc
 import time, os
 import pandas as pd
+from curriculog_excel_sheet_generator.classes.app.utils.get_current_proposal_overview_report import get_current_proposal_overview_report
 from decouple import config
 from selenium import webdriver
 from selenium.webdriver.common.by import By
@@ -37,7 +38,6 @@ class ShowcaseDownloader:
         self.undergraduate_program_proposals = programs["undergraduate_programs"]
         self.graduate_program_proposals = programs["graduate_programs"]
         self.num_webdrivers = int(config('NUM_WEBDRIVERS'))
-        self.dprog_overview_table = pd.read_excel(config('DPROG_OVERVIEW_TABLE'))
         self.webdrivers = []
         for _ in range(self.num_webdrivers):
             service = webdriver.ChromeService()
@@ -50,15 +50,13 @@ class ShowcaseDownloader:
             self.css = css
     def _get_proposal_list_report(self):
         """Returns a pandas dataframe of the proposal list report. If no such report exists an error is thrown."""
-        plr_dir = os.path.join(config('TOP_OUTPUT_DIR'), 'proposal_overview', 'current')
-        # Get the xlsx files in plr_dir
-        excel_files = [os.path.join(plr_dir, f) for f in os.listdir(plr_dir) if f.endswith('.xlsx')]
+        dprog_overview_report =get_current_proposal_overview_report()
 
-        if len(excel_files) == 0:
-            raise Exception(f"{plr_dir} does not contain any xlsx files. Please generate a new report.")
+        if dprog_overview_report is None:
+            raise Exception(f"There is no current Dprog Overview report. Please generate a {config('CATALOG_YEAR_DPROG_CHANGES_REPORT_NAME')} report and try downloading showcases again.")
         else:
-            plr = excel_files[0]
-            return pd.read_excel(plr)
+            
+            return pd.read_excel(dprog_overview_report)
 
     def get_programs(self):
         """Filter concatenated_proposals to identify only those that are for a Graduate or Undergraduate program. Stores programs under graduate_programs and undergraduate_programs, respectively."""
@@ -72,7 +70,7 @@ class ShowcaseDownloader:
         """Clicks the button to send the logged in user a push notification to authorize login"""
         try:
             print('SENDING DUO PUSH')
-            trust_browser_button = WebDriverWait(driver, 10).until(EC.visibility_of_element_located((By.ID, "trust-browser-button")))
+            trust_browser_button = WebDriverWait(driver, 60).until(EC.visibility_of_element_located((By.ID, "trust-browser-button")))
             trust_browser_button.click()
         except TimeoutException:
             pass
@@ -87,14 +85,22 @@ class ShowcaseDownloader:
     def _login(self):
         """Logs in to each driver."""
         for i, driver in enumerate(self.webdrivers):
+            print(f'Logging in to driver {i}')
             self._open_login(driver)
             login_button = WebDriverWait(driver, 10).until(EC.visibility_of_element_located((By.ID, "login")))
             login_button.click()
-            netid_field = driver.find_element(By.ID, 'username')
+            #Convert to webdriver wait
+            if config('NET_ID') == '' or config('PASSWORD') == '':
+                raise ValueError('Config must have NetID and Password entered to download showcases!')
+            netid_field = WebDriverWait(driver, 20).until(EC.visibility_of_element_located((By.ID, 'username')))
+            password_field = WebDriverWait(driver, 20).until(EC.visibility_of_element_located((By.ID, 'password')))
             password_field = driver.find_element(By.ID, 'password')
+            print(config('NET_ID'))
+            print(config('PASSWORD'))
             netid_field.send_keys(config('NET_ID'))
             password_field.send_keys(config('PASSWORD'))
             password_field.send_keys(Keys.ENTER)
+            print(f'ENTERED NETID AND PASSWORD FOR DRIVER {i}')
             self._send_duo_push(driver)
     
     def open_showcase_window(self, driver):
@@ -191,19 +197,23 @@ class ShowcaseDownloader:
                                 futures.append(executor.submit(self.download_showcase, url, undergrad_showcases_in_college, driver, department, action))
                             for future in concurrent.futures.as_completed(futures):
                                 future.result()
-                        undergrad_showcases_in_college.save_proposals_in_department(department=department, action=program_type)
+                        normalized_program_type = program_type.lower().replace(' ', '_')
+                        normalized_program_type = normalized_program_type.replace('/', '_')
+                        undergrad_showcases_in_college.save_proposals_in_department(department=department, action=normalized_program_type)
                     undergrad_showcases_in_college.save_concatenated_html()
 
     def get_corresponding_dprog(self, proposal_url):
         """Returns the corresponding dprog for the given proposal url."""
         #return current millisecond
-        # Get the row in self.dprog_overview_table that matches the proposal url at 'Curriculog Link'
-        df = self.dprog_overview_table[self.dprog_overview_table['Curriculog Link'] == proposal_url]
-        if df.empty:
-            # We dont have a dprog for this proposal, just return the current millisecond
-            return int(round(time.time() * 1000))
-        dprog = df.iloc[0]['Dprog']
-        return dprog.replace('/', '_')
+        # # Get the row in self.dprog_overview_table that matches the proposal url at 'Curriculog Link'
+        df = self.proposal_list_report[self.proposal_list_report['URL'] == proposal_url]
+
+        dprog = (
+            df.iloc[0]["Dprog"]
+            if pd.notna(df.iloc[0]["Dprog"]) 
+            else str(int(round(time.time() * 1000)))
+        ) 
+        return dprog
     def download_showcase(self, url, undergrad_showcases_in_college, driver, department, action):
         """Take a driver thread and downloads the showcase."""
         try:
@@ -213,7 +223,9 @@ class ShowcaseDownloader:
             showcase_html = self.open_showcase_window(driver)
             undergrad_showcases_in_college.raw_data+=showcase_html
             undergrad_showcases_in_college.proposals_in_department += showcase_html
-            undergrad_showcases_in_college.save_currrent_showcase(current_showcase_html=showcase_html, corresponding_dprog=self.get_corresponding_dprog(proposal_url=url), department=department, action= action)
+            normalized_program_type = action.lower().replace(' ', '_')
+            normalized_program_type = normalized_program_type.replace('/', '_')
+            undergrad_showcases_in_college.save_currrent_showcase(current_showcase_html=showcase_html, corresponding_dprog=self.get_corresponding_dprog(proposal_url=url), department=department, action= normalized_program_type)
         except Exception as e:
             print(f'Error downloading showcase: {e}')
         

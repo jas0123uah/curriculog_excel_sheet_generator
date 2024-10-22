@@ -282,15 +282,9 @@ class PandasHelper:
 
     def merge_dataframes(self, df1, df2, merge_on):
         """Given two dataframes and a key/column to merge on, merge them and return the resulting dataframe. Used to merge API responses from Curriculog API and allow user access to more fields."""
-        # print(df1)
-        # print(df2)
-        # if df2.empty and df1.empty == False:
-        #     return df1
-        # elif df1.empty and df2.empty == False: 
-        #     return df2
-        # else:
-        #     return df1.merge(df2, on=merge_on)
-        #return df1 if df2.empty else 
+        if df1.empty or df2.empty:
+            raise Exception(
+                "Dataframe is empty. Does your Current Step Started Before (Date), in your input file use the date you are expecting?")
         
         return df1.merge(df2, on=merge_on)
     def filter_concatenated_proposals(self, filters:Filter):
@@ -299,9 +293,13 @@ class PandasHelper:
         for filter_item in filters:
             pprint(vars(filter_item))
         #print(list(self.concatenated_dataframe.columns))
-        filters = list(filter(lambda f: f.field_name in self.concatenated_dataframe.columns, filters))
+        #filters = list(filter(lambda f: f.field_name in self.concatenated_dataframe.columns, filters))
+        print(self.concatenated_dataframe.columns)
+        print(f'Before filtering: {(self.concatenated_dataframe.head())}')
+        #raise Exception('test')
         for filter_item in filters:
-            pprint(vars(filter_item))
+            #pprint(vars(filter_item))
+            print(f'This is filter: {filter_item.field_name} {filter_item.operator} {filter_item.values[0]}')
             if filter_item.operator == '>':
                 print(f'{filter_item.field_name} should be >: {filter_item.values[0]}')
                 self.concatenated_dataframe = self.concatenated_dataframe[self.concatenated_dataframe[filter_item.field_name] > filter_item.values[0]]
@@ -334,7 +332,8 @@ class PandasHelper:
             elif filter_item.operator == 'BETWEEN':
                 print(f'{filter_item.field_name} should be between: {filter_item.values[0]} and {filter_item.values[1]}')
                 self.concatenated_dataframe = self.concatenated_dataframe[self.concatenated_dataframe[filter_item.field_name].between(filter_item.values[0], filter_item.values[1])]
-
+            
+            print(f'This is dataframe after filtering {self.concatenated_dataframe.head()}')
     def sort_concatenated_proposals(self, sorting_rules:list[SortingRule]): 
         """Accepts a list of SortingRule instances and sorts**concatenated_dataframe** in Pandas. Sorting is done by the first SortingRule followed by subsequent SortingRules, so SortingRule order matters. Stores sorted dataframe as the new value on concatenated_dataframe."""
         #Keep only the sorting rules that are pertinent to columns in our concatenated dataframe
