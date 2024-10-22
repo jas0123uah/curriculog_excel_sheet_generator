@@ -13,7 +13,6 @@ def build_new_report_window():
         if report_name == 'Download Showcases':
             download_showcases()
             return
-        input_excel = get_selected_file(listbox, xlsx_files_dict)
         excel_parser = ExcelInputParser(input_excel)
         excel_parser.parse_workbook()
         excel_parser.get_api_filters()

@@ -94,7 +94,7 @@ class ExcelInputParser:
             val = self._get_value_in_column(row=row, column=col)
             vals.append(val)
         field_filter = None
-        if vals[1]: ##if there is no operator assume no filter.
+        if vals[1] not in [None, 'None', '']: ##if there is no operator assume no filter.
             if type(vals[2]) is not datetime.datetime:
                 values=str(vals[2]).split(";")
             else:
@@ -103,6 +103,8 @@ class ExcelInputParser:
             field_filter = Filter(field_name=vals[0], operator=vals[1], values=values)
             #Keep the filter by itself for easy access later
             self.filters.append(field_filter)
+        else:
+            print(f'No filter is being applied to {vals[0]}')
         return field_filter
 
 
@@ -161,4 +163,6 @@ class ExcelInputParser:
     def _get_actions(self):
         """Loops over self.fields to return the request form types under "Action". If no Action field was requested, it returns an empty list."""
         action_field = next(( x for x in self.fields if x.field_name == 'Action'), None)
+        print(f'This is action_field: {action_field}')
+        print(f'This is vars action_field {pprint(vars(action_field))}')
         self.actions = [] if action_field is None else action_field.filters.values
