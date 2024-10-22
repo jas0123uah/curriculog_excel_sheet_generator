@@ -5,10 +5,15 @@ class Doc:
         """Constructor for a Showcase Doc for a given college. Showcase Docs have a page indicating the start of each data type, e.g., START 2023-2024 UG Add Program."""
         self.college = college
         self.college_type = college_type
-        self.program_type = program_type
+        self._program_type = program_type
         self.raw_data = ''
         self.proposals_in_department = ''
         self.data_types = set()
+    @property
+    def program_type(self):
+        normalized_program_type = self._program_type.lower().replace(' ', '_')
+        normalized_program_type = normalized_program_type.replace('/', '_')
+        return normalized_program_type
     def save_concatenated_html(self):
         """Writes self.raw_data to an html file."""
         output_dir = f'showcases/{self.college_type}_showcases/{self.college}/'
@@ -45,4 +50,3 @@ class Doc:
             with open(output_file, 'w+', encoding='utf-8', errors='ignore') as html_file:
                 html_file.write(current_showcase_html)
                 print(f' SUCCESSFULLY WROTE TO {output_file}')
-
