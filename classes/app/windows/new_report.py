@@ -9,9 +9,8 @@ from ...app.utils import LoadingWindow, get_current_proposal_overview_report
 from pathlib import Path
 from decouple import config
 def build_new_report_window():
-    def use_last_api_calls_callback(input_excel, ):
-        normalized_path = os.path.normpath(input_excel)
-        if  r'\output\proposal_overview\current' in  normalized_path or  "/output/proposal_overview/current" in normalized_path:
+    def use_last_api_calls_callback(input_excel, report_name:str):
+        if report_name == 'Download Showcases':
             download_showcases()
             return
         input_excel = get_selected_file(listbox, xlsx_files_dict)
@@ -46,8 +45,12 @@ def build_new_report_window():
     def get_selected_file(listbox, xlsx_files_dict):
         selected_index = listbox.curselection()
         if selected_index:
+            report_name = listbox.get(selected_index)
             selected_file = listbox.get(selected_index)
-            return xlsx_files_dict[selected_file]
+            return   {
+                'file_path': xlsx_files_dict[selected_file],
+                'report_name': report_name
+            }
         else:
             return None
     
@@ -128,7 +131,7 @@ def build_new_report_window():
     use_last_api_calls_checkbox.pack(anchor="w", side="left", padx=10, pady=10)
 
     # Create a submit button
-    submit_button = tk.Button(new_window, text="Submit", state=tk.DISABLED, command=lambda: use_last_api_calls_callback(input_excel= get_selected_file(listbox, xlsx_files_dict)) if use_last_api_calls_var.get() == True else  generate_report(api_key_entry.get(), input_excel= get_selected_file(listbox, xlsx_files_dict), window=new_window))
+    submit_button = tk.Button(new_window, text="Submit", state=tk.DISABLED, command=lambda: use_last_api_calls_callback(input_excel= get_selected_file(listbox, xlsx_files_dict)['file_path'], report_name= get_selected_file(listbox, xlsx_files_dict)['report_name']) if use_last_api_calls_var.get() == True else  generate_report(api_key_entry.get(), input_excel= get_selected_file(listbox, xlsx_files_dict)['file_path'], window=new_window, report_name= get_selected_file(listbox, xlsx_files_dict)['report_name']))
     submit_button.pack(pady=10)
 
     # Add the filenames to the listbox

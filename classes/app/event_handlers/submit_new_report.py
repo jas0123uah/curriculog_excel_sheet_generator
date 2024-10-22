@@ -10,7 +10,7 @@ from ...report_generator import ReportGenerator
 from ...excel_input_parser import ExcelInputParser
 from ...pandas_helper import PandasHelper
 from ...excel_writer import ExcelWriter
-def generate_report(api_token, input_excel, window):
+def generate_report(api_token, input_excel, window, report_name:str):
     # If input_excel cotains "/output/proposal_overview/current" call download_showcases.download_showcases()
     path = os.path.normpath(input_excel)
     dirs = path.split(os.sep)
@@ -18,7 +18,7 @@ def generate_report(api_token, input_excel, window):
     # split the input_excel path into a list
     #Check if proposal_overview and current are in dirs
 
-    if "proposal_overview" in dirs and "current" in dirs :
+    if report_name == 'Download Showcases':
         download_showcases()
         return
     #loading_window = LoadingWindow()
