@@ -56,16 +56,38 @@ def process_api_responses(report_runner, excel_parser, input_excel):
 
     data_manipulator.transform_column_names()
     data_manipulator.filter_concatenated_proposals(excel_parser.filters)
+
+    # TEMP HARDCODE FILTER FOR PROPOSAL IDS 
+    #relevant_ids = ['CECS', 'HCA']
+    #print(list(data_manipulator.concatenated_dataframe.columns))
+    #data_manipulator.concatenated_dataframe = data_manipulator.concatenated_dataframe[data_manipulator.concatenated_dataframe['College'].isin(relevant_ids)]
+    # Remove unlaunched proposals
+    data_manipulator.concatenated_dataframe = data_manipulator.concatenated_dataframe[
+        data_manipulator.concatenated_dataframe["Step Name"] != "Unlaunched Step"
+    ]
+    proposal_ids = list(data_manipulator.concatenated_dataframe['proposal_id'].unique())
+    report_runner.proposal_list = [x for x in report_runner.proposal_list if x['proposal_id'] in proposal_ids]
+    # END HARDCODED STUFF
     if data_manipulator.concatenated_dataframe.empty:
         raise ValueError('No proposals found after filtering. Please check your filters.')
     data_manipulator.sort_concatenated_proposals(sorting_rules=excel_parser.sorting_rules)
     data_manipulator.get_relevant_columns(excel_parser.fields)
+    if 'Check for Showcase Updates' in input_excel:
+        print('Checking for showcase updates...')
+        proposal_showcase_update_data = report_runner.pull_updated_requirements_and_last_updated_times()
+        data_manipulator.concatenated_dataframe["last_updated"] = (
+            data_manipulator.concatenated_dataframe["URL"]
+            .map(proposal_showcase_update_data)
+            .map(lambda x: x.get("last_updated", None))
+        )
     data_manipulator.get_additional_dataframes()
     writer = ExcelWriter(data_manipulator.concatenated_dataframe, data_manipulator.additional_dataframes, excel_parser.fields, data_manipulator.grouping_rule, report_name=input_excel)
     if 'Dprog Changes' in input_excel:
         writer.update_workbook(key_column='URL', )
     else:
+        print('Creating workbook...')
         writer.create_workbook()
+
 
     
 def on_selection_change(listbox, submit_button):
