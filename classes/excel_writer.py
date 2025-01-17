@@ -72,6 +72,7 @@ class ExcelWriter:
             self.workbook.save(
                 os.path.join(f"{self.current_output_dir}", f"{now}.xlsx")
             )
+            print(f"Workbook saved to {self.current_output_dir}")
 
     def update_workbook(self, key_column: str):
         """Function specifically for updating a given year's Dprog Changes Table. Allows you to pull in proposed Dprog Changes throughout the year."""

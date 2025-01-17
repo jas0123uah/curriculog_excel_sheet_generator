@@ -3,6 +3,7 @@ import datetime
 from pprint import pprint
 from .field import Field
 import logging, sys
+import pydash as _
 from decouple import config
 
 # Configure root logger  
@@ -133,18 +134,16 @@ class ReportGenerator:
         if report_type == 'ATTACHMENTS':
             response = requests.get(url=url, headers=self.headers, allow_redirects=True)
             return response._content
-        elif request_params: 
+        elif request_params is not None:
             response = requests.post(url=url, headers=self.headers, data=request_params, allow_redirects=True)
         else:
-            response = requests.post(url=url, headers=self.headers, allow_redirects=True)
-        #pprint(vars(response))
+            response = requests.post(url=url, headers=self.headers,  allow_redirects=True)
         report_id = response.json()['report_id']
         if report_type == 'USER LIST':
             self.user_report_id = report_id
         elif report_type == 'PROPOSAL LIST':
             self.proposal_list_report_id = report_id
-        print(f'{report_type} IS UNDER REPORT ID: {report_id}')
-        if wait_for_results:
+        if wait_for_results is True:
             results = self.get_report_results(report_id)
             return results
         return report_id
@@ -216,7 +215,6 @@ class ReportGenerator:
             self.ap_ids = list(ap_id_lookup.values())
         else:
             # Pull the values from ap_id lookup that have keys in self.actions
-            print(f'Actions: {self.actions}')
             self.ap_ids = [ap_id_lookup[action] for action in self.actions]
         return self.ap_ids
 
@@ -252,3 +250,141 @@ class ReportGenerator:
         if not os.path.exists(config("PREVIOUS_REPORT_IDS")):
             os.makedirs(config("PREVIOUS_REPORT_IDS"))
         self.write_json(data,f'{config("PREVIOUS_REPORT_IDS")+"previous_report_ids"}')
+
+
+    def pull_updated_requirements_and_last_updated_times(self):
+        # print(self.api_token)
+        # proposal_id = 5209
+        # field_id = 179838
+        now = datetime.datetime.now()
+        # Format datetime to MM-DD-YYYY-HH-MM-SS
+        now = now.strftime("%m-%d-%Y-%H-%M-%S")
+        
+        # Get the ap_id & proposal_id for proposals which have a showcase
+        target_proposals = {}
+        for proposal in self.proposal_list:
+            ap_id = proposal['ap_id']
+            if ap_id in self.ap_ids:
+                url = proposal['url']
+                proposal_id = proposal['proposal_id']
+                target_proposals[url] = {'ap_id': ap_id, 'proposal_id': proposal_id, 'url': url}
+        
+        for proposal_data in target_proposals.values():
+            proposal_id = proposal_data['proposal_id']
+            url = proposal_data['url']
+            field_report_request_params = {'proposal_id': str(proposal_id), 'ap_id': str(proposal_data['ap_id'])}
+            field_report_id = self.run_report(
+                api_endpoint=f"/api/v1/report/proposal_field/",
+                report_type="PROPOSAL FIELD",
+                wait_for_results=False,
+                request_params=json.dumps(field_report_request_params),
+            )
+            target_proposals[url]['field_report_id'] = field_report_id
+        
+        # Determine the field id corresponding to requirements
+        proposal_ids_and_req_field_ids = []
+        requirements_field_id_proposal_url_lookup = {}
+
+        for proposal_data in target_proposals.values():
+            proposal_id = proposal_data['proposal_id']
+            url = proposal_data['url']
+            field_report_id = proposal_data['field_report_id']
+            print(f'FIELD REPORT ID: {field_report_id}')
+            field_report = self.get_report_results(field_report_id)
+
+            requirements_field_id = [
+                field["field_id"]
+                for field in field_report[0]["fields"]
+                if field["label"].lower() == "requirements"
+            ]
+            if len(requirements_field_id) > 0:
+                requirements_field_id = requirements_field_id[0]
+                requirements_field_id_proposal_url_lookup[str(requirements_field_id)] = url
+            else:
+                raise ValueError(f"Could not find requirements field for proposal {url}")
+            proposal_ids_and_req_field_ids.append((proposal_id, requirements_field_id))
+            target_proposals[url]['requirements_field_id'] = requirements_field_id
+        
+            #field_reports[url] = field_report
+        chunks = _.chunk(proposal_ids_and_req_field_ids, 25)
+        field_diff_report_ids = []
+        for chunk in chunks:
+            print(f'CHUNK: {chunk}')
+            fields_ids = [entry[1] for entry in chunk]
+
+            #requirements_field_id = chunk[1]
+            field_diff_report_request_params = {
+                'field_id' : fields_ids, 
+            }
+            field_diff_report_id = self.run_report(
+                api_endpoint=f"/api/v1/report/proposal_field_diff/",
+                report_type="PROPOSAL FIELD DIFF",
+                wait_for_results=False,
+                request_params=json.dumps(field_diff_report_request_params),
+            )
+            print(f'These field_ids: {fields_ids} belong to  Field Diff Report Id: {field_diff_report_id}')
+            field_diff_report_ids.append(field_diff_report_id)
+
+        # READ IN THE JSON DICT OF REQUIREMENTS FIELDS FROM PREVIOUS SHOWCASES: previous_requirements
+        previous_requirements_path = r"C:\Users\jspenc35\projects\curriculog_excel_sheet_generator\output\requirements.json"
+        # Check if previous_requirements_path exists. If it does not, create it.
+        if not os.path.exists(previous_requirements_path):
+            with open(previous_requirements_path, "w") as f:
+                json.dump({}, f)
+
+        with open(previous_requirements_path, "r", encoding="utf-8", errors="ignore") as f:
+            previous_requirements = json.load(f)
+
+        
+        for field_diff_report_id in field_diff_report_ids:
+            field_diff_report = self.get_report_results(field_diff_report_id)
+            for diff in field_diff_report:
+                field_id = str(diff['field_id'])
+                proposal_url = requirements_field_id_proposal_url_lookup[field_id]
+                showcase_current_requirements = diff["current_value"]
+                showcase_previous_current_requirements =previous_requirements.get(proposal_url, {}).get('current_requirements', [])
+
+
+                previous_last_updated = previous_requirements.get(proposal_url, {}).get(
+                    "last_updated", None
+                )
+                showcase_was_updated = not _.is_equal(
+                    showcase_previous_current_requirements,
+                    showcase_current_requirements,
+                )
+
+                target_proposals[proposal_url]["current_requirements"] = (
+                    showcase_current_requirements
+                )
+                if showcase_was_updated is True:
+                    target_proposals[proposal_url]["previous_requirements"] = (
+                        showcase_previous_current_requirements
+                    )
+                else:
+                    # No change was made between now & the last pull. Just copy stuff over
+                    target_proposals[proposal_url]["previous_requirements"] = (
+                        previous_requirements.get(
+                            proposal_url, {}
+                        ).get("previous_requirements", [])
+                    )
+
+                last_updated = (
+                    now
+                    if (previous_last_updated is None or showcase_was_updated)
+                    else previous_last_updated
+                )
+                target_proposals[proposal_url]["last_updated"] = last_updated
+
+
+
+
+
+
+
+
+        with open(r"{}".format(previous_requirements_path), "w", encoding="utf-8", errors="ignore") as f:
+            json.dump(target_proposals, f, ensure_ascii=False, indent=4)
+
+        # self.write_json(target_proposals, 'requirements')
+        return target_proposals
+    
