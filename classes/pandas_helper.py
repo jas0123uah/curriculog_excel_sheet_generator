@@ -6,6 +6,8 @@ from collections import OrderedDict
 import pandas as pd
 import json, re
 import numpy as np
+import os
+from decouple import config
 from pprint import pprint
 import logging, sys
 # Configure root logger  
@@ -40,7 +42,7 @@ class PandasHelper:
         self.concatenated_dataframe.to_csv('concatenated_dataframe.tsv', sep='\t')
         
         
-    def _convert_proposal_field_report_to_pandas_dataframe(self):
+    def _convert_proposal_field_report_to_pandas_dataframe(self, save_available_field_names=True):
         """In the API response for the Curriculog Proposal Field Report, the response nests the fields for a proposal under a list called 'fields'. This function loops over those the api_responses and the nested fields to create a pandas dataframe with a column for each field. If the field, does not exist in given proposal it will be filled with NA."""
         proposal_field_resp = self.api_responses['/api/v1/report/proposal_field/']
         pandas_dict = self._get_fields_from_proposals(proposal_field_resp)
@@ -48,6 +50,16 @@ class PandasHelper:
         pandas_dict = self._get_field_values_from_proposals(pandas_dict, proposal_field_resp)
         
         self.concatenated_dataframe = pd.DataFrame.from_dict(pandas_dict)
+
+        if save_available_field_names is True:
+            # Clone concatenated dataframe
+            available_fields_df = self.concatenated_dataframe.copy()
+            # Transpose columns and rows
+            #available_fields_df = available_fields_df.transpose()
+            available_fields_df.to_excel(
+                os.path.join(config("TOP_OUTPUT_DIR"), "available_fields.xlsx"),
+                index=False,
+            )
         #self.concatenated_dataframe.to_csv(f'PRIOR TO MERGE.tsv', sep='}')
     def _get_fields_from_proposals(self, proposal_field_resp):
         """Returns a dict of field names that are found in at least one proposal. Values are an empty list."""
@@ -158,9 +170,9 @@ class PandasHelper:
                 if 'user_id' in api_resp_as_df.columns:
                     api_resp_as_df.rename(columns={'user_id':'originator_id'}, inplace=True)
                 
-                print(f'api_resp_df {api_resp_as_df.columns}')
-                print(f'concatenated_df {self.concatenated_dataframe.columns}')
-                print(self.concatenated_dataframe)
+                #print(f'api_resp_df {api_resp_as_df.columns}')
+                #print(f'concatenated_df {self.concatenated_dataframe.columns}')
+                #print(self.concatenated_dataframe)
                 self.concatenated_dataframe = self.merge_dataframes(self.concatenated_dataframe, api_resp_as_df, merge_on)
     
     def __init__(self, proposal_list_res, proposal_fields_res, user_report_res, fields:list, sorting_rules, grouping_rule): 
@@ -294,14 +306,14 @@ class PandasHelper:
             pprint(vars(filter_item))
         #print(list(self.concatenated_dataframe.columns))
         #filters = list(filter(lambda f: f.field_name in self.concatenated_dataframe.columns, filters))
-        print(self.concatenated_dataframe.columns)
-        print(f'Before filtering: {(self.concatenated_dataframe.head())}')
+        #print(self.concatenated_dataframe.columns)
+        #print(f'Before filtering: {(self.concatenated_dataframe.head())}')
         
         #raise Exception('test')
         for filter_item in filters:
             #pprint(vars(filter_item))
             if filter_item.field_name in self.concatenated_dataframe.columns:
-                print(f'This is filter: {filter_item.field_name} {filter_item.operator} {filter_item.values[0]}')
+                #print(f'This is filter: {filter_item.field_name} {filter_item.operator} {filter_item.values[0]}')
                 if filter_item.operator == '>':
                     print(f'{filter_item.field_name} should be >: {filter_item.values[0]}')
                     self.concatenated_dataframe = self.concatenated_dataframe[self.concatenated_dataframe[filter_item.field_name] > filter_item.values[0]]
