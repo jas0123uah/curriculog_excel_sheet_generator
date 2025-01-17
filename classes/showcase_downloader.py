@@ -1,7 +1,7 @@
 from .doc import Doc
 import time, os
 import pandas as pd
-from curriculog_excel_sheet_generator.classes.app.utils.get_current_proposal_overview_report import get_current_proposal_overview_report
+from .app.utils.get_current_proposal_overview_report import get_current_proposal_overview_report
 from decouple import config
 from selenium import webdriver
 from selenium.webdriver.common.by import By
@@ -11,6 +11,53 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 import concurrent.futures
 
+truncated_department_names = {
+    "CECS": "CECS",
+    "School of Journalism and Media": "JMED",
+    "Ecology and Evolutionary Biology": "EEB",
+    "Theory and Practice in Teacher Education": "TPTE",
+    "Earth, Environmental, and Planetary Sciences": "EEPS",
+    "Political Science": "POLS",
+    "Kinesiology, Recreation, and Sport Studies": "KNS",
+    "Anthropology": "ANTH",
+    "Chemistry": "CHEM",
+    "Interdisciplinary Programs": "INPG",
+    "Nutrition": "NUTR",
+    "Counseling, Human Development, and Family Science": "CHDFS",
+    "World Languages and Cultures": "WLC",
+    "School of Art": "ART",
+    "Sociology": "SOCI",
+    "Classics": "CLAS",
+    "Psychology": "PSYC",
+    "Tombras School of Advertising and Public Relations": "ADPR",
+    "School of Information Sciences": "INSC",
+    "Retail, Hospitality, and Tourism Management": "RHTM",
+    "University Honors": "UHON",
+    "School of Communication Studies": "SCOM",
+    "VetMed": "VET",
+    "Applied Engineering and Technology": "APENGR",
+    "Religious Studies": "REST",
+    "English": "ENGL",
+    "History": "HIST",
+    "Philosophy": "PHIL",
+    "Educational Leadership and Policy Studies": "EDUCPOL",
+    "Geography and Sustainability": "GEOG",
+    "Mathematics": "MATH",
+    "Biomedical Engineering": "BME",
+    "Chemical and Biomolecular Engineering": "CHEM-E",
+    "Materials Science and Engineering": "MSE",
+    "Electrical Engineering and Computer Science": "EECS",
+    "HBS": "HBS",
+    "Physics and Astronomy": "PHYS",
+    "Division of Biology": "BIOL",
+    "Theatre": "THEAT",
+    "Engineering Fundamentals Program": "EF",
+    "Nuclear Engineering": "NE",
+    "Pre-Professional Programs": "PPP",
+    "School of Interior Architecture": "IAR",
+    "Mechanical, Aerospace, and Biomedical Engineering": "MECH_AERO_ENGR",
+    "School of Design": "DSGN",
+}
 class element_does_not_have_css_class(object):
   """An expectation for checking that an element has a particular css class.
 
@@ -39,15 +86,21 @@ class ShowcaseDownloader:
         self.graduate_program_proposals = programs["graduate_programs"]
         self.num_webdrivers = int(config('NUM_WEBDRIVERS'))
         self.webdrivers = []
+        print('Trying to initiate showcase downloader')
         for _ in range(self.num_webdrivers):
+            print('Trying to initiate service and options')
             service = webdriver.ChromeService()
             options = webdriver.ChromeOptions()
             options.add_argument('--headless=new')
+            print('Initiated service and options')
             driver = webdriver.Chrome(service=service, options=options)
+            print('Appending driver')
             self.webdrivers.append(driver)
+        print('Loaded webdrivers')
         with open(os.path.join(config('MAIN_CURRICULOG_DIR'), f'showcase_css.css'), 'r', encoding='utf-8') as  css_file:
             css = css_file.read()
             self.css = css
+        print('Initialized ShowcaseDownloader')
     def _get_proposal_list_report(self):
         """Returns a pandas dataframe of the proposal list report. If no such report exists an error is thrown."""
         dprog_overview_report =get_current_proposal_overview_report()
@@ -163,6 +216,7 @@ class ShowcaseDownloader:
 
     def download_showcases(self):
         """Iterates over the undergraduate and graduate program proposals and creates concatenated PDF for each college."""
+        print('Calling download_showcases')
         self._login()
         college_types = ['undergraduate']
         for college_type in college_types:
@@ -171,6 +225,7 @@ class ShowcaseDownloader:
             else:
                 target_program_type = self.graduate_program_proposals
             colleges_in_college_type = target_program_type['College'].unique()
+            print(colleges_in_college_type)
             for college in colleges_in_college_type:
                 proposals_in_college = target_program_type[target_program_type['College'] == college]
                 program_proposal_types = proposals_in_college['Action'].unique()
@@ -192,6 +247,7 @@ class ShowcaseDownloader:
                                 url = row['URL']
                                 # print(f'THERES A PROPOSAL AT URL: {url}')
                                 department = row['Department']
+                                department = truncated_department_names.get(department, department)
                                 action = row['Action']
                                 driver = self.webdrivers[idx % len(self.webdrivers)]
                                 futures.append(executor.submit(self.download_showcase, url, undergrad_showcases_in_college, driver, department, action))
