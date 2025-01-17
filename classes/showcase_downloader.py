@@ -1,7 +1,8 @@
 from .doc import Doc
 import time, os
 import pandas as pd
-from curriculog_excel_sheet_generator.classes.app.utils.get_current_proposal_overview_report import get_current_proposal_overview_report
+from .app.utils.get_current_proposal_overview_report import get_current_proposal_overview_report
+#from curriculog_excel_sheet_generator.classes.app.utils.get_current_proposal_overview_report import get_current_proposal_overview_report
 from decouple import config
 from selenium import webdriver
 from selenium.webdriver.common.by import By
