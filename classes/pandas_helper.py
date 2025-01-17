@@ -56,10 +56,10 @@ class PandasHelper:
             available_fields_df = self.concatenated_dataframe.copy()
             # Transpose columns and rows
             #available_fields_df = available_fields_df.transpose()
-            available_fields_df.to_excel(
-                os.path.join(config("TOP_OUTPUT_DIR"), "available_fields.xlsx"),
-                index=False,
-            )
+            # available_fields_df.to_excel(
+            #     os.path.join(config("TOP_OUTPUT_DIR"), "available_fields.xlsx"),
+            #     index=False,
+            # )
         #self.concatenated_dataframe.to_csv(f'PRIOR TO MERGE.tsv', sep='}')
     def _get_fields_from_proposals(self, proposal_field_resp):
         """Returns a dict of field names that are found in at least one proposal. Values are an empty list."""
