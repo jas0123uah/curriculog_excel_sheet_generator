@@ -156,7 +156,7 @@ class ShowcaseDownloader:
             print(f'ENTERED NETID AND PASSWORD FOR DRIVER {i}')
             self._send_duo_push(driver)
     
-    def open_showcase_window(self, driver):
+    def open_showcase_window(self, driver, get_markup = True):
         """Opens the showcase window from the current page. Returns the html of the showcase window."""
         proposal_url = driver.current_url
         try:
@@ -171,8 +171,9 @@ class ShowcaseDownloader:
         # Wait for the masked class to be removed from the body
         wait = WebDriverWait(driver, 10)
         wait.until(element_does_not_have_css_class((By.TAG_NAME, 'body'), "masked"))
-        driver.find_element(By.CSS_SELECTOR, 'button#markup').click()
-        wait.until(element_does_not_have_css_class((By.TAG_NAME, 'body'), "masked"))
+        if get_markup is True:
+            driver.find_element(By.CSS_SELECTOR, 'button#markup').click()
+            wait.until(element_does_not_have_css_class((By.TAG_NAME, 'body'), "masked"))
         
         buttons = []
     
@@ -230,7 +231,8 @@ class ShowcaseDownloader:
                 proposals_in_college = target_program_type[target_program_type['College'] == college]
                 program_proposal_types = proposals_in_college['Action'].unique()
                 for program_type in program_proposal_types:
-                    undergrad_showcases_in_college = Doc(college, college_type, program_type)
+                    undergrad_showcases_in_college = Doc(college, college_type, program_type, True)
+                    unmarked_showcases_in_college = Doc(college, college_type, program_type, False)
                     print(f'Getting {college_type} proposals in college {college} for program type {program_type}')
                     proposals_of_given_type_in_college = proposals_in_college[proposals_in_college['Action'] == program_type]
                     #proposals_of_given_type_in_college = proposals_of_given_type_in_college.head(3)
@@ -250,7 +252,7 @@ class ShowcaseDownloader:
                                 department = truncated_department_names.get(department, department)
                                 action = row['Action']
                                 driver = self.webdrivers[idx % len(self.webdrivers)]
-                                futures.append(executor.submit(self.download_showcase, url, undergrad_showcases_in_college, driver, department, action))
+                                futures.append(executor.submit(self.download_showcase, url, undergrad_showcases_in_college, unmarked_showcases_in_college, driver, department, action))
                             for future in concurrent.futures.as_completed(futures):
                                 future.result()
                         normalized_program_type = program_type.lower().replace(' ', '_')
@@ -266,22 +268,30 @@ class ShowcaseDownloader:
 
         dprog = (
             df.iloc[0]["Dprog"]
-            if pd.notna(df.iloc[0]["Dprog"]) 
+            if "Dprog" in df.columns and pd.notna(df.iloc[0]["Dprog"]) 
             else str(int(round(time.time() * 1000)))
         ) 
         return dprog
-    def download_showcase(self, url, undergrad_showcases_in_college, driver, department, action):
+    def download_showcase(self, url, undergrad_showcases_in_college, unmarked_showcases_in_college, driver, department, action):
         """Take a driver thread and downloads the showcase."""
         try:
             print(f'Getting showcase at url: {url}')
             driver.get(url)
             time.sleep(4)
-            showcase_html = self.open_showcase_window(driver)
-            undergrad_showcases_in_college.raw_data+=showcase_html
-            undergrad_showcases_in_college.proposals_in_department += showcase_html
+            marked_up_showcase_html = self.open_showcase_window(driver)
+            undergrad_showcases_in_college.raw_data += marked_up_showcase_html
+            undergrad_showcases_in_college.proposals_in_department += marked_up_showcase_html
+
+            unmarked_showcase_html = self.open_showcase_window(driver, get_markup=False)
+            unmarked_showcases_in_college.raw_data += unmarked_showcase_html
+            unmarked_showcases_in_college.proposals_in_department += unmarked_showcase_html
+
+
             normalized_program_type = action.lower().replace(' ', '_')
             normalized_program_type = normalized_program_type.replace('/', '_')
-            undergrad_showcases_in_college.save_currrent_showcase(current_showcase_html=showcase_html, corresponding_dprog=self.get_corresponding_dprog(proposal_url=url), department=department, action= normalized_program_type)
+
+            unmarked_showcases_in_college.save_currrent_showcase(current_showcase_html=unmarked_showcase_html, corresponding_dprog=self.get_corresponding_dprog(proposal_url=url), department=department, action= normalized_program_type)
+            undergrad_showcases_in_college.save_currrent_showcase(current_showcase_html=marked_up_showcase_html, corresponding_dprog=self.get_corresponding_dprog(proposal_url=url), department=department, action= normalized_program_type)
         except Exception as e:
             print(f'Error downloading showcase: {e}')
         
