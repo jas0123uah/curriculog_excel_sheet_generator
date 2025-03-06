@@ -119,9 +119,12 @@ class PandasHelper:
         return pandas_dict
     def _get_field_values_from_proposals(self, pandas_dict, proposal_field_resp):
         """Loops over proposals and all possible proposal fields. If the proposal has the field its value is appended to the field label in the pandas_dict else np.nan is appended as a  placeholder."""
+        pandas_dict['attachments'] = []
         for proposal_number, proposal in enumerate(proposal_field_resp):
             #LOOP OVER ALL POSSIBLE FIELDS A PROPOSAL MAY HAVE
             for field_num, field_label in enumerate(pandas_dict.keys()):
+                if field_label == 'attachments':
+                    continue
                 #print(f'Getting field {field_label} for proposal {proposal_number}')
                 field_data = list(filter(lambda proposal_field: proposal_field['label'] == field_label or ( field_label in self.fields_represented_by_normalized_field_name and proposal_field['label'] in self.fields_represented_by_normalized_field_name[field_label]), proposal['fields']))
                 #If the field exists in the proposal
@@ -146,7 +149,19 @@ class PandasHelper:
                 else:
                     curr_list.append('')
                 pandas_dict[field_label] = curr_list
-            
+                # if 'attachments' not in pandas_dict: 
+                #     pandas_dict['attachments'] = []
+                
+            curr_attachments = pandas_dict['attachments']
+            proposal_attachments = ", ".join([datum['filename'] for datum in proposal['attachments']])
+            curr_attachments.append(proposal_attachments)   
+            pandas_dict['attachments'] = curr_attachments
+        print(pandas_dict.keys())
+        #print(f"Number of attachments: {len(pandas_dict['attachments'])}")
+        #print(f"Number of College: {len(pandas_dict['College'])}")
+        print(f"Attachments: {pandas_dict['attachments']}")
+        print(f"Proposal Names: {pandas_dict['Name of Proposal']}")
+        print(f'Curr list: {curr_list}')
         return pandas_dict
         
     

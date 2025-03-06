@@ -58,9 +58,9 @@ def process_api_responses(report_runner, excel_parser, input_excel):
     data_manipulator.filter_concatenated_proposals(excel_parser.filters)
 
     # TEMP HARDCODE FILTER FOR PROPOSAL IDS 
-    relevant_ids = ['CECS', 'HCA']
+    #relevant_ids = ['CECS', 'HCA']
     #print(list(data_manipulator.concatenated_dataframe.columns))
-    data_manipulator.concatenated_dataframe = data_manipulator.concatenated_dataframe[data_manipulator.concatenated_dataframe['College'].isin(relevant_ids)]
+    #data_manipulator.concatenated_dataframe = data_manipulator.concatenated_dataframe[data_manipulator.concatenated_dataframe['College'].isin(relevant_ids)]
     # Remove unlaunched proposals
     data_manipulator.concatenated_dataframe = data_manipulator.concatenated_dataframe[
         data_manipulator.concatenated_dataframe["Step Name"] != "Unlaunched Step"
