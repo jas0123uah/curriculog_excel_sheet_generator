@@ -159,9 +159,6 @@ class PandasHelper:
         print(pandas_dict.keys())
         #print(f"Number of attachments: {len(pandas_dict['attachments'])}")
         #print(f"Number of College: {len(pandas_dict['College'])}")
-        print(f"Attachments: {pandas_dict['attachments']}")
-        print(f"Proposal Names: {pandas_dict['Name of Proposal']}")
-        print(f'Curr list: {curr_list}')
         return pandas_dict
         
     
