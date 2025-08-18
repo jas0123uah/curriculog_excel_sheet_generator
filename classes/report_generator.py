@@ -215,7 +215,7 @@ class ReportGenerator:
             self.ap_ids = list(ap_id_lookup.values())
         else:
             # Pull the values from ap_id lookup that have keys in self.actions
-            self.ap_ids = [ap_id_lookup[action] for action in self.actions]
+            self.ap_ids = [ap_id_lookup[action] for action in self.actions if action in ap_id_lookup.keys()]
         return self.ap_ids
 
     def pull_previous_results(self, args):
