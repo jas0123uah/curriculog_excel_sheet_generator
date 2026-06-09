@@ -30,14 +30,15 @@ After you have set the script up/ Regular use instructions:
 13. Paste the copied API key
 14. Type another ' to fully enclose the API key in single quotes. Ensure you don't have trailing spaces at the end of the API key you pasted.
 15. Save the .env file.
-16. Paste the following into the terminal and hit enter: python curriculog_report_generator.py
-17. Click the "New Report Button" in the GUI.
-18. Click the name of the report you are trying to generate.
-19. Click Submit.
-20. Watch the terminal for any errors. If errors occur, contact Jonathan Hughes or Jay Spencer
-21. After the script runs successfully, close the GUI.
-22. Paste the following into the terminal and hit enter: explorer.exe .
-23. Navigate to output and open the folder with the name of the report you were trying to generate.
-24. Go to the folder current. The excel document in this folder corresponds to the report you just ran.
-25. Previous reports you ran will be under the folder previous.
-26. Close the terminal.  
+16. In the file explorer, under the input folder open the report you are wanting to pull. Update the fields you need to update. For example, If your report has a Current Step Started Before (Date) field, update this to be the day after the last day faculty had to submit proposals. 
+17. Paste the following into the terminal and hit enter: python curriculog_report_generator.py
+18. Click the "New Report Button" in the GUI.
+19. Click the name of the report you are trying to generate.
+20. Click Submit.
+21. Watch the terminal for any errors. If errors occur, contact Jonathan Hughes or Jay Spencer
+22. After the script runs successfully, close the GUI.
+23. Paste the following into the terminal and hit enter: explorer.exe .
+24. Navigate to output and open the folder with the name of the report you were trying to generate.
+25. Go to the folder current. The excel document in this folder corresponds to the report you just ran.
+26. Previous reports you ran will be under the folder previous.
+27. Close the terminal.  
