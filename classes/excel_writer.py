@@ -197,7 +197,7 @@ class ExcelWriter:
         """Given an input row and column_name, find the cell corresponding to column_name and return its value."""
         col_lookup = self.col_lookups[worksheet_index]
         idx = col_lookup[column_name]["idx"]
-        target_cell = [cell for col_num, cell in enumerate(row, start=1) if col_num == idx + 1][0]
+        target_cell = [cell for col_num, cell in enumerate(row, start=1) if col_num == idx +1 or col_num == len(row) ][0]
         #target_cell = list(filter(lambda cell: cell.column == idx + 1, row))[0]
         return target_cell
 
