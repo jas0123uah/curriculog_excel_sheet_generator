@@ -238,7 +238,7 @@ class PandasHelper:
             'catalog_name': 'Catalog Name',
             'catalog_year': 'Catalog Year',
             'GR/UG': 'GR/UG',
-            'ap_name': 'Action',
+            'ap_name': 'Proposal Action',
             'If yes, which Connections category?': 'Connections Categories',
             'trimmed_ap_name': 'Trimmed Action',
             'email': 'Proposal Submitter Email',
@@ -342,6 +342,7 @@ class PandasHelper:
                     #comment
                     print(f'{filter_item.field_name} should equal: {filter_item.values[0]}')
                     print(filter_item.values[0])
+
                     self.concatenated_dataframe = self.concatenated_dataframe.loc[self.concatenated_dataframe[filter_item.field_name] == filter_item.values[0]]
                 elif filter_item.operator == 'NOT EQUAL TO':
                     print(f'{filter_item.field_name} should NOT equal: {filter_item.values[0].lower()}')
@@ -350,6 +351,9 @@ class PandasHelper:
                     print(f'{filter_item.field_name} should contain one of the following values: {", ".join(filter_item.values)}')
                     #Filter to have only rows where filter_item.field_name's value is in filter_item.values
                     print(filter_item.values)
+        
+
+
                     self.concatenated_dataframe = self.concatenated_dataframe[self.concatenated_dataframe[filter_item.field_name].apply(lambda x: any(item in str(x) for item in filter_item.values))]
                     #self.concatenated_dataframe = self.concatenated_dataframe[self.concatenated_dataframe[filter_item.field_name] in filter_item.values]
                 elif filter_item.operator == 'NOT IN':

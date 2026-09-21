@@ -162,7 +162,7 @@ class ExcelInputParser:
         return ",".join(data)
     def _get_actions(self):
         """Loops over self.fields to return the request form types under "Action". If no Action field was requested, it returns an empty list."""
-        action_field = next(( x for x in self.fields if x.field_name == 'Action'), None)
+        action_field = next(( x for x in self.fields if x.field_name == 'Proposal Action'), None)
         print(f'This is action_field: {action_field}')
         print(f'This is vars action_field {pprint(vars(action_field))}')
         self.actions = [] if action_field is None else action_field.filters.values
